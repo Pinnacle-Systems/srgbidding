@@ -1,0 +1,87 @@
+import { createApi } from "@reduxjs/toolkit/query/react"
+import baseQuery from "./baseQuery";
+import { SIZE_API } from "../../Api";
+
+
+const SizeMasterApi = createApi({
+    reducerPath: "sizeMaster",
+    baseQuery: baseQuery,
+    tagTypes: ["SizeMaster"],
+    endpoints: (builder) => ({
+        getSizeMaster: builder.query({
+            query: ({ params, searchParams }) => {
+                if (searchParams) {
+                    return {
+                        url: SIZE_API + "/search/" + searchParams,
+                        method: "GET",
+                        headers: {
+                            "Content-type": "application/json; charset=UTF-8",
+                        },
+                        params
+                    };
+                }
+                return {
+                    url: SIZE_API,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["SizeMaster"],
+        }),
+        getSizeMasterById: builder.query({
+            query: (id) => {
+                return {
+                    url: `${SIZE_API}/${id}`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                };
+            },
+            providesTags: ["SizeMaster"],
+        }),
+        addSizeMaster: builder.mutation({
+            query: (payload) => ({
+                url: SIZE_API,
+                method: "POST",
+                body: payload,
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            }),
+            invalidatesTags: ["SizeMaster"],
+        }),
+        updateSizeMaster: builder.mutation({
+            query: (payload) => {
+                const { id, ...body } = payload;
+                return {
+                    url: `${SIZE_API}/${id}`,
+                    method: "PUT",
+                    body,
+                };
+            },
+            invalidatesTags: ["SizeMaster"],
+        }),
+        deleteSizeMaster: builder.mutation({
+            query: (id) => ({
+                url: `${SIZE_API}/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["SizeMaster"],
+        }),
+    }),
+});
+
+export const {
+    useGetSizeMasterQuery,
+    useGetSizeMasterByIdQuery,
+    useLazyGetSizeMasterByIdQuery,
+    useAddSizeMasterMutation,
+    useUpdateSizeMasterMutation,
+    useDeleteSizeMasterMutation,
+} = SizeMasterApi;
+
+export default SizeMasterApi;

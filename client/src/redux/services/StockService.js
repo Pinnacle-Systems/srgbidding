@@ -1,0 +1,158 @@
+import { createApi } from "@reduxjs/toolkit/query/react"
+import baseQuery from "./baseQuery";
+import { STOCK_API } from "../../Api";
+
+
+const stockApi = createApi({
+  reducerPath: "stock",
+  baseQuery: baseQuery,
+  tagTypes: ["Stock"],
+  endpoints: (builder) => ({
+    getStock: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: STOCK_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: STOCK_API,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getPcsStock: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getPcsStock",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getStockById: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${STOCK_API}/${params.productId || params.salePrice}`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    addStock: builder.mutation({
+      query: (payload) => ({
+        url: STOCK_API,
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      }),
+      invalidatesTags: ["Stock"],
+    }),
+    updateStock: builder.mutation({
+      query: (payload) => {
+        const { id, ...body } = payload;
+        return {
+          url: `${STOCK_API}/${id}`,
+          method: "PUT",
+          body,
+        };
+      },
+      invalidatesTags: ["Stock"],
+    }),
+    deleteStock: builder.mutation({
+      query: (id) => ({
+        url: `${STOCK_API}/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Stock"],
+    }),
+    getStockReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getStockReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getBoardQty: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getBoardQty",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getStockforMaterialIssue: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getStockforMaterialIssue",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+    getOrdersReport: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/getOrdersReport",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Stock"],
+    }),
+  }),
+});
+
+export const {
+  useGetStockQuery,
+  useGetStockByIdQuery,
+  useAddStockMutation,
+  useUpdateStockMutation,
+  useDeleteStockMutation,
+  useGetPcsStockQuery,
+  useGetStockReportQuery,
+  useGetBoardQtyQuery,
+  useLazyGetBoardQtyQuery,
+  useGetStockforMaterialIssueQuery,
+  useGetOrdersReportQuery,
+} = stockApi;
+
+export default stockApi;

@@ -1,0 +1,87 @@
+import { createApi } from "@reduxjs/toolkit/query/react"
+import baseQuery from "./baseQuery";
+import { MACHINE_API } from "../../Api";
+
+
+const MachineMasterApi = createApi({
+  reducerPath: "machine",
+  baseQuery: baseQuery,
+  tagTypes: ["Machine"],
+  endpoints: (builder) => ({
+    getMachineMaster: builder.query({
+      query: ({ params, searchParams }) => {
+        if (searchParams) {
+          return {
+            url: MACHINE_API + "/search/" + searchParams,
+            method: "GET",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+            params,
+          };
+        }
+        return {
+          url: MACHINE_API,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params,
+        };
+      },
+      providesTags: ["Machine"],
+    }),
+    getMachineMasterById: builder.query({
+      query: (id) => {
+        return {
+          url: `${MACHINE_API}/${id}`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Machine"],
+    }),
+    addMachineMaster: builder.mutation({
+      query: (payload) => ({
+        url: MACHINE_API,
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      }),
+      invalidatesTags: ["Machine"],
+    }),
+    updateMachineMaster: builder.mutation({
+      query: (payload) => {
+        const { id, ...body } = payload;
+        return {
+          url: `${MACHINE_API}/${id}`,
+          method: "PUT",
+          body,
+        };
+      },
+      invalidatesTags: ["Machine"],
+    }),
+    deleteMachineMaster: builder.mutation({
+      query: (id) => ({
+        url: `${MACHINE_API}/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Machine"],
+    }),
+  }),
+});
+
+export const {
+  useGetMachineMasterQuery,
+  useGetMachineMasterByIdQuery,
+  useLazyGetMachineMasterByIdQuery,
+  useAddMachineMasterMutation,
+  useUpdateMachineMasterMutation,
+  useDeleteMachineMasterMutation,
+} = MachineMasterApi;
+
+export default MachineMasterApi;
