@@ -2,7 +2,7 @@ import validator from 'validator';
 import React from "react";
 import { MultiSelect } from "react-multi-select-component";
 import Select from 'react-dropdown-select';
-import { findFromList, findFromListFindProperty } from '../Utils/helper';
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from 'react-icons/fa';
 
 
 export const handleOnChange = (event, setValue) => {
@@ -267,3 +267,103 @@ export const DropdownWithSearch = ({ options, value, setValue, readOnly, searchB
         </>
     )
 }
+
+
+export const Pagination = ({ allData, currentPageNumber, handlePageChange, totalPages, indexOfFirstItem, indexOfLastItem }) => {
+    if (totalPages <= 1) return null;
+
+    return (
+        <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+            <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                Showing {indexOfFirstItem + 1} to {indexOfLastItem} of {allData?.totalCount || 0} entries
+            </div>
+            <div className="flex gap-1">
+                <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPageNumber === 1}
+                    className={`min-w-8 rounded-md px-2.5 py-1 ${currentPageNumber === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                    title="First Page"
+                >
+                    <FaStepBackward size={12} className="inline" />
+                </button>
+                <button
+                    onClick={() => handlePageChange(currentPageNumber - 1)}
+                    disabled={currentPageNumber === 1}
+                    className={`px-3 py-1 rounded-md ${currentPageNumber === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                >
+                    <FaChevronLeft className="inline" />
+                </button>
+
+                {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                        pageNum = i + 1;
+                    } else if (currentPageNumber <= 3) {
+                        pageNum = i + 1;
+                    } else if (currentPageNumber >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                    } else {
+                        pageNum = currentPageNumber - 2 + i;
+                    }
+
+                    return (
+                        <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-3 py-1 rounded-md ${currentPageNumber === pageNum
+                                ? 'bg-indigo-800 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {pageNum}
+                        </button>
+                    );
+                })}
+
+                {totalPages > 5 && currentPageNumber < totalPages - 2 && (
+                    <span className="px-3 py-1">...</span>
+                )}
+
+                {totalPages > 5 && currentPageNumber < totalPages - 2 && (
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        className={`px-3 py-1 rounded-md ${currentPageNumber === totalPages
+                            ? 'bg-indigo-800 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        {totalPages}
+                    </button>
+                )}
+
+                <button
+                    onClick={() => handlePageChange(currentPageNumber + 1)}
+                    disabled={currentPageNumber === totalPages}
+                    className={`px-3 py-1 rounded-md ${currentPageNumber === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                >
+                    <FaChevronRight className="inline" />
+                </button>
+                <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPageNumber === totalPages}
+                    className={`min-w-8 rounded-md px-2.5 py-1 ${currentPageNumber === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        }`}
+                    title="Last Page"
+                >
+                    <FaStepForward size={12} className="inline" />
+                </button>
+            </div>
+        </div>
+    );
+};

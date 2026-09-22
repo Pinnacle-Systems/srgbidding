@@ -13,7 +13,7 @@ const middleware = {
             return next();
         }
 
-        console.log(request?.headers?.authorization, "request")
+        // console.log(request?.headers?.authorization, "request")
 
         try {
             //   get the token from the authorization header
@@ -31,7 +31,7 @@ const middleware = {
             // retrieve the user details of the logged in user
             const user = decodedToken;
 
-            console.log("user", decodedToken);
+            // console.log("user", decodedToken);
 
             // pass the user down to the endpoints here
             request.user = user;

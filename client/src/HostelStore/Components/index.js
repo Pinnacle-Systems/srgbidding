@@ -64,3 +64,4 @@ export { default as MaterialReturn } from "./MaterialReturnForm";
 export { default as OrderMaster } from "./OrderMaster";
 export { default as LineMaster } from "./LineMaster";
 export { default as OrdersReport } from "./OrdersReport";
+export { default as InternalRequestEntry } from "./InternalRequestEntry";
