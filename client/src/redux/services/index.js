@@ -50,3 +50,4 @@ export { default as ItemSubGroupMasterApi } from "./ItemSubGroupService";
 export { default as ItemMasterApi } from "./ItemMasterService";
 export { default as OrderMasterApi } from "./OrderMasterService";
 export { default as LineMasterApi } from "./LineMasterService";
+export { default as MaterialMasterApi } from "./MaterialMasterServices";

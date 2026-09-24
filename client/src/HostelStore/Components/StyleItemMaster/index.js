@@ -26,13 +26,14 @@ import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 import { useGetSizeTemplateQuery } from "../../../redux/services/SizeTemplateMaster";
 import { useGetItemGroupMasterQuery } from "../../../redux/services/ItemGroupMasterService";
 import { DropdownWithModal } from "../../../Inputs/Reuseable";
-import { ItemGroup, UomMaster, SizeTemplate, HsnMaster, Gsm } from "..";
+import { ItemGroup, UomMaster, SizeTemplate, HsnMaster, Gsm, MaterialMaster } from "..";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService";
 import { UserPermissions } from "../../../Utils/UserPermissions";
 import { ItemSubGroupMaster } from "../../../Basic/components";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../../redux/services/ItemMasterService";
+import { useGetMaterialMasterQuery } from "../../../redux/services/MaterialMasterServices";
 
 const MODEL = "Item Master";
 export default function Form({ onSuccess, defaultName = "" }) {
@@ -46,12 +47,13 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const [aliasName, setAliasName] = useState(defaultName || "");
   const [hsnId, setHsnId] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  const childRecord = useRef(0);
   const [itemGroupId, setItemGroupId] = useState("");
   const [itemSubGroupId, setItemSubGroupId] = useState("");
   const [sizeTemplateId, setSizeTemplateId] = useState("");
   const [uomId, setUomId] = useState("");
   const [gsmId, setGsmId] = useState("");
+  const [materialId, setMaterialId] = useState("");
+  const [childRecord, setChildRecord] = useState(0);
 
   const [dispatchInvalidate] = useInvalidateTags();
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -62,10 +64,10 @@ export default function Form({ onSuccess, defaultName = "" }) {
     ),
   };
   const { data: hsnList } = useGetHsnMasterQuery({ params });
-  const { data: uomList } = useGetUomQuery({ params });
-  const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params });
-  const { data: itemGroupList } = useGetItemGroupMasterQuery({ params });
-  const { data: gsmList } = useGetGsmMasterQuery({ params });
+  // const { data: uomList } = useGetUomQuery({ params });
+  // const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params });
+  // const { data: itemGroupList } = useGetItemGroupMasterQuery({ params });
+  const { data: materialList } = useGetMaterialMasterQuery({ params });
   const { data: itemSubGroupList } = useGetItemSubGroupMasterQuery({
     params,
     searchParams: searchValue,
@@ -108,7 +110,8 @@ export default function Form({ onSuccess, defaultName = "" }) {
       setUomId(data?.uomId ? data?.uomId : "");
       setSizeTemplateId(data?.sizeTemplateId ? data?.sizeTemplateId : "");
       setGsmId(data?.gsmId ? data?.gsmId : "");
-      childRecord.current = data?.childRecord ? data?.childRecord : 0;
+      setMaterialId(data?.materialId ? data?.materialId : "")
+      setChildRecord(data?.childRecord ? data?.childRecord : 0)
     },
     [id],
   );
@@ -131,10 +134,16 @@ export default function Form({ onSuccess, defaultName = "" }) {
     sizeTemplateId,
     uomId,
     gsmId,
+    materialId
   };
 
+  useEffect(() => {
+    // if (id) return
+    setAliasName(name)
+  }, [name])
+
   const validateData = (data) => {
-    if (data.name && data.itemGroupId) {
+    if (data.name && data.materialId) {
       return true;
     }
     return false;
@@ -309,7 +318,8 @@ export default function Form({ onSuccess, defaultName = "" }) {
       header: "Item Name",
       accessor: (item) => item.name,
       className: "font-medium text-gray-900  w-[400px]  py-1  px-2",
-      search: "Item Name",
+      enableSearch: true
+
     },
     {
       header: "Status",
@@ -350,30 +360,54 @@ export default function Form({ onSuccess, defaultName = "" }) {
           <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
             <fieldset className=" rounded mt-2">
               <div className="w-full grid grid-cols-3 gap-3">
-                <div className="mb-3">
-                  <TextInputNew1
-                    ref={countryNameRef}
-                    name="Item Name"
-                    type="text"
-                    value={name}
-                    setValue={setName}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                  />
-                </div>
-                <div className="mb-3">
-                  <TextInputNew1
-                    name="Alias Name"
-                    type="text"
-                    value={aliasName}
-                    setValue={setAliasName}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                  />
+                <div className="flex flex-row gap-2 col-span-3 ">
+                  <div className="w-96">
+                    <TextInputNew1
+                      ref={countryNameRef}
+                      name="Item Name"
+                      type="text"
+                      value={name}
+                      setValue={setName}
+                      required={true}
+                      readOnly={readOnly}
+                      disabled={childRecord}
+                    />
+                  </div>
+                  <div className="mb-3 w-96">
+                    <TextInputNew1
+                      name="Alias Name"
+                      type="text"
+                      value={aliasName}
+                      setValue={setAliasName}
+                      readOnly={readOnly}
+                      disabled={childRecord}
+                    />
+                  </div>
                 </div>
 
                 <DropdownWithModal
+                  name="Material Category"
+                  options={dropDownListObject(
+                    id
+                      ? materialList?.data
+                      : materialList?.data?.filter((item) => item?.active),
+                    "name",
+                    "id",
+                  )}
+                  value={materialId}
+                  setValue={(val) => {
+                    setMaterialId(val);
+                    setItemSubGroupId("");
+                  }}
+                  required={true}
+                  readOnly={readOnly}
+                  className={`w-[150px]`}
+                  disabled={childRecord}
+                  addNewLabel="+ Add New Material Category"
+                  childComponent={MaterialMaster}
+                  addNewModalWidth="w-[40%] h-[45%]"
+                />
+                {/* <DropdownWithModal
                   name="Item Group"
                   options={dropDownListObject(
                     id
@@ -394,8 +428,8 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   addNewLabel="+ Add New Item Group"
                   childComponent={ItemGroup}
                   addNewModalWidth="w-[40%] h-[45%]"
-                />
-                {/* <div className="mb-3">
+                /> */}
+                <div className="mb-3">
                   <DropdownWithModal
                     name="Hsn"
                     options={dropDownListObject(
@@ -415,7 +449,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
                     addNewModalWidth="w-[40%] h-[50%]"
                   // required={true}
                   />
-                </div> */}
+                </div>
 
 
 

@@ -218,3 +218,9 @@ export const productionTypeNew = [
   { show: "Outside", value: "Outside" },
 
 ];
+export const requestPriority = [
+  { show: "Low", value: "Low" },
+  { show: "Medium", value: "Medium" },
+  { show: "High", value: "High" },
+
+];

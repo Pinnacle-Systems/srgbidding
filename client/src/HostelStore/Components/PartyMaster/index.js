@@ -770,12 +770,16 @@ export default function Form({
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-96",
+      enableSearch: true
+
     },
     {
       header: "Branch Type",
       accessor: (item) => item?.BranchType?.name || "-",
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-40 pl-2",
+      enableSearch: true
+
     },
     {
       header: "Customer/Supplier",
@@ -795,12 +799,9 @@ export default function Form({
       accessor: (item) => item.address,
       cellClass: () => "font-medium text-gray-900",
       className: "text-gray-800 uppercase w-96",
+      enableSearch: true
+
     },
-    // {
-    //   header: "Category",
-    //   accessor: (item, index) => (item?.isCustomer ? "Customer" : "Supplier"),
-    //   className: "font-medium text-gray-900 w-18 uppercase text-left pl-2",
-    // },
 
     {
       header: "Status",

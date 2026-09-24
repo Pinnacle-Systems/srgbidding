@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import PurchaseInwardForm from "./PurchaseInwardForm.js";
-import InternalRequestEntry from "./PurchaseInwardFormReport.js"
 import { getCommonParams } from "../../../Utils/helper.js";
 import { FaPlus } from "react-icons/fa";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
@@ -19,22 +17,28 @@ import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServi
 import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService.js";
 import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
 import { useGetItemGroupMasterQuery } from "../../../redux/services/ItemGroupMasterService.js";
+import IndentForm from "./IndentForm.js";
+import IndentFormReport from "./IndentFormReport.js";
+import { useDeleteMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssue.js";
+import { useDeleteInternalIndentIssueMutation } from "../../../redux/uniformService/InternalIndent.js";
 
 export default function Form() {
+
   const [showForm, setShowForm] = useState(false);
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+
+  const [fromPoSupplierId, setFromPoSupplierId] = useState(""); // ⬅️
+  const [fromPoId, setFromPoId] = useState("");
+  const [fromPoType, setFromPoType] = useState("")
+
   const { branchId, companyId, finYearId, userId } = getCommonParams()
   const params = {
     branchId, companyId, finYearId, isAddessCombined: true
   };
-  const [fromPoSupplierId, setFromPoSupplierId] = useState(""); // ⬅️
-  const [fromPoId, setFromPoId] = useState("");
-  const [fromPoType, setFromPoType] = useState("")
-  const [trigger, { data: singleData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading, }] =
-    useLazyGetPurchaseInwardEntryByIdQuery();
+
+
+
   const handleView = (orderId) => {
     setId(orderId);
     setShowForm(true);
@@ -46,12 +50,12 @@ export default function Form() {
     setShowForm(true);
     setReadOnly(false);
   };
-  const [removeData] = useDeletePurchaseInwardEntryMutation();
+  const [removeData] = useDeleteInternalIndentIssueMutation();
+
   const [dispatchInvalidate] = useInvalidateTags();
 
   const handleDelete = async (id) => {
     setId(id);
-    const { data } = await trigger(id);
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
@@ -152,20 +156,54 @@ export default function Form() {
 
   return (
     <>
-      <div
-        className="p-1 bg-[#F1F1F0] h-[85%]"
-        style={{ display: showForm ? "none" : "block" }}
-      >
-        <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-          <div>
-            <h1 className="text-lg font-bold text-gray-800">
-              Purchase Inward Report
-            </h1>
-          </div>
 
-          <div className="flex items-center gap-2">
+
+
+      {showForm ? (
+        <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden">
+          <IndentForm
+            readOnly={readOnly}
+            setReadOnly={setReadOnly}
+            id={id}
+            setId={setId}
+            onClose={() => {
+              setShowForm(false);
+              setReadOnly((prev) => !prev);
+              setFromPoSupplierId("");   // ⬅️ clear on close
+              setFromPoId("");
+              setFromPoType("");
+            }}
+            setShowForm={setShowForm}
+            supplierList={supplierList}
+            branchList={branchList}
+            uomList={uomList}
+            styleItemList={styleItemList}
+            itemGroupList={itemGroupList}
+            hsnList={hsnList}
+            onNew={onNew}
+            sizeList={sizeList}
+            colorList={colorList}
+            fromPoId={fromPoId}
+            fromPoSupplierId={fromPoSupplierId}
+            fromPoType={fromPoType}
+            setFromPoId={setFromPoId}
+            setFromPoSupplierId={setFromPoSupplierId}
+            setFromPoType={setFromPoType}
+            handleClose={handleClose}
+            taxTypeList={taxTypeList}
+            gsmList={gsmList}
+          />
+        </div>
+
+      ) : (
+        <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
+          <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
+
+            <h1 className="text-lg font-bold text-gray-800">              Material Issue Report
+            </h1>
+
             <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 py-1 rounded-md flex items-center gap-2 text-xs px-2"
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
               onClick={() => {
                 setShowForm(true);
                 onNew();
@@ -174,52 +212,16 @@ export default function Form() {
               <FaPlus /> Create New
             </button>
           </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <InternalRequestEntry
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            itemsPerPage={15}
-          />
+          <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
+            <IndentFormReport
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              itemsPerPage={15}
+            />
+          </div>
         </div>
-      </div>
-
-      {showForm && (
-        <PurchaseInwardForm
-          readOnly={readOnly}
-          setReadOnly={setReadOnly}
-          id={id}
-          setId={setId}
-          onClose={() => {
-            setShowForm(false);
-            setReadOnly((prev) => !prev);
-            setFromPoSupplierId("");   // ⬅️ clear on close
-            setFromPoId("");
-            setFromPoType("");
-          }}
-          setShowForm={setShowForm}
-          supplierList={supplierList}
-          branchList={branchList}
-          uomList={uomList}
-          styleItemList={styleItemList}
-          itemGroupList={itemGroupList}
-          hsnList={hsnList}
-          onNew={onNew}
-          sizeList={sizeList}
-          colorList={colorList}
-          fromPoId={fromPoId}
-          fromPoSupplierId={fromPoSupplierId}
-          fromPoType={fromPoType}
-          setFromPoId={setFromPoId}
-          setFromPoSupplierId={setFromPoSupplierId}
-          setFromPoType={setFromPoType}
-          handleClose={handleClose}
-          taxTypeList={taxTypeList}
-          gsmList={gsmList}
-          dispatchInvalidate={dispatchInvalidate}
-        />
       )}
     </>
   );

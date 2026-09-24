@@ -260,6 +260,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-72",
+      enableSearch: true
+
     },
 
     {
@@ -267,6 +269,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-center uppercase w-16",
+
     },
 
 
@@ -451,6 +454,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onEdit={handleEdit}
           onDelete={deleteData}
           itemsPerPage={10}
+          enableSearch={true}
+
         />
       </div>
 

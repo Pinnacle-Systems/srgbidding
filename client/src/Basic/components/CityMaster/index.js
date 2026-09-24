@@ -299,21 +299,28 @@ export default function Form({
       header: "S.No",
       accessor: (item, index) => index + 1,
       className: "font-medium text-gray-900 w-12  text-center",
+
     },
     {
       header: "City Name",
       accessor: (item) => item?.name,
       className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
     },
     {
       header: "State Name",
       accessor: (item) => item?.state?.name,
       className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
     },
     {
       header: "Country Name",
       accessor: (item) => item?.state?.country?.name,
       className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
     },
 
     {
@@ -343,7 +350,7 @@ export default function Form({
   function countryFromState() {
     return state
       ? stateList?.data?.find((item) => item.id === parseInt(state))?.country
-          ?.name
+        ?.name
       : "";
   }
 

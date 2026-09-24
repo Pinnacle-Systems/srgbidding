@@ -20,12 +20,12 @@ import { Tooltip } from "@mui/material";
 import { Receipt, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
-import { Pagination } from "../../../Basic/components/Inputs";
+import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssue";
 
-const InternalRequestEntry = ({
+const IndentFormReport = ({
   onClick,
   onView,
-  itemsPerPage = 10,
+  itemsPerPage = 15,
   onEdit,
   onDelete,
   rowActions = true,
@@ -34,20 +34,27 @@ const InternalRequestEntry = ({
     sessionStorage.getItem("sessionId") + "currentBranchId",
   );
 
+  const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
+  const [searchDeliveryDate, setSearchDeliveryDate] = useState("");
   const [searchSupplier, setSearchSupplier] = useState("");
   const [searchInwardType, setSearchInwardType] = useState("");
 
+  const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
+  const [searchProjectValue, setSearchProjectValue] = useState("");
+  const [searchFollowedBy, setSearchFollowedBy] = useState("");
+  const dispatch = useDispatch();
 
-
+  const handleOnclick = (e) => {
+    setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
+  };
   const searchFields = {
-    serachDocNo: serachDocNo.toUpperCase(),
-    searchClientName: searchClientName.toUpperCase(),
+    serachDocNo,
     searchDate,
-    searchSupplier: searchSupplier.toUpperCase(),
+    searchSupplier,
     searchInwardType,
   };
 
@@ -61,41 +68,179 @@ const InternalRequestEntry = ({
     searchInwardType,
   ]);
 
+  const companyId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userCompanyId",
+  );
+  const params = {
+    branchId,
+    companyId,
+  };
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetPurchaseInwardEntryQuery({
+  } = useGetMaterialIssueQuery({
     params: {
       branchId,
       ...searchFields,
       pagination: true,
-      dataPerPage: itemsPerPage,
+      dataPerPage,
       pageNumber: currentPageNumber,
     },
   });
 
-
+  useEffect(() => {
+    if (allData?.totalCount) {
+      setTotalCount(allData?.totalCount);
+    }
+  }, [allData, isLoading, isFetching]);
 
   const isLoadingIndicator = isLoading || isFetching;
 
-
-
-  const totalPages = Math?.ceil((allData?.totalCount || 0) / parseInt(itemsPerPage));
-  const indexOfFirstItem = 0;
-  const indexOfLastItem = Math.min(currentPageNumber * parseInt(itemsPerPage), allData?.totalCount || 0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
+  const indexOfLastItem = currentPage * parseInt(15);
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
-
-
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPageNumber(1);
-      (newPage);
+      setCurrentPage(newPage);
     }
   };
+  const Pagination = () => {
+    // if (totalPages <= 1) return null;
 
+    return (
+      <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+          Showing {indexOfFirstItem + 1} to{" "}
+          {Math.min(indexOfLastItem, allData?.data?.length)} of{" "}
+          {allData?.length} entries
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-3 py-1 rounded-md ${currentPage === 1
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <FaChevronLeft className="inline" />
+          </button>
+
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                  ? "bg-indigo-800 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <span className="px-3 py-1">...</span>
+          )}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                ? "bg-indigo-800 text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              {totalPages}
+            </button>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <FaChevronRight className="inline" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const StatusBadge = ({ status }) => {
+    const config = {
+      Pending: {
+        bg: "bg-yellow-100",
+        text: "text-yellow-800",
+        border: "border-yellow-300",
+      },
+      "Not Billed": {
+        bg: "bg-indigo-100",
+        text: "text-indigo-800",
+        border: "border-indigo-300",
+      },
+      "Partially Billed": {
+        bg: "bg-blue-100",
+        text: "text-blue-800",
+        border: "border-blue-300",
+      },
+      "Fully Billed": {
+        bg: "bg-green-200",
+        text: "text-green-900",
+        border: "border-green-400",
+      },
+      "Partially Returned": {
+        bg: "bg-orange-100",
+        text: "text-orange-800",
+        border: "border-orange-300",
+      },
+      "Fully Returned": {
+        bg: "bg-red-100",
+        text: "text-red-800",
+        border: "border-red-300",
+      },
+      "Partially Billed & Returned": {
+        bg: "bg-purple-100",
+        text: "text-purple-800",
+        border: "border-purple-300",
+      },
+    };
+
+    const c = config[status] || {
+      bg: "bg-gray-100",
+      text: "text-gray-700",
+      border: "border-gray-300",
+    };
+
+    return (
+      <span
+        className={`px-2 py-0.5 rounded-full text-[11px] font-medium border whitespace-nowrap ${c.bg} ${c.text} ${c.border}`}
+      >
+        {status || "Unknown"}
+      </span>
+    );
+  };
 
   return (
     <div
@@ -113,7 +258,7 @@ const InternalRequestEntry = ({
                   </th>
 
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Inward No</div>
+                    <div>Issue No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -125,7 +270,7 @@ const InternalRequestEntry = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Inward Date</div>
+                    <div>Issue Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -137,7 +282,7 @@ const InternalRequestEntry = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-40">
-                    <div>Inward Type</div>
+                    <div>Production Type</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -235,7 +380,7 @@ const InternalRequestEntry = ({
                 </tbody>
               ) : (
                 <tbody className="border-2">
-                  {(currentItems ? currentItems : []).map(
+                  {(allData?.data ? allData?.data : []).map(
                     (dataObj, index) => (
                       <tr
                         onKeyDown={(e) => {
@@ -259,7 +404,7 @@ const InternalRequestEntry = ({
                           {getDateFromDateTimeToDisplay(dataObj.docDate)}
                         </td>
                         <td className="py-1.5 text-left  ">
-                          {dataObj.inwardType}{" "}
+                          {dataObj.productionType}{" "}
                         </td>
 
                         <td className="py-1.5 text-left">
@@ -267,8 +412,7 @@ const InternalRequestEntry = ({
                           {`${dataObj?.supplier?.name}${dataObj?.supplier?.BranchType?.name
                             ? ` / ${dataObj?.supplier?.BranchType?.name}`
                             : ""
-                            }${dataObj?.supplier?.City?.name ? ` / ${dataObj?.supplier?.City?.name}` : ""}`}
-                        </td>
+                            }${dataObj?.supplier?.City?.name ? ` / ${dataObj?.supplier?.City?.name}` : ""}`}                        </td>
                         {/* <td className="py-1.5 text-center">
                           <StatusBadge status={dataObj?.status} />
                         </td> */}
@@ -435,15 +579,7 @@ const InternalRequestEntry = ({
             </table>
           </div>
           <div className="h-[10vh]">
-            <Pagination
-              allData={allData}
-              currentPageNumber={currentPageNumber}
-              handlePageChange={handlePageChange}
-              totalPages={totalPages}
-              indexOfFirstItem={indexOfFirstItem}
-              indexOfLastItem={indexOfLastItem}
-
-            />
+            <Pagination />
           </div>
         </div>
       </>
@@ -451,4 +587,4 @@ const InternalRequestEntry = ({
   );
 };
 
-export default InternalRequestEntry;
+export default IndentFormReport;

@@ -78,3 +78,5 @@ export { default as materialIssue } from "./materialIssue.route.js";
 export { default as materialReturn } from "./materialReturn.route.js";
 export { default as line } from "./line.route.js";
 export { default as orderMaster } from "./orderMaster.route.js";
+export { default as materialMaster } from "./materialMaster.route.js";
+export { default as internalIndent } from "./internalIndent.route.js";

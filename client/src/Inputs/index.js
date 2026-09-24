@@ -16,6 +16,8 @@ import {
   FaInfoCircle,
   FaPlus,
   FaSearch,
+  FaStepBackward,
+  FaStepForward,
   FaTrash,
 } from "react-icons/fa";
 import secureLocalStorage from "react-secure-storage";
@@ -33,6 +35,7 @@ import {
 } from "../Basic/components/Reuseable/gridNavigation";
 import { UserPermissions } from "../Utils/UserPermissions";
 import Swal from "sweetalert2";
+import { usePermissionForUsers } from "../Basic/components/HasPermission";
 
 const FORM_LABEL_CLASS = "block text-[11px] font-bold text-slate-700 mb-1";
 const FORM_LABEL_MUTED_CLASS = "block text-[11px] font-bold text-gray-600 mb-1";
@@ -1632,24 +1635,55 @@ export const DropdownInputNew = forwardRef(
 export const ReusableTable = ({
   columns,
   data,
-  itemsPerPage = 10,
   onView,
   onEdit,
   onDelete,
-  emptyStateMessage = "No data available",
+  emptyStateMessage = 'No data available',
   rowActions = true,
+  itemsPerPage = 15,
   width,
-  childRecordLabel = "", // New prop with default value
+  childRecordLabel = "",
+  heightClass = "h-[calc(100%-0.75rem)]",
+  printData,
+  enableSearch,
+  enableExcel
 }) => {
+
   const [currentPage, setCurrentPage] = useState(1);
+  const [columnFilters, setColumnFilters] = useState({});
+  const [currentItemsPerPage, setCurrentItemsPerPage] = useState(itemsPerPage === 15 ? 16 : itemsPerPage);
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  const filteredData = data?.filter(item => {
+    const matchesColumns = Object.keys(columnFilters).every(colHeader => {
+      const filterVal = columnFilters[colHeader];
+      if (!filterVal) return true;
+
+      const column = columns.find(c => c.header === colHeader);
+      if (!column) return true;
+
+      const value = column.accessor(item);
+      return String(value || "").toLowerCase().includes(filterVal.toLowerCase());
+    });
+
+    if (!matchesColumns) return false;
+
+    if (statusFilter === 'Active') return item.active === true || item.active === 'Y' || item.active === 'Yes';
+    if (statusFilter === 'Inactive') return item.active === false || item.active === 'N' || item.active === 'No' || !item.active;
+
+    return true;
+  }) || [];
+
+  const totalPages = Math?.ceil(filteredData?.length / currentItemsPerPage);
+  const indexOfLastItem = currentPage * currentItemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - currentItemsPerPage;
+  const currentItems = filteredData?.slice(indexOfFirstItem, indexOfLastItem);
   const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
-  const totalPages = Math?.ceil(data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
 
-  const { hasPermission } = UserPermissions();
+  const { hasPermission } = usePermissionForUsers()
+
+  // console.log(hasPermission, "permission")
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -1659,19 +1693,82 @@ export const ReusableTable = ({
 
   const Pagination = () => {
     return (
-      <div className=" w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
-        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to{" "}
-          {Math.min(indexOfLastItem, data?.length)} of {data?.length} entries
+      <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
+        <div className="mb-2 text-sm text-gray-600 sm:mb-0 flex items-center gap-2">
+          <span>Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries</span>
+          <select
+            value={currentItemsPerPage}
+            onChange={(e) => {
+              setCurrentItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded px-1 py-0.5 text-sm outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value={16}>16</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={500}>500</option>
+
+          </select>
+          {enableExcel && (
+            <button
+              onClick={() => {
+                const excelData = (filteredData || []).map((item) => {
+                  const rowData = {};
+                  columns.forEach((col) => {
+                    if (col.header) {
+                      let val = "";
+                      if (typeof col.exportAccessor === "function") {
+                        val = col.exportAccessor(item);
+                      } else if (typeof col.accessor === "function") {
+                        val = col.accessor(item);
+                        if (React.isValidElement(val)) {
+                          if (col.header.toLowerCase() === "status") {
+                            val = item.active ? "Active" : "Inactive";
+                          } else {
+                            val = "";
+                          }
+                        } else if (Array.isArray(val)) {
+                          val = val.join(", ");
+                        } else if (val && typeof val === "object") {
+                          val = "";
+                        }
+                      }
+                      rowData[col.header] = val;
+                    }
+                  });
+                  return rowData;
+                });
+                exportFileToCsv("Export", excelData, "Master_Export", "Pinnacle");
+              }}
+              className="ml-2 px-2 py-0.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center gap-1"
+            >
+              <FaFileExcel />
+              Export
+            </button>
+          )}
+
         </div>
         <div className="flex gap-1">
           <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="First Page"
+          >
+            <FaStepBackward size={12} className="inline" />
+          </button>
+          <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md ${currentPage === 1
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-600 hover:bg-gray-100"
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
+            title="Previous Page"
           >
             <FaChevronLeft className="inline" />
           </button>
@@ -1692,9 +1789,9 @@ export const ReusableTable = ({
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
-                className={`px-3 py-1 rounded-md ${currentPage === pageNum
-                  ? "bg-indigo-800 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-100"
+                className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === pageNum
+                  ? 'bg-indigo-800 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
                   }`}
               >
                 {pageNum}
@@ -1703,15 +1800,15 @@ export const ReusableTable = ({
           })}
 
           {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-3 py-1">...</span>
+            <span className="px-2 py-1">...</span>
           )}
 
           {totalPages > 5 && currentPage < totalPages - 2 && (
             <button
               onClick={() => handlePageChange(totalPages)}
-              className={`px-3 py-1 rounded-md ${currentPage === totalPages
-                ? "bg-indigo-800 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100"
+              className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                ? 'bg-indigo-800 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
             >
               {totalPages}
@@ -1721,25 +1818,40 @@ export const ReusableTable = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md ${currentPage === totalPages
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-600 hover:bg-gray-100"
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
+            title="Next Page"
           >
             <FaChevronRight className="inline" />
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Last Page"
+          >
+            <FaStepForward size={12} className="inline" />
           </button>
         </div>
       </div>
     );
   };
 
+
+
   return (
     <>
-      <div className="bg-[#F1F1F0] shadow-sm h-[69vh]">
-        <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
-            <table className="">
-              <thead className="bg-gray-200 text-gray-800">
+      <div className="bg-[#F1F1F0] shadow-sm h-[79vh]">
+        <div className={`flex min-h-0 flex-col overflow-hidden bg-[#F1F1F0] h-[100vh]  ${heightClass}`}>
+          <div className="min-h-0 flex-1 overflow-auto h-[68vh]">
+            <table className="table-auto">
+              <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
+
                 <tr>
                   {columns?.map((column, index) => (
                     <th
@@ -1750,26 +1862,65 @@ export const ReusableTable = ({
                       {column.header}
                     </th>
                   ))}
+
                   {rowActions && (
                     <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
                       ACTIONS
                     </th>
                   )}
                 </tr>
+                {(enableSearch || columns?.some(c => c.header === "Status")) && (
+                  <tr>
+                    {columns?.map((column, index) => (
+                      <th key={`search-${index}`} className={`px-2 py-1 ${column.header !== "" ? "border-r border-white/50" : ""}`}>
+                        {column.header === "Status" ? (
+                          <select
+                            className="w-full text-[12px] font-normal px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500 bg-white"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                          >
+                            <option value="All">All</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                        ) : column.enableSearch && (
+                          <input
+                            type="text"
+                            placeholder="Search..."
+                            className="w-full text-[12px] font-normal uppercase px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500"
+                            value={columnFilters[column.header] || ""}
+                            onChange={(e) => {
+                              e.preventDefault()
+                              setColumnFilters((prev) => ({
+                                ...prev,
+                                [column.header]: e.target.value,
+                              }))
+                            }}
+                          />
+                        )}
+                      </th>
+                    ))}
+                    {rowActions && <th></th>}
+                  </tr>
+                )}
+
+
+
+
+
               </thead>
               <tbody>
                 {currentItems?.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={columns?.length + (rowActions ? 1 : 0)}
-                      className="px-4 py-4 text-center text-gray-500"
-                    >
+                    <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
                       {emptyStateMessage}
                     </td>
                   </tr>
                 ) : (
                   currentItems?.map((item, index) => {
-                    const hasChildRecords = item?.childRecord > 0;
+
+                    const hasChildRecords = childRecordCount(item?._count) > 0
+
 
                     return (
                       <tr
@@ -1777,12 +1928,13 @@ export const ReusableTable = ({
                         className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                           }`}
                       >
+
                         {columns?.map((column, colIndex) => (
                           <td
                             key={colIndex}
-                            className={` ${column.className ? column.className : ""} ${column.header !== "" ? "border-r border-white/50" : ""} h-7 px-1.5`}
+                            className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
                           >
-                            {column.accessor(item, index)}
+                            {column.accessor(item, indexOfFirstItem + index)}
                           </td>
                         ))}
                         {rowActions && (
@@ -1791,82 +1943,36 @@ export const ReusableTable = ({
                               {onView && (
                                 <button
                                   className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                  onClick={() =>
-                                    hasPermission(() => onView(item.id), "read")
-                                  }
-                                // onClick={() => onView(item.id)}
+                                  onClick={() => hasPermission(() => onView(item.id), "read")}
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                      clipRule="evenodd"
-                                    />
+                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                                   </svg>
                                 </button>
                               )}
                               {onEdit && (
                                 <button
                                   className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                  onClick={() =>
-                                    hasPermission(() => onEdit(item.id), "edit")
-                                  }
-                                // onClick={() => onEdit(item.id)}
+                                  onClick={() => hasPermission(() => onEdit(item.id), "edit")}
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                   </svg>
                                 </button>
                               )}
-                              {onDelete && (
-                                <div
-                                  className="relative inline-block"
-                                  onMouseEnter={() =>
-                                    setHoveredDeleteId(item.id)
-                                  }
-                                  onMouseLeave={() => setHoveredDeleteId(null)}
-                                >
+                              <div className="relative inline-block"
+                                onMouseEnter={() =>
+                                  setHoveredDeleteId(item.id)
+                                }
+                                onMouseLeave={() => setHoveredDeleteId(null)}
+                              >
+                                {onDelete && (
                                   <button
-                                    className={`text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded transition-opacity ${hasChildRecords
-                                      ? "opacity-40 cursor-not-allowed"
-                                      : "hover:bg-red-100"
-                                      }`}
-                                    // cursor-pointer
-                                    // onClick={() => {
-                                    //   if (!hasChildRecords) {
-                                    //     hasPermission(
-                                    //       () =>
-                                    //         onDelete(
-                                    //           item.id,
-                                    //           item?.childRecord,
-                                    //         ),
-                                    //       "delete",
-                                    //       item?.childRecord,
-                                    //     );
-                                    //   }
-                                    // }}
-                                    onClick={() => {
-                                      // if (!hasChildRecords) {
-                                      //   onDelete(item.id, item?.childRecord);
-                                      // }
-                                      hasPermission(
-                                        () =>
-                                          onDelete(item.id, item?.childRecord),
-                                        "delete",
-                                        item?.childRecord,
-                                      );
-                                    }}
+                                    className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
+                                    onClick={() =>
+                                      hasPermission(() => onDelete(item.id), "delete", item?._count)
+                                    }
                                     disabled={hasChildRecords}
                                   >
                                     <svg
@@ -1882,44 +1988,63 @@ export const ReusableTable = ({
                                       />
                                     </svg>
                                   </button>
+                                )}
+                                {console.log(childRecordCount(item?._count > 0), "childRecord")}
+                                {hasChildRecords &&
+                                  hoveredDeleteId === item.id && (
+                                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
+                                      Cannot delete. Child records exist.
+                                      {/* <span className="font-semibold">
+                                        {item?.referencedIn ? "in " + item?.referencedIn : ""}
+                                      </span>
+                                      . Please Remove them First.
+                                      <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
+                                        <div className="border-4 border-transparent border-r-gray-900"></div>
+                                      </div> */}
+                                    </div>
+                                  )}
 
-                                  {/* Tooltip */}
-                                  {hasChildRecords &&
-                                    hoveredDeleteId === item.id && (
-                                      <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg whitespace-nowrap z-50">
-                                        Cannot Delete{" "}
-                                        <span className="font-semibold">
-                                          {childRecordLabel
-                                            ? "in " + childRecordLabel
-                                            : ""}
-                                        </span>
-                                        . Child records exist.
-                                        {/* Arrow */}
-                                        <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
-                                          <div className="border-4 border-transparent border-r-gray-900"></div>
-                                        </div>
-                                      </div>
-                                    )}
-                                </div>
+                              </div>
+                              {printData && (
+                                <button
+                                  className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                  onClick={() => hasPermission(() => printData(item.id), "edit")}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                  </svg>
+                                </button>
                               )}
                             </div>
                           </td>
                         )}
                       </tr>
-                    );
-                  })
+                    )
+
+                  }
+
+
+                  )
                 )}
               </tbody>
             </table>
           </div>
+          <div className="shrink-0 bg-white">
+            <Pagination />
+          </div>
         </div>
       </div>
-      <div className="h-[10vh]">
-        <Pagination />
-      </div>
     </>
+
+
+
+
+
   );
 };
+
 
 export const ToggleButton = forwardRef(
   (
@@ -4087,3 +4212,10 @@ export const DropdownNew = forwardRef(
     );
   },
 );
+
+
+export function childRecordCount(count) {
+  if (!count) return false
+  return Object.values(count).some(v => v > 0);
+
+}

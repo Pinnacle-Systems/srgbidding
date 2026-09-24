@@ -77,3 +77,5 @@ export const MATERIAL_ISSUE = "materialIssue";
 export const MATERIAL_RETURN = "materialReturn";
 export const ORDER_MASTER_API = "orderMaster";
 export const LINE_MASTER_API = "lineMaster";
+export const MATERIAL_MASTER_API = "materialMaster";
+export const INTERNAL_INDENT_API = "indent";

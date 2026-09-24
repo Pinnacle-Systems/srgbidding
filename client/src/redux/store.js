@@ -51,6 +51,7 @@ import {
   ItemMasterApi,
   OrderMasterApi,
   LineMasterApi,
+  MaterialMasterApi,
 } from "./services";
 import paymentApi from "./services/PaymentService";
 import StyleMasterApi from "./services/StyleMasterService";
@@ -154,7 +155,8 @@ const commonReducers = {
   MaterialIssue: MaterialIssueApi.reducer,
   MaterialReturn: MaterialReturnApi.reducer,
   OrderMaster: OrderMasterApi.reducer,
-  LineMaster: LineMasterApi.reducer
+  LineMaster: LineMasterApi.reducer,
+  MaterialMaster: MaterialMasterApi.reducer,
 
 };
 const commonMiddleware = [
@@ -231,7 +233,8 @@ const commonMiddleware = [
   MaterialIssueApi.middleware,
   MaterialReturnApi.middleware,
   OrderMasterApi.middleware,
-  LineMasterApi.middleware
+  LineMasterApi.middleware,
+  MaterialMasterApi.middleware
 ];
 
 const store = configureStore({

@@ -81,6 +81,8 @@ import {
   materialReturn,
   line,
   orderMaster,
+  materialMaster,
+  internalIndent,
 } from "./src/routes/index.js";
 import { setIo } from "./src/utils/notificationHelper.js";
 import { socketMain } from "./src/sockets/socket.js";
@@ -198,6 +200,8 @@ app.use("/materialIssue", materialIssue);
 app.use("/materialReturn", materialReturn);
 app.use("/lineMaster", line);
 app.use("/orderMaster", orderMaster);
+app.use("/materialMaster", materialMaster);
+app.use("/indent", internalIndent);
 
 
 

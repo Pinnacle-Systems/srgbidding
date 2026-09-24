@@ -284,6 +284,7 @@ export default function Form({
       header: "S.No",
       accessor: (item, index) => index + 1,
       className: "font-medium text-gray-900 w-12  text-center",
+
     },
 
     {
@@ -291,6 +292,8 @@ export default function Form({
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-96",
+      enableSearch: true
+
     },
 
     {

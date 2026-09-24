@@ -135,6 +135,8 @@ model Branch {
   MaterialReturn        MaterialReturn[]
   LineMaster            LineMaster[]
   Order                 Order[]
+  Material              Material[]
+  Indent                Indent[]
 }
 
 model UserOnBranch {
@@ -241,6 +243,8 @@ model User {
   MaterialIssueUpdatedBy   MaterialIssue[]      @relation(name: "updatedBy")
   MaterialReturnCreatedBy  MaterialReturn[]     @relation(name: "createdBy")
   MaterialReturnUpdatedBy  MaterialReturn[]     @relation(name: "updatedBy")
+  IndentCreatedBy          Indent[]             @relation(name: "createdBy")
+  IndentUpdatedBy          Indent[]             @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -297,6 +301,7 @@ model Employee {
   Stock           Stock[]
   MaterialIssue   MaterialIssue[]
   MaterialReturn  MaterialReturn[]
+  Indent          Indent[]
 }
 
 model FinYear {
@@ -375,6 +380,7 @@ model Department {
   Stock              Stock[]
   MaterialIssue      MaterialIssue[]
   MaterialReturn     MaterialReturn[]
+  Indent             Indent[]
 }
 
 enum PageType {
@@ -653,6 +659,7 @@ model Uom {
   salesDeliveryItems     SalesDeliveryItems[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
+  IndentItems            IndentItems[]
 }
 
 model ProductUomPriceDetails {
@@ -1092,6 +1099,7 @@ model Color {
   JobCards               JobCard[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
+  IndentItems            IndentItems[]
 }
 
 model DeliveryInvoice {
@@ -1247,6 +1255,7 @@ model Hsn {
   Item                   Item[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
+  IndentItems            IndentItems[]
 }
 
 model BranchType {
@@ -1696,6 +1705,7 @@ model Size {
   salesSizeBreakups      SalesSizeBreakup[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
+  IndentItems            IndentItems[]
 }
 
 model Gsm {
@@ -1715,8 +1725,8 @@ model Gsm {
   orderItems             OrderItems[]
   proformaInvoiceItems   ProformaInvoiceItem[]
   boardQualities         BoardQuality[]
-
-  jobCards JobCard[]
+  IndentItems            IndentItems[]
+  jobCards               JobCard[]
 }
 
 model Item {
@@ -1727,12 +1737,15 @@ model Item {
   itemGroupId         Int?
   Hsn                 Hsn?                  @relation(fields: [hsnId], references: [id], onDelete: Cascade)
   hsnId               Int?
+  Material            Material?             @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  materialId          Int?
   InwardItems         InwardItems[]
   PurchaseReturnItems PurchaseReturnItems[]
   Stock               Stock[]
   active              Boolean?              @default(false)
   MaterialIssueItems  MaterialIssueItems[]
   MaterialReturnItems MaterialReturnItems[]
+  IndentItems         IndentItems[]
 }
 
 model ItemGroup {
@@ -1755,6 +1768,7 @@ model ItemGroup {
   Item                   Item[]
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
+  IndentItems            IndentItems[]
 }
 
 model SizeTemplate {
@@ -2875,4 +2889,58 @@ model LineMaster {
   active      Boolean? @default(false)
   branchId    Int?
   Branch      Branch?  @relation(fields: [branchId], references: [id])
+}
+
+model Material {
+  id       Int      @id @default(autoincrement())
+  name     String?
+  active   Boolean? @default(false)
+  branchId Int?
+  Branch   Branch?  @relation(fields: [branchId], references: [id])
+  Item     Item[]
+}
+
+model Indent {
+  id           Int           @id @default(autoincrement())
+  docId        String
+  docDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdById  Int?
+  updatedBy    User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById  Int?
+  Branch       Branch?       @relation(fields: [branchId], references: [id])
+  branchId     Int?
+  departmentId Int?
+  Department   Department?   @relation(fields: [departmentId], references: [id])
+  employeeId   Int?
+  Employee     Employee?     @relation(fields: [employeeId], references: [id])
+  Priority     String?
+  reason       String?
+  remark       String?
+  requiredDate DateTime?
+  IndentItems  IndentItems[]
+}
+
+model IndentItems {
+  id          Int        @id @default(autoincrement())
+  Indent      Indent?    @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  indentId    Int?
+  Itemgroup   ItemGroup? @relation(fields: [itemGroupId], references: [id])
+  itemGroupId Int?
+  Item        Item?      @relation(fields: [itemId], references: [id])
+  itemId      Int?
+  Size        Size?      @relation(fields: [sizeId], references: [id])
+  sizeId      Int?
+  Color       Color?     @relation(fields: [colorId], references: [id])
+  colorId     Int?
+  Uom         Uom?       @relation(fields: [uomId], references: [id])
+  uomId       Int?
+  Hsn         Hsn?       @relation(fields: [hsnId], references: [id])
+  hsnId       Int?
+  Gsm         Gsm?       @relation(fields: [gsmId], references: [id])
+  gsmId       Int?
+  price       String?
+  qty         String?
 }

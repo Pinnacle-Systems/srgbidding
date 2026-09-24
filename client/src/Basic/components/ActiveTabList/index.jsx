@@ -93,7 +93,8 @@ import {
   OrderMaster,
   LineMaster,
   OrdersReport,
-  InternalRequestEntry,
+  MaterialMaster,
+  InternalIndentForm,
 } from "../../../HostelStore/Components";
 
 const ActiveTabList = () => {
@@ -191,7 +192,8 @@ const ActiveTabList = () => {
     "ORDER MASTER": <OrderMaster />,
     "LINE MASTER": <LineMaster />,
     "ORDERS REPORT": <OrdersReport />,
-    "INTERNAL REQUEST ENTRY": <InternalRequestEntry />,
+    "INTERNAL REQUISITION ENTRY": <InternalIndentForm />,
+    "MATERIAL MASTER": <MaterialMaster />,
 
 
   };

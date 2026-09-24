@@ -330,13 +330,13 @@ export default function Form({
       accessor: (item) =>
         `${item.Location?.branchName ? ` ${item.Location.branchName} /` : ""} ${item.storeName}`,
       className: "font-medium text-gray-900  w-[250px]  py-1  px-2",
-      search: "Location Name",
+      enableSearch: true
+
     },
     {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
       className: "font-medium text-gray-900 text-center w-[10px] py-1",
-      search: "",
     },
   ];
 

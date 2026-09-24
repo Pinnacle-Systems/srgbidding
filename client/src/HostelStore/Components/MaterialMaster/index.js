@@ -1,32 +1,32 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import secureLocalStorage from "react-secure-storage";
-import {
-  useGetEmployeeCategoryQuery,
-  useGetEmployeeCategoryByIdQuery,
-  useAddEmployeeCategoryMutation,
-  useUpdateEmployeeCategoryMutation,
-  useDeleteEmployeeCategoryMutation,
-} from "../../../redux/services/EmployeeCategoryMasterService";
-import FormHeader from "../FormHeader";
-import FormReport from "../FormReportTemplate";
+
+import FormHeader from "../../../Basic/components/FormHeader";
+import FormReport from "../../../Basic/components/FormReportTemplate";
 import { toast } from "react-toastify";
 import {
   TextInput,
   CheckBox,
   ReusableTable,
-  TextInputNew,
   ToggleButton,
   TextInputNew1,
 } from "../../../Inputs";
-import ReportTemplate from "../ReportTemplate";
+import ReportTemplate from "../../../Basic/components/ReportTemplate";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
+import {
+  useAddHsnMasterMutation,
+  useDeleteHsnMasterMutation,
+  useGetHsnMasterByIdQuery,
+  useGetHsnMasterQuery,
+  useLazyGetHsnMasterByIdQuery,
+  useUpdateHsnMasterMutation,
+} from "../../../redux/services/HsnMasterServices";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { UserPermissions } from "../../../Utils/UserPermissions";
-
-const MODEL = "Employee Category Master";
+import { useAddMaterialMasterMutation, useDeleteMaterialMasterMutation, useGetMaterialMasterByIdQuery, useGetMaterialMasterQuery, useUpdateMaterialMasterMutation } from "../../../redux/services/MaterialMasterServices";
 
 export default function Form({
   onSuccess,
@@ -40,8 +40,8 @@ export default function Form({
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState(editId || deleteId || "");
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [active, setActive] = useState(true);
+  const [tax, setTax] = useState("");
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
 
   const [searchValue, setSearchValue] = useState("");
@@ -52,20 +52,21 @@ export default function Form({
       sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
-  const {
-    data: allData,
-    isLoading,
-    isFetching,
-  } = useGetEmployeeCategoryQuery({ params, searchParams: searchValue });
+  const { data: allData } = useGetMaterialMasterQuery({
+    params,
+    searchParams: searchValue,
+  });
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetEmployeeCategoryByIdQuery(id, { skip: !id });
+  } = useGetMaterialMasterByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddEmployeeCategoryMutation();
-  const [updateData] = useUpdateEmployeeCategoryMutation();
-  const [removeData] = useDeleteEmployeeCategoryMutation();
+  const [trigger, { data: LazyData }] = useLazyGetHsnMasterByIdQuery();
+
+  const [addData] = useAddMaterialMasterMutation();
+  const [updateData] = useUpdateMaterialMasterMutation();
+  const [removeData] = useDeleteMaterialMasterMutation();
 
   const { hasPermission } = UserPermissions();
   const handleCreate = () => {
@@ -79,25 +80,31 @@ export default function Form({
     (data) => {
       // if (id) setReadOnly(true);
       setName(data?.name ? data.name : "");
-      setCode(data?.code ? data.code : "");
       setActive(id ? (data?.active ? data.active : false) : true);
+      setTax(data?.tax ? data?.tax : "");
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id],
   );
+  const {
+    firstInputRef: countryNameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   const data = {
+    id,
     name,
-    code,
+    tax,
     active,
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
-    id,
   };
 
   const validateData = (data) => {
@@ -110,16 +117,17 @@ export default function Form({
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId("");
-      syncFormWithDb(undefined);
       if (onSuccess) {
         await Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
         });
-        onSuccess(returnData.data.id);
+        onSuccess(returnData?.data.id);
         return;
       }
+      setId("");
+      syncFormWithDb(undefined);
+
       if (nextProcess == "new") {
         syncFormWithDb(undefined);
         onNew();
@@ -129,7 +137,7 @@ export default function Form({
         syncFormWithDb(undefined);
       }
       Swal.fire({
-        title: text + "  " + "Successfully",
+        title: `${text}  Successfullty`,
         icon: "success",
       });
     } catch (error) {
@@ -140,8 +148,8 @@ export default function Form({
   const saveData = (nextProcess) => {
     if (!validateData(data)) {
       Swal.fire({
-        text: "Please fill all required fields...!",
-        icon: "warning",
+        title: "Please fill all required fields...!",
+        icon: "error",
         didClose: () => {
           countryNameRef?.current?.focus();
         },
@@ -151,15 +159,24 @@ export default function Form({
     let foundItem;
     if (id) {
       foundItem = allData?.data
-        ?.filter((i) => i.id != id)
-        ?.some((item) => item.name === name);
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
+        );
     } else {
-      foundItem = allData?.data?.some((item) => item.name === name);
+      foundItem = allData?.data?.some(
+        (item) =>
+          item.name?.trim().toLowerCase() === name?.trim().toLowerCase(),
+      );
     }
+
     if (foundItem) {
       Swal.fire({
-        text: "The Employee Category Name already exists.",
+        text: "The Material Name already exists.",
         icon: "warning",
+        timer: 1500,
+        // showConfirmButton: false,
         didClose: () => {
           countryNameRef?.current?.focus();
         },
@@ -179,27 +196,36 @@ export default function Form({
   };
 
   const deleteData = async (id, childRecord) => {
+    const { data } = await trigger(id);
+    if (childRecord) {
+      Swal.fire({
+        icon: "error",
+        title: "Child record Exists",
+      });
+      return;
+    }
     if (id) {
-      if (childRecord) {
-        Swal.fire({
-          title: "Child Record Exists",
-          icon: "error",
-        });
-        return;
-      }
       if (!window.confirm("Are you sure to delete...?")) {
         return;
       }
-      try {
-        await removeData(id);
-        setId("");
+      if (data?.data?.childRecord > 0) {
         Swal.fire({
-          title: "Deleted" + "  " + "Successfully",
-          icon: "success",
+          icon: "error",
+          title: "Child record Exists",
+          text: "Data cannot be deleted!",
         });
-        syncFormWithDb(undefined);
-      } catch (error) {
-        toast.error("something went wrong");
+      } else {
+        try {
+          await removeData(id);
+          setId("");
+          Swal.fire({
+            title: "Deleted" + "  " + "Successfully",
+            icon: "success",
+          });
+          syncFormWithDb(undefined);
+        } catch (error) {
+          toast.error("something went wrong");
+        }
       }
     }
   };
@@ -214,41 +240,51 @@ export default function Form({
 
   const onNew = () => {
     setId("");
-    setReadOnly(false);
     setForm(true);
     setSearchValue("");
     syncFormWithDb(undefined);
+    setReadOnly(false);
+    setTax("");
   };
 
   function onDataClick(id) {
     setId(id);
     setForm(true);
   }
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
 
-  const tableHeaders = ["Code", "Name", "Status"];
-  const tableDataNames = [
-    "dataObj.code",
-    "dataObj.name",
-    "dataObj.active ? ACTIVE : INACTIVE",
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+
+    {
+      header: "hsn",
+      accessor: (item) => item?.name,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-left uppercase w-72",
+      enableSearch: true
+
+    },
+
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-16",
+    },
   ];
-
-  // if (!form)
-  //     return (
-  //         <ReportTemplate
-  //             heading={MODEL}
-  //             tableHeaders={tableHeaders}
-  //             tableDataNames={tableDataNames}
-  //             loading={
-  //                 isLoading || isFetching
-  //             }
-  //             setForm={setForm}
-  //             data={allData?.data}
-  //             onClick={onDataClick}
-  //             onNew={onNew}
-  //             searchValue={searchValue}
-  //             setSearchValue={setSearchValue}
-  //         />
-  //     );
 
   const handleView = (id) => {
     setId(id);
@@ -263,88 +299,38 @@ export default function Form({
     console.log("Edit");
   };
 
-  const ACTIVE = (
-    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
-      <Power size={10} />
-    </div>
-  );
-  const INACTIVE = (
-    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
-      <Power size={10} />
-    </div>
-  );
-  const columns = [
-    {
-      header: "S.No",
-      accessor: (item, index) => index + 1,
-      className: "font-medium text-gray-900 w-12  text-center",
-    },
-
-    {
-      header: "Employee Category Name",
-      accessor: (item) => item?.name,
-      //   cellClass: () => "font-medium  text-gray-900",
-      className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
-      enableSearch: true
-
-    },
-
-    {
-      header: "Status",
-      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
-      //   cellClass: () => "font-medium text-gray-900",
-      className: "font-medium text-gray-900 text-center uppercase w-16",
-    },
-  ];
-
-  const {
-    firstInputRef: countryNameRef,
-    toggleButtonRef,
-    saveCloseButtonRef,
-    saveNewButtonRef,
-  } = refs;
-
-  useEffect(() => {
-    if ((form || onSuccess) && countryNameRef.current) {
-      countryNameRef.current.focus();
-    }
-  }, [form, onSuccess]);
-
   const formBody = (
-    <div className="flex-1 p-3 ">
-      <div className="grid grid-cols-1  gap-3  h-full ">
-        <div className="lg:col-span-2 space-y-3">
+    <div className="flex-1 p-3">
+      <div className="grid grid-cols-1  gap-3  h-full">
+        <div className="lg:col-span- space-y-3">
           <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-            <div className="grid grid-cols-2  gap-3 ">
-              <TextInputNew1
-                name="Category Name"
-                type="text"
-                value={name}
-                setValue={setName}
-                required={true}
-                readOnly={readOnly}
-                disabled={childRecord.current > 0}
-                ref={countryNameRef}
-              />
+            <div className="space-y-4 ">
+              <fieldset className=" rounded mt-2">
 
-              <TextInputNew
-                name="Code"
-                type="text"
-                value={code}
-                setValue={setCode}
-                readOnly={readOnly}
-                disabled={childRecord.current > 0}
-              />
-              <ToggleButton
-                name="Status"
-                options={statusDropdown}
-                value={active}
-                setActive={setActive}
-                required={true}
-                readOnly={readOnly}
-                ref={toggleButtonRef}
-                onKeyDown={handlers.handleToggleKeyDown}
-              />
+                <div className="grid grid-cols-3 my-2 gap-5">
+                  <TextInputNew1
+                    name="Name"
+                    type="text"
+                    value={name}
+                    setValue={setName}
+                    required={true}
+                    readOnly={readOnly}
+                    disabled={childRecord.current > 0}
+                    ref={countryNameRef}
+                  />
+
+                </div>
+                <ToggleButton
+                  name="Status"
+                  options={statusDropdown}
+                  value={active}
+                  setActive={setActive}
+                  required={true}
+                  readOnly={readOnly}
+                  ref={toggleButtonRef}
+                  onKeyDown={handlers.handleToggleKeyDown}
+                />
+              </fieldset>
             </div>
           </div>
         </div>
@@ -352,24 +338,36 @@ export default function Form({
     </div>
   );
 
+  useEffect(() => {
+    if ((form || onSuccess) && countryNameRef.current) {
+      countryNameRef.current.focus();
+    }
+  }, [form, onSuccess]);
+
   if (deleteId) {
     const childCount = singleData?.data?.childRecord ?? 0;
     const isLoadingRecord = isSingleFetching || isSingleLoading;
 
     const handleConfirmDelete = async () => {
       try {
-        await removeData(deleteId).unwrap();
+        const res = await removeData(deleteId).unwrap();
+        if (res?.statusCode === 1) {
+          toast.error(
+            res?.data?.message || "Cannot delete: child records exist",
+          );
+          return;
+        }
         toast.success("Deleted successfully");
         onSuccess?.();
       } catch (err) {
-        toast.error(err?.data?.message || "Delete failed");
+        toast.error(err?.data?.message || "Failed to delete");
       }
     };
 
     return (
       <div className="min-h-[250px] flex flex-col bg-gray-200">
-        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center bg-white">
-          <h2 className="text-lg font-semibold">Delete Employee Category</h2>
+        <div className="border-b py-2 px-4 mx-3 mt-4 bg-white">
+          <h2 className="text-lg font-semibold">Delete Material</h2>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded mb-3">
@@ -426,7 +424,7 @@ export default function Form({
       >
         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
           <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-            {editId ? "Edit Employee Category" : "Add New Employee Category"}
+            {editId ? "Edit Material" : "Add New Material"}
           </h2>
           <button
             type="button"
@@ -446,71 +444,20 @@ export default function Form({
   }
 
   return (
-    // <div
-    //     onKeyDown={handleKeyDown}
-    //     className="md:items-start md:justify-items-center grid h-full bg-theme"
-    // >
-    //     <div className="flex flex-col frame w-full h-full">
-    //         <FormHeader
-    //             onNew={onNew}
-    //             onClose={() => {
-    //                 setForm(false);
-    //                 setSearchValue("");
-    //             }}
-    //             model={MODEL}
-    //             saveData={saveData}
-    //             setReadOnly={setReadOnly}
-    //             deleteData={deleteData}
-
-    //         />
-    //         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
-    //             <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
-    //                 <div className='col-span-3 grid md:grid-cols-2 border overflow-auto'>
-    //                     <div className='mr-1 md:ml-2'>
-    //                         <fieldset className='frame my-1'>
-    //                             <legend className='sub-heading'>Employee Category Info</legend>
-    //                             <div className='grid grid-cols-1 my-2'>
-    //                                 <TextInput name="Category Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-    //                                 <TextInput name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}/>
-    //                                 <CheckBox name="Active" readOnly={readOnly} value={active} setValue={setActive} />
-    //                             </div>
-    //                         </fieldset>
-    //                     </div>
-    //                 </div>
-    //             </div>
-    //             <div className="frame hidden md:block overflow-x-hidden">
-    //                 <FormReport
-    //                     searchValue={searchValue}
-    //                     setSearchValue={setSearchValue}
-    //                     setId={setId}
-    //                     tableHeaders={tableHeaders}
-    //                     tableDataNames={tableDataNames}
-    //                     data={allData?.data}
-    //                     loading={
-    //                         isLoading || isFetching
-    //                     }
-    //                 />
-    //             </div>
-    //         </div>
-    //     </div>
-    // </div>
-
-    <div onKeyDown={handleKeyDown} className="p-1">
+    <div onKeyDown={handleKeyDown} className="p-1 h-[87%]">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-lg font-bold text-gray-800">
-          Employee Category Master
-        </h5>
+        <h5 className="text-lg font-bold text-gray-800">Material Master</h5>
         <div className="flex items-center">
           <button
             onClick={handleCreate}
             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Employee Category
+            + Add New Material
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 ">
         <ReusableTable
           columns={columns}
           data={allData?.data}
@@ -526,22 +473,18 @@ export default function Form({
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[50%]"}
+            widthClass={"w-[40%] h-[300px]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);
               setId("");
             }}
           >
-            <div className="h-full flex flex-col bg-gray-200 ">
+            <div className="h-full flex flex-col bg-gray-200">
               <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
-                    {id
-                      ? !readOnly
-                        ? "Edit Employee Category  Master"
-                        : "Employee Category  Master"
-                      : "Add New Employee Category "}
+                    {id ? (!readOnly ? "Edit Material " : "Material ") : "Add New Material"}
                   </h2>
                 </div>
                 <div className="flex gap-2">
@@ -567,11 +510,11 @@ export default function Form({
                         onClick={() => {
                           saveData("close");
                         }}
-                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
-                  border border-blue-600 flex items-center gap-1 text-xs"
                         ref={saveCloseButtonRef} // ✅ Add ref
                         tabIndex={0}
                         onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                                                 border border-blue-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
                         {id ? "Update" : "Save & close"}
@@ -585,11 +528,11 @@ export default function Form({
                         onClick={() => {
                           saveData("new");
                         }}
-                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"
                         onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         ref={saveNewButtonRef} // ✅ Add ref
                         tabIndex={0}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                                                 border border-green-600 flex items-center gap-1 text-xs"
                       >
                         <Check size={14} />
                         {"Save & New"}

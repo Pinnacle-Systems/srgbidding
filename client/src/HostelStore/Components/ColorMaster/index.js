@@ -284,6 +284,8 @@ export default function Form({ onSuccess, defaultName = "" }) {
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
+      enableSearch: true
+
     },
 
     {

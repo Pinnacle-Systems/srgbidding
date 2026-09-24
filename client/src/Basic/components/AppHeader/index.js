@@ -21,7 +21,6 @@ import PageSearch from "./PageSearch";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
-  useLogout();
   const [hideNavBar, sethideNavBar] = useState(true);
 
   // Real-time approval notifications
@@ -74,6 +73,7 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
   //     sessionStorage.getItem("sessionId") + "defaultAdmin"
   //   )
   // );
+  useLogout();
 
   const retrieveAllowedPages = useCallback(() => {
     if (

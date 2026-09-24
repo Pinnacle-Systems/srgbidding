@@ -11,7 +11,7 @@ async function get(req) {
     include: {
       _count: {
         select: {
-          InwardItems: true,
+          IndentItems: true,
         },
       },
     },
@@ -20,13 +20,13 @@ async function get(req) {
     statusCode: 0,
     data: (data = data.map((item) => ({
       ...item,
-      childRecord: item?._count.InwardItems,
+      childRecord: item?._count.IndentItems,
     }))),
   };
 }
 
 async function getOne(id) {
-  const childRecordPo = await prisma.InwardItems.count({
+  const childRecordPo = await prisma.IndentItems.count({
     where: { itemId: parseInt(id) },
   });
   const childRecordInward = await prisma.MaterialIssueItems.count({
@@ -43,7 +43,7 @@ async function getOne(id) {
       Hsn: true,
     },
   });
-  if (!data) return NoRecordFound("styleItem");
+  if (!data) return NoRecordFound("Item");
   return {
     statusCode: 0,
     data: {
@@ -83,7 +83,7 @@ async function create(body) {
     sizeTemplateId,
     itemGroupId,
     itemSubGroupId,
-    gsmId,
+    materialId,
   } = await body;
   const data = await prisma.item.create({
     data: {
@@ -93,6 +93,7 @@ async function create(body) {
       code,
       hsnId: parseInt(hsnId) || null,
       itemGroupId: parseInt(itemGroupId) || null,
+      materialId: parseInt(materialId) || null,
       active: active ? Boolean(active) : false
     },
   });
@@ -110,7 +111,7 @@ async function update(id, body) {
     sizeTemplateId,
     itemGroupId,
     itemSubGroupId,
-    gsmId,
+    materialId,
   } = await body;
 
   const dataFound = await prisma.item.findUnique({
@@ -130,6 +131,7 @@ async function update(id, body) {
       code,
       hsnId: parseInt(hsnId) || null,
       itemGroupId: parseInt(itemGroupId) || null,
+      materialId: parseInt(materialId) || null,
       active: active ? Boolean(active) : false
     },
   });
