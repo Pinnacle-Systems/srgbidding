@@ -95,6 +95,15 @@ import {
   OrdersReport,
   MaterialMaster,
   InternalIndentForm,
+  YarnMaster,
+  CountMaster,
+  YarnBlendMaster,
+  FabricMaster,
+  YarnIndentForm,
+  FabricIndentForm,
+  DyesChemicalIndentForm,
+  GeneralIndentForm,
+  SparepartIndentForm,
 } from "../../../HostelStore/Components";
 
 const ActiveTabList = () => {
@@ -192,8 +201,17 @@ const ActiveTabList = () => {
     "ORDER MASTER": <OrderMaster />,
     "LINE MASTER": <LineMaster />,
     "ORDERS REPORT": <OrdersReport />,
-    "INTERNAL REQUISITION ENTRY": <InternalIndentForm />,
+    "INTERNAL INDENT FORM": <InternalIndentForm />,
     "MATERIAL MASTER": <MaterialMaster />,
+    "YARN MASTER": <YarnMaster />,
+    "YARN BLEND MASTER": <YarnBlendMaster />,
+    "FABRIC MASTER": <FabricMaster />,
+    "COUNTS MASTER": <CountMaster />,
+    "YARN INDENT FORM": <YarnIndentForm />,
+    "FABRIC INDENT FORM": <FabricIndentForm />,
+    "DYES/CHEMICAL INDENT FORM": <DyesChemicalIndentForm />,
+    "GENERAL INDENT FORM": <GeneralIndentForm />,
+    "SPAREPART INDENT FORM": <SparepartIndentForm />,
 
 
   };

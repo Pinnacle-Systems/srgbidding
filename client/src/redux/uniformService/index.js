@@ -15,3 +15,7 @@ export { default as ProcessBillApi } from "./ProcessBillService";
 export { default as SalesDeliveryApi } from "./SalesDeliveryService";
 export { default as MaterialIssueApi } from "./MaterialIssue";
 export { default as MaterialReturnApi } from "./MaterialReturn";
+export { default as ContentMasterApi } from "./ContentMasterServices";
+export { default as CountsMasterApi } from "./CountsMasterServices";
+export { default as YarnBlendApi } from "./YarnBlendMasterServices";
+export { default as YarnMasterApi } from "./YarnMasterServices";

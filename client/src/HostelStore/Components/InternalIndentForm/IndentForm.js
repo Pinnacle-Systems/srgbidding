@@ -41,6 +41,7 @@ import YarnTable from "./Tables/Yarn.jsx";
 import FabricTable from "./Tables/Fabric.jsx";
 import SparePartTable from "./Tables/SpareParts.jsx";
 import DyesAndMaintainenceTable from "./Tables/Others.jsx";
+import { useAddInternalIndentIssueMutation, useGetInternalIndentIssueByIdQuery, useUpdateInternalIndentIssueMutation } from "../../../redux/uniformService/InternalIndent.js";
 
 const IndentForm = ({
   onClose,
@@ -67,134 +68,59 @@ const IndentForm = ({
 }) => {
   const today = new Date();
 
-  const [docDate, setDocDate] = useState(
-    moment.utc(today).format("YYYY-MM-DD"),
-  );
-  const [supplierId, setSupplierId] = useState("");
-  const [inwardItems, setInwardItems] = useState([]);
+  const [docDate, setDocDate] = useState(moment.utc(today).format("YYYY-MM-DD"));
   const [remarks, setRemarks] = useState("");
-  const [inwardType, setInwardType] = useState("Direct Inward");
-  const [storeId, setStoreId] = useState("");
   const [docId, setDocId] = useState("");
-  const [locationId, setLocationId] = useState("");
-  const [dcNo, setDcNo] = useState("");
-  const [dcDate, setDcDate] = useState("");
-  const [vehicleNo, setVehicleNo] = useState("");
-  const [invNo, setInvNo] = useState("");
-  const [tempItems, setTempItems] = useState([]);
-  const [searchDocId, setSearchDocId] = useState("");
-  const [searchDocDate, setSearchDocDate] = useState("");
-  const [dataPerPage, setDataPerPage] = useState("10");
-  const [currentPageNumber, setCurrentPageNumber] = useState(1);
-  const [receiptType, setReceiptType] = useState("");
-  const [taxTemplateId, setTaxTemplateId] = useState("");
-  const [discountType, setDiscountType] = useState("Percentage");
-  const [discountValue, setDiscountValue] = useState();
-  const [summary, setSummary] = useState(false);
-  const [netBillValue, setNetBillValue] = useState("");
-  const [attachmentModal, setAttachmentModal] = useState(false);
-  const [selectedAttachmentIndex, setSelectedAttachmentIndex] = useState(null);
-  const [attachments, setAttachments] = useState([]);
+  const [indentItems, setIndentItems] = useState([]);
 
-  const [productionType, setProductionType] = useState("InHouse");
+  // New Header Fields
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [estimatedValue, setEstimatedValue] = useState("");
+  const [status, setStatus] = useState("DRAFT");
+  const [allowedActions, setAllowedActions] = useState([]);
+  const [rowVersion, setRowVersion] = useState(1);
 
-  const [searchInwardNo, setSearchInwardNo] = useState("");
-  const [searchInwardDate, setSearchInwardDate] = useState("");
-  const [searchItemGroup, setSearchItemGroup] = useState("");
-  const [searchItem, setSearchItem] = useState("");
-  const [searchSize, setSearchSize] = useState("");
-  const [searchColor, setSearchColor] = useState("");
-  const [searchUom, setSearchUom] = useState("");
-  const [orderId, setOrderId] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+  const [priority, setPriority] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [inwardItems, setInwardItems] = useState([])
   const [childRecord, setChildRecord] = useState(false);
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
-  const [thermalPrint, setThermalPrint] = useState(false);
-  const [priority, setPriority] = useState("");
 
-  const tabs = ["Yarn", "Fabric", "Spare Part", "Dyes & Maintainence"];
-  const [activeTab, setActiveTab] = useState(tabs[0]);
+  const allTabs = ["Yarn", "Fabric", "Spare Part", "Dyes & Chemicals", "General"];
+  const [activeTab, setActiveTab] = useState("");
 
   const supplierRef = useRef(null);
   const [dispatchInvalidate] = useInvalidateTags();
-  const vehicleRef = useRef(null);
 
   const { userId, finYearId, branchId } = getCommonParams();
-  const { data: locationData } = useGetLocationMasterQuery({
-    params: { branchId },
-  });
 
-  const storeOptions = locationData
-    ? locationData.data.filter(
-      (item) => parseInt(item.locationId) === parseInt(locationId),
-    )
-    : [];
+
 
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetMaterialIssueByIdQuery(id, { skip: !id });
+  } = useGetInternalIndentIssueByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddMaterialIssueMutation();
-  const [updateData] = useUpdateMaterialIssueMutation();
-  const { data: supplierData } = useGetPartyByIdQuery(supplierId, {
-    skip: !supplierId,
-  });
+  const [addData] = useAddInternalIndentIssueMutation();
+  const [updateData] = useUpdateInternalIndentIssueMutation();
 
 
-  const { data: orderData } = useGetOrderMasterQuery({});
+
   const { data: departmentData } = useGetDepartmentQuery({});
-  const { data: employeeData } = useGetEmployeeQuery({});
 
 
-  const searchFields = {
-    searchDocId,
-    searchDocDate,
-    searchInwardNo,
-    searchInwardDate,
-    searchItemGroup: searchItemGroup.toUpperCase(),
-    searchItem: searchItem.toUpperCase(),
-    searchSize: searchSize.toUpperCase(),
-    searchColor: searchColor.toUpperCase(),
-    searchUom: searchUom.toUpperCase(),
-  };
-
-  const isSupplierOutside = useMemo(() => {
-    return supplierData?.data?.City?.state?.name !== "TAMILNADU";
-  }, [supplierData]);
-
-  useEffect(() => {
-    if (fromPoSupplierId && fromPoType && !id) {
-      setSupplierId(fromPoSupplierId);
-      setInwardType(fromPoType);
-    }
-  }, [fromPoSupplierId, fromPoType]);
-
-  useEffect(() => {
-    setCurrentPageNumber(1);
-  }, [searchDocId, searchDocDate]);
 
 
-  console.log(searchFields, "searchFields")
 
-  const {
-    data: stockDate,
-    isLoading,
-    isFetching,
-    isError,
-  } = useGetStockforMaterialIssueQuery({
-    params: {
-      branchId,
-      supplierId,
-      ...searchFields,
-      pagination: true,
-      dataPerPage,
-      pageNumber: currentPageNumber,
 
-    },
-  });
+
+
+
+
 
 
   const syncFormWithDb = useCallback(
@@ -205,32 +131,31 @@ const IndentForm = ({
           ? moment.utc(data.docDate).format("YYYY-MM-DD")
           : moment.utc(new Date()).format("YYYY-MM-DD"),
       );
-      setInwardType(
-        data?.inwardType || fromPoType || "Direct Inward",
+      setIndentItems(data?.IndentItems ? data?.IndentItems : []);
+
+      setRemarks(data?.remark || "");
+      setDeliveryLocation(data?.deliveryLocation || "");
+      setPurpose(data?.purpose || "");
+      setEstimatedValue(data?.estimatedValue || "");
+      setStatus(data?.status || "DRAFT");
+      setAllowedActions(data?.allowedActions || []);
+      setRowVersion(data?.rowVersion || 1);
+
+      setPriority(data?.Priority || "");
+      setDeliveryDate(
+        data?.requiredDate ? moment.utc(data.requiredDate).format("YYYY-MM-DD") : "",
       );
-      setLocationId(data?.Store ? data.Store.locationId : branchId);
-      setStoreId(data?.locationId ? data.locationId : "");
-      setInwardItems(data?.MaterialIssueItems ? data?.MaterialIssueItems : []);
-      setSupplierId(data?.supplierId || fromPoSupplierId || "");
-      setDcDate(
-        data?.dcDate ? moment.utc(data.dcDate).format("YYYY-MM-DD") : "",
-      );
-      setRemarks(data?.remarks || "");
-      setDcNo(data?.dcNo ? data.dcNo : "");
-      setVehicleNo(data?.vehicleNo ? data.vehicleNo : "");
-      setInvNo(data?.invNo ? data?.invNo : "");
-      setReceiptType(data?.receiptType || "");
-      setTaxTemplateId(data?.taxTemplateId || "");
-      setDiscountType(data?.discountType || "");
-      setDiscountValue(data?.discountValue || "");
-      setNetBillValue(parseFloat(data?.netBillValue)?.toFixed(2) || "");
-      setAttachments(data?.attachments ? data?.attachments : []);
-      setOrderId(data?.orderId || "");
+
       setDepartmentId(data?.departmentId || "");
       setEmployeeId(data?.employeeId || "");
-      setChildRecord(data?.childRecord ? data?.childRecord : false)
+      setChildRecord(data?.childRecord ? data?.childRecord : false);
+
+      if (data?.indentType) {
+        // Map backend indentType back to activeTab if needed, though they might match exactly
+        setActiveTab(data.indentType);
+      }
     },
-    [id, fromPoSupplierId, fromPoType],
+    [id],
   );
 
   useEffect(() => {
@@ -244,44 +169,36 @@ const IndentForm = ({
 
   const { data: singelUserData, isLoading: userLoding, isFetching: userFetching } = useGetUserByIdQuery(userId, { skip: !userId });
 
-  const syncFormWithDbItems = useCallback(
-    (data) => {
-      setDepartmentId(data?.Employee?.departmentId);
-    },
-    [inwardType, supplierId],
-  );
+  const tabs = useMemo(() => {
+    const userCreationAccess = singelUserData?.data?.indentCreationAccess;
+    if (!userCreationAccess || userCreationAccess.length === 0) return allTabs; // Fallback for legacy users
+    return allTabs.filter(tab => userCreationAccess.includes(tab));
+  }, [singelUserData, allTabs]);
 
   useEffect(() => {
-    if (singelUserData?.data) {
-      syncFormWithDbItems(singelUserData?.data);
+    if (tabs.length > 0 && !tabs.includes(activeTab)) {
+      setActiveTab(tabs[0]);
     }
-  }, [userLoding, userFetching, syncFormWithDbItems, singelUserData]);
+  }, [tabs, activeTab]);
+
+
 
   let data = {
     id,
     docDate,
     branchId,
     userId,
-    inwardType,
-    storeId,
-    supplierId,
-    dcNo,
-    dcDate,
-    remarks,
-    vehicleNo,
-    inwardItems: inwardItems?.filter((po) => po.itemId),
-    finYearId,
-    invNo,
-    receiptType,
-    taxTemplateId,
-    discountType,
-    discountValue,
-    netBillValue,
-    attachments: attachments?.filter((i) => i.filePath),
-    productionType,
-    orderId,
+    indentType: activeTab, // save the current tab as the type
+    Priority: priority,
+    requiredDate: deliveryDate,
     departmentId,
     employeeId,
+    remark: remarks,
+    deliveryLocation,
+    purpose,
+    estimatedValue,
+    rowVersion,
+    IndentItems: indentItems,
   };
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
@@ -429,17 +346,8 @@ const IndentForm = ({
   const validateData = (data) => {
     const items = data?.inwardItems || [];
     const filledItems = items.filter((item) => item.styleItemId);
-    const isAgainstInvoice = data.receiptType === "Against Invoice";
-    const isAmountMatched =
-      Number(data?.netBillValue).toFixed(2) ===
-      parseFloat(totals?.net || 0).toFixed(2);
     const checks = [
-      { condition: !data.productionType, title: "Production Type is required!" },
-      { condition: !data.storeId, title: "From Location is required!" },
-      { condition: !data.supplierId, title: "Supplier is required!" },
-      { condition: !data.orderId, title: "Order No is required!" },
-      { condition: !data.departmentId, title: "Department is required!" },
-      { condition: !data.employeeId, title: "Incharge Name is required!" },
+      { condition: !data.priority, title: "Priority is required!" },
 
 
       {
@@ -477,25 +385,12 @@ const IndentForm = ({
     return true;
   };
 
-  const enrichedItems = useMemo(() => {
-    if (!inwardItems?.length) return inwardItems;
-    const { items, ...totals } =
-      calculateTaxWithHSNBreakupAndInsertIntoInwardItems(
-        structuredClone(inwardItems), // clone to avoid mutating state
-        isSupplierOutside,
-        discountType,
-        discountValue,
-      );
-    return { items, totals };
-  }, [inwardItems, discountType, discountValue, isSupplierOutside]);
 
-  const enrichedItemsList = enrichedItems?.items || [];
-  const totals = enrichedItems?.totals || {};
 
   const saveData = (nextProcess) => {
-    if (!validateData(data)) {
-      return;
-    }
+    // if (!validateData(data)) {
+    //   return;
+    // }
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
         return;
@@ -528,27 +423,21 @@ const IndentForm = ({
 
 
 
-  useEffect(() => {
-    if (attachments?.length >= 5) return;
-    setAttachments((prev) => {
-      let newArray = Array.from({ length: 5 - prev?.length }, () => {
-        return { date: today, filePath: "", log: "" };
-      });
-      return [...prev, ...newArray];
-    });
-  }, [setAttachments, attachments]);
+  // useEffect(() => {
+  //   if (attachments?.length >= 5) return;
+  //   setAttachments((prev) => {
+  //     let newArray = Array.from({ length: 5 - prev?.length }, () => {
+  //       return { date: today, filePath: "", log: "" };
+  //     });
+  //     return [...prev, ...newArray];
+  //   });
+  // }, [setAttachments, attachments]);
 
 
 
 
 
-  function suppliers() {
-    if (productionType === "InHouse") {
-      return supplierList?.data?.filter((item) => item?.active && item?.isSupplier && item?.inhouse === true);
-    } else {
-      return supplierList?.data?.filter((item) => item?.active && item?.isSupplier && item?.outside === true);
-    }
-  }
+
   const EMPTY_ROW = {
     styleItemId: "",
     hsnId: "",
@@ -605,52 +494,42 @@ const IndentForm = ({
 
   const footerContent = (
     <CommonFormFooter
-
       readOnly={readOnly}
-
-      // saveCloseButtonRef={saveCloseButtonRef}
-      // saveNewButtonRef={saveNewButtonRef}
-
-
       leftActions={
         <>
-          <button onClick={() => saveData("close")}
-            disabled={readOnly}
-            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <HiOutlineRefresh className="w-4 h-4 mr-2" />
-            Save & Close
-          </button>
-          <button onClick={() => saveData("new")} disabled={readOnly} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
-            Save & New
-          </button>
+          {(!id || allowedActions.includes("edit")) && (
+            <button onClick={() => saveData("draft")}
+              disabled={readOnly}
+              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+              <FiSave className="w-4 h-4 mr-2" />
+              Save Draft
+            </button>
+          )}
         </>
       }
       rightActions={
         <>
-          <button
-            className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-            onClick={() => {
-
-              setThermalPrint(true);
-            }}
-          // disabled={childRecord}
-          >
-            <FiPrinter className="w-4 h-4 mr-2" />
-            Thermal Print
-          </button>
-          <button
-            className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-            onClick={() => {
-
-              setReadOnly(false);
-            }}
-          // disabled={childRecord}
-          >
-            <FiEdit2 className="w-4 h-4 mr-2" />
-            Edit
-          </button>
-
+          {id && allowedActions.includes("edit") && readOnly && (
+            <button
+              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+              onClick={() => {
+                setReadOnly(false);
+              }}
+            >
+              <FiEdit2 className="w-4 h-4 mr-2" />
+              Edit
+            </button>
+          )}
+          {(!id || allowedActions.includes("submit")) && (
+            <button
+              className="bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
+              onClick={() => {
+                saveData("submit");
+              }}
+            >
+              Submit
+            </button>
+          )}
         </>
       }
     />
@@ -670,52 +549,13 @@ const IndentForm = ({
 
   return (
     <>
-      <Modal
-        isOpen={summary}
-        onClose={() => setSummary(false)}
-        widthClass={"p-10"}
-      >
-        <PoSummary
-          discountType={discountType}
-          setDiscountType={setDiscountType}
-          discountValue={discountValue}
-          setDiscountValue={setDiscountValue}
-          poItems={inwardItems}
-          taxTypeId={taxTemplateId}
-          readOnly={readOnly}
-          totals={totals}
-          setSummary={setSummary}
-        />
-      </Modal>
-      <Modal isOpen={thermalPrint} onClose={() => setThermalPrint(false)} widthClass="w-[300pt] h-[95%]">
-        <PDFViewer style={{ width: "100%", height: "90vh" }}>
-          <ThermalSalesPrintFormat
-            title="MATERIAL ISSUE"
-            docId={docId}
-            // date={date}
-            branchData={branchList?.data?.filter((i) => i.id === parseInt(branchId))?.[0]}
-            items={inwardItems?.filter(i => i.itemId)}
-            remarks={remarks}
-            itemList={itemGroupList?.data}
-            sizeList={sizeList?.data}
-            colorList={colorList?.data}
-            uomList={uomList?.data}
-            itemGroupList={itemGroupList?.data}
-            supplierName={findFromList(supplierId, suppliers(), "name") || supplierData?.data?.name}
-            orderNo={findFromList(orderId, orderData?.data, "docId")}
-            department={findFromList(departmentId, departmentData?.data, "name")}
-            inchargeName={findFromList(employeeId, employeeData?.data, "name")}
-            processType={productionType === "InHouse" ? "IN-HOUSE" : "OUT-SOURCE"}
-          />
-        </PDFViewer>
-      </Modal>
 
 
 
       <TransactionEntryShell
         id={id}
         readOnly={readOnly}
-        title="Material Issue Form"
+        title="Internal Indent Form"
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
@@ -764,9 +604,16 @@ const IndentForm = ({
               </div>{/*  */}
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-4 gap-1 overflow-visible">
+            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-6 gap-1 overflow-visible">
 
-
+              <ReusableInput
+                label="Required Date"
+                value={deliveryDate}
+                setValue={setDeliveryDate}
+                type={"date"}
+                required={true}
+                readOnly={readOnly}
+              />
               <SearchableTableCellSelect
                 name="Priority "
                 options={requestPriority}
@@ -775,27 +622,39 @@ const IndentForm = ({
                 required={true}
                 className={`w-[150px]`}
                 addNewModalWidth="w-[40%] h-[48%]"
-                autoFocus={true}
               />
-              <div className="col-span-3">
+              {/* <ReusableInput
+                label="Delivery Location"
+                value={deliveryLocation}
+                setValue={setDeliveryLocation}
+                required={true}
+                readOnly={readOnly}
+              />
+              <ReusableInput
+                label="Estimated Value"
+                value={estimatedValue}
+                setValue={setEstimatedValue}
+                required={false}
+                readOnly={readOnly}
+              />
+              <div className="col-span-2">
+                <ReusableInput
+                  label="Purpose"
+                  value={purpose}
+                  setValue={setPurpose}
+                  required={true}
+                  readOnly={readOnly}
+                />
+              </div> */}
+              <div className="col-span-2">
                 <TextAreaNew
                   name="Remarks"
                   value={remarks}
                   setValue={setRemarks}
                   readOnly={readOnly}
                   rows={1}
-                  cols={10}
-
                 />
               </div>
-
-
-
-
-
-
-
-
             </TransactionHeaderSection >
 
           </div >
@@ -806,20 +665,22 @@ const IndentForm = ({
           <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
             <div className=" px-2  pb-2  rounded-md shadow-sm min-h-[270px] bg-white overflow-hidden flex flex-col flex-1 w-full">
               {/* Category Tabs */}
-              <div className="flex bg-gray-300 mt-2 ml-6 mb-2 rounded-t w-max ovreflow-hidden">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-1 text-sm font-medium transition-colors border-r border-gray-500 ${activeTab === tab
-                      ? "bg-[#4F46E5] text-white font-bold"
-                      : "text-gray-600 "
-                      }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+              <div className="flex bg-white sticky top-0 z-10 px-2 mt-2">
+                <div className="flex w-full gap-2 border-b border-gray-300">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveTab(tab)}
+                      className={`relative px-4 py-2 text-[14px] font-medium transition-all duration-200 focus:outline-none border border-b-0 rounded-t-md -mb-[1px] ${activeTab === tab
+                        ? "text-black border-gray-300 bg-white z-10"
+                        : "text-gray-500 border-transparent hover:text-black hover:bg-gray-50"
+                        }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
               </div>
               {activeTab == "Yarn" &&
 
@@ -849,7 +710,7 @@ const IndentForm = ({
                 )
 
               }
-              {activeTab == "Dyes & Maintainence" &&
+              {(activeTab == "Dyes & Chemicals" || activeTab == "General") &&
 
                 (
                   <DyesAndMaintainenceTable

@@ -107,6 +107,45 @@ const InternalIndentIssueApi = createApi({
       }),
       invalidatesTags: ["InternalIndentIssue"],
     }),
+    submitIndent: builder.mutation({
+      query: (id) => ({
+        url: `${INTERNAL_INDENT_API}/${id}/submit`,
+        method: "POST",
+      }),
+      invalidatesTags: ["InternalIndentIssue"],
+    }),
+    approveIndent: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `${INTERNAL_INDENT_API}/${id}/approve`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["InternalIndentIssue"],
+    }),
+    rejectIndent: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `${INTERNAL_INDENT_API}/${id}/reject`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["InternalIndentIssue"],
+    }),
+    returnIndent: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `${INTERNAL_INDENT_API}/${id}/return`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["InternalIndentIssue"],
+    }),
+    cancelIndent: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `${INTERNAL_INDENT_API}/${id}/cancel`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["InternalIndentIssue"],
+    }),
   }),
 });
 
@@ -120,6 +159,11 @@ export const {
   useLazyGetPurchaseDetailQuery,
   useGetPurInwardItemsQuery,
   useGetInternalIndentIssueForBillByIdQuery,
+  useSubmitIndentMutation,
+  useApproveIndentMutation,
+  useRejectIndentMutation,
+  useReturnIndentMutation,
+  useCancelIndentMutation,
 } = InternalIndentIssueApi;
 
 export default InternalIndentIssueApi;

@@ -166,7 +166,7 @@ const Sidebar = ({
 
   const order = [
     "APPROVAL",
-    "ORDER",
+    "INDENT",
     "PURCHASE",
     "PRODUCTION",
     "OUTSIDE PROCESS",
@@ -228,9 +228,8 @@ const Sidebar = ({
 
       {isOpen && (
         <div
-          className={`fixed z-[999] top-[20.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${
-            isMainDropdownOpen ? "h-[450px]" : "h-auto"
-          } rounded-lg py-4 flex flex-col items-center shadow-xl transition-all duration-300`}
+          className={`fixed z-[999] top-[20.5%] left-[1.5rem] bg-[#343a40] text-white w-[72px] ${isMainDropdownOpen ? "h-[450px]" : "h-auto"
+            } rounded-lg py-4 flex flex-col items-center shadow-xl transition-all duration-300`}
         >
           {/* Dashboard Link */}
           {/* <div

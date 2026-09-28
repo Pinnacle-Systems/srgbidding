@@ -7,7 +7,7 @@ const UserRoles = () => {
 
     const subMenus = [
         "Roles",
-        "Users"
+        "Users",
     ]
 
     const getShowSubMenu = () => {
@@ -35,7 +35,7 @@ const UserRoles = () => {
                     </div>
                 </div>
                 <div className='col-span-7'>
-                {getShowSubMenu()}
+                    {getShowSubMenu()}
                 </div>
             </div>
         </div>

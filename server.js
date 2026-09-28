@@ -83,6 +83,15 @@ import {
   orderMaster,
   materialMaster,
   internalIndent,
+  yarn,
+  count,
+  yarnBlend,
+  fabric,
+  yarnIndent,
+  fabricIndent,
+  dyesChemicalIndent,
+  generalIndent,
+  sparepartIndent,
 } from "./src/routes/index.js";
 import { setIo } from "./src/utils/notificationHelper.js";
 import { socketMain } from "./src/sockets/socket.js";
@@ -202,7 +211,15 @@ app.use("/lineMaster", line);
 app.use("/orderMaster", orderMaster);
 app.use("/materialMaster", materialMaster);
 app.use("/indent", internalIndent);
-
+app.use("/yarn", yarn);
+app.use("/counts", count);
+app.use("/yarnBlend", yarnBlend);
+app.use("/fabric", fabric);
+app.use("/yarnIndent", yarnIndent);
+app.use("/fabricIndent", fabricIndent);
+app.use("/dyesChemicalIndent", dyesChemicalIndent);
+app.use("/generalIndent", generalIndent);
+app.use("/sparepartIndent", sparepartIndent);
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

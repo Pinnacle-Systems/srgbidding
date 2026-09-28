@@ -17,28 +17,33 @@ import {
   buildIncludeForModule,
 } from "../utils/approvalHelper.js";
 
+const REFERENCE_PAGE = "INTERNAL INDENT FORM";
+const INDENT_TYPE = "INTERNAL";
+const DOC_PREFIX = "INT";
 
-// ── Doc ID ────────────────────────────────────────────────────────────────────
+
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
   if (saveType) return "Draft Save";
 
-  let lastObject = await prisma.MaterialIssue.findFirst({
+  let lastObject = await prisma.Indent.findFirst({
     where: {
       branchId: parseInt(branchId),
+      indentType: INDENT_TYPE,
       AND: [{ createdAt: { gte: startTime } }, { createdAt: { lte: endTime } }],
     },
     orderBy: { id: "desc" },
   });
 
   const branchObj = await getTableRecordWithId(branchId, "branch");
-  let newDocId = `${branchObj.branchCode}/${shortCode}/MIS/1`;
+  let newDocId = `${branchObj.branchCode}/${shortCode}/${DOC_PREFIX}/1`;
 
   if (lastObject) {
     if (lastObject.docId === "Draft Save") {
-      const records = await prisma.MaterialIssue.findMany({
+      const records = await prisma.Indent.findMany({
         select: { docId: true },
         where: {
           branchId: parseInt(branchId),
+      indentType: INDENT_TYPE,
           AND: [
             { createdAt: { gte: startTime } },
             { createdAt: { lte: endTime } },
@@ -50,14 +55,82 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
         const maxNo = max ? Number(max.split("/").pop()) : 0;
         return currentNo > maxNo ? current.docId : max;
       }, null);
-      newDocId = `${branchObj.branchCode}/${shortCode}/MIS/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
+      newDocId = `${branchObj.branchCode}/${shortCode}/${DOC_PREFIX}/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
     } else {
-      newDocId = `${branchObj.branchCode}/${shortCode}/MIS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+      newDocId = `${branchObj.branchCode}/${shortCode}/${DOC_PREFIX}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
     }
   }
   return newDocId;
 }
 
+function getPOApprovalStatus(log, isApprovalConfigured = false) {
+  if (!log) {
+    return isApprovalConfigured
+      ? {
+        status: "NOTAPPROVED",
+        label: "Not Approved",
+        color: "orange",
+        currentLevel: 1,
+        levelLogs: [],
+      }
+      : {
+        status: "NOT_CONFIGURED",
+        label: "No Approval",
+        color: "gray",
+        currentLevel: null,
+        levelLogs: [],
+      };
+  }
+  const base = {
+    currentLevel: log.currentLevel,
+    levelLogs: log.LevelLogs ?? [],
+    remarks: log.remarks,
+  };
+  const map = {
+    APPROVED: {
+      ...base,
+      status: "APPROVED",
+      label: "Approved",
+      color: "green",
+    },
+    REJECTED: { ...base, status: "REJECTED", label: "Rejected", color: "red" },
+    PENDING: { ...base, status: "PENDING", label: "Pending", color: "orange" },
+    NOTAPPROVED: {
+      ...base,
+      status: "NOTAPPROVED",
+      label: "Not Approved",
+      color: "orange",
+    },
+    SUPERSEDED: {
+      ...base,
+      status: "SUPERSEDED",
+      label: "Re-approval Needed",
+      color: "yellow",
+    }, // ✅ NEW
+  };
+  return (
+    map[log.status] ?? {
+      ...base,
+      status: "UNKNOWN",
+      label: "Unknown",
+      color: "gray",
+    }
+  );
+}
+
+function evaluateConfigs(activeConfigs, record) {
+  if (!activeConfigs?.length) return false;
+
+  const valid = activeConfigs
+    .filter(
+      (c) =>
+        c.approvalLevels?.length > 0 &&
+        c.approvalLevels.some((l) => l.LevelUsers?.length > 0),
+    )
+    .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+
+  return valid.some((config) => evaluateConfigTrigger(config, record));
+}
 
 
 async function get(req) {
@@ -66,15 +139,12 @@ async function get(req) {
     pagination,
     pageNumber,
     dataPerPage,
-    serachDocNo,
     searchDocDate,
-    searchStore,
-    searchInwardType,
+    searchDocId,
     finYearId,
-    searchSupplier,
+    searchIndentType,
+    searchStatus,
   } = req.query;
-
-  console.log(branchId, "branchId")
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate
@@ -90,17 +160,15 @@ async function get(req) {
   let data = await prisma.Indent.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      // AND: finYearDate
-      //   ? [
-      //     { createdAt: { gte: finYearDate.startTime } },
-      //     { createdAt: { lte: finYearDate.endTime } },
-      //   ]
-      //   : undefined,
-      // docId: Boolean(serachDocNo) ? { contains: serachDocNo } : undefined,
-      // supplier: {
-      //   name: searchSupplier ? { contains: searchSupplier } : undefined,
-      // },
-
+      indentType: INDENT_TYPE,
+      status: searchStatus ? searchStatus : undefined,
+      docId: searchDocId ? { contains: searchDocId } : undefined,
+      AND: finYearDate
+        ? [
+          { createdAt: { gte: finYearDate.startDateStartTime } },
+          { createdAt: { lte: finYearDate.endDateEndTime } },
+        ]
+        : undefined,
     },
 
 
@@ -120,13 +188,97 @@ async function get(req) {
       pageNumber * dataPerPage,
     );
   }
+  const poIds = data.map((po) => po.id);
+
+  const { module, hasApproval } = await getModuleApprovalSetup(
+    REFERENCE_PAGE,
+    branchId,
+  );
+
+  const approvalLogs = await prisma.approvalLog.findMany({
+    where: { referencePage: REFERENCE_PAGE, referenceId: { in: poIds } },
+    select: {
+      id: true,
+      referenceId: true,
+      status: true,
+      remarks: true,
+      currentLevel: true,
+      LevelLogs: {
+        select: {
+          action: true,
+          levelNo: true,
+          userId: true,
+          createdAt: true,
+          User: { select: { id: true, username: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  const approvalLogMap = approvalLogs.reduce((acc, log) => {
+    acc[log.referenceId] = log;
+    return acc;
+  }, {});
+
+  const activeConfigs =
+    hasApproval && module
+      ? await prisma.approvalConfig.findMany({
+        where: {
+          moduleId: module.id,
+          branchId: parseInt(branchId),
+      indentType: INDENT_TYPE,
+          active: true,
+        },
+        include: {
+          ConfigConditions: {
+            include: { Field: true, Operator: true, CompareField: true },
+          },
+          approvalLevels: {
+            include: { LevelUsers: true },
+            orderBy: { levelNo: "asc" },
+          },
+        },
+        // orderBy: { priority: "asc" },
+      })
+      : [];
+
+  const resolvedData = data.map((po) => {
+    const log = approvalLogMap[po.id] ?? null;
+    let shouldTrigger = false;
+    if (!log && hasApproval && activeConfigs.length > 0) {
+      shouldTrigger = evaluateConfigs(activeConfigs, po);
+    }
+
+    // Compute allowedActions based on status
+    let allowedActions = [];
+    const status = po.status || "DRAFT";
+    if (status === "DRAFT") {
+      allowedActions = ["edit", "submit", "discard"];
+    } else if (status === "SUBMITTED") {
+      // Typically you'd check if user is approver here, but we simplify for now
+      allowedActions = ["approve", "reject", "return"];
+    } else if (status === "APPROVED") {
+      allowedActions = ["cancel"]; // if not consumed
+    } else if (status === "REJECTED") {
+      allowedActions = ["edit", "discard"];
+    } else if (status === "RETURNED") {
+      allowedActions = ["edit", "submit"];
+    } else if (status === "CANCELLED") {
+      allowedActions = [];
+    }
+
+    return {
+      ...po,
+      allowedActions,
+      approvalStatus: getPOApprovalStatus(log, !!log || shouldTrigger),
+      childRecord: 0,
+    };
+  });
 
   return {
     statusCode: 0,
-    data: (data = data.map((item) => ({
-      ...item,
-      // childRecord: item?._count.MaterialReturn,
-    }))),
+    data: resolvedData,
     nextDocId: newDocId,
     totalCount,
   };
@@ -134,16 +286,9 @@ async function get(req) {
 
 async function getOne(id) {
 
-  const childRecordPo = await prisma.MaterialReturn.count({
-    where: {
-      materialIssueId: parseInt(id),
-    },
-  });
-
   const data = await prisma.Indent.findUnique({
     where: { id: parseInt(id) },
     include: {
-      supplier: true,
       IndentItems: {
         include: {
           Itemgroup: true,
@@ -151,46 +296,35 @@ async function getOne(id) {
           Size: true,
           Color: true,
           Uom: true,
-
         }
       },
     }
   });
 
-  if (!data) return NoRecordFound("Purchase Inward");
+  if (!data) return NoRecordFound("Indent");
 
-  const MaterialIssueItemsWithStock = await Promise.all(
-    data.MaterialIssueItems.map(async (item) => {
-      const stock = await prisma.stock.aggregate({
-        where: {
-          itemGroupId: item.itemGroupId,
-          itemId: item.itemId,
-          sizeId: item.sizeId,
-          colorId: item.colorId,
-          uomId: item.uomId,
-        },
-        _sum: {
-          qty: true,
-        },
-      });
-
-      const returnQty = item?.MaterialReturnItems?.reduce((total, currentItem) => parseInt(total) + parseInt(currentItem?.returnQty), 0)
-
-      return {
-        ...item,
-        netQty: (parseInt(stock._sum.qty || 0) + parseInt(item.issueQty || 0)) - parseInt(returnQty || 0),
-        alreadyReturnQty: returnQty || 0,
-        balQty: parseInt(item.issueQty || 0) - parseInt(returnQty || 0),
-      };
-    })
-  );
+  let allowedActions = [];
+  const status = data.status || "DRAFT";
+  if (status === "DRAFT") {
+    allowedActions = ["edit", "submit", "discard"];
+  } else if (status === "SUBMITTED") {
+    allowedActions = ["approve", "reject", "return"];
+  } else if (status === "APPROVED") {
+    allowedActions = ["cancel"];
+  } else if (status === "REJECTED") {
+    allowedActions = ["edit", "discard"];
+  } else if (status === "RETURNED") {
+    allowedActions = ["edit", "submit"];
+  } else if (status === "CANCELLED") {
+    allowedActions = [];
+  }
 
   return {
     statusCode: 0,
     data: {
       ...data,
-      childRecord: childRecordPo > 0 ? true : false,
-      MaterialIssueItems: MaterialIssueItemsWithStock,
+      allowedActions,
+      childRecord: false,
     },
   };
 }
@@ -241,9 +375,11 @@ async function create(body) {
 
       data: {
         docId: newDocId,
+        indentType: INDENT_TYPE,
         docDate: docDate ? new Date(docDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
+      indentType: INDENT_TYPE,
         locationId: parseInt(storeId),
         supplierId: parseInt(supplierId),
         productionType,
@@ -312,7 +448,7 @@ async function calculateFIFOAvailableStock(tx, stockDetail, storeId, branchId) {
 async function createIssueItems(
   tx,
   inwardItems,
-  materialIssue,
+  indentRecord,
   userId,
   storeId,
   branchId,
@@ -326,7 +462,7 @@ async function createIssueItems(
 
   const createdItem = await tx.IndentItems.create({
     data: {
-      indentId: parseInt(materialIssue.id),
+      indentId: parseInt(indentRecord.id),
       itemGroupId: stockDetail?.itemGroupId ? parseInt(stockDetail.itemGroupId) : null,
       itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
@@ -399,7 +535,7 @@ async function update(id, body, files) {
   await prisma.$transaction(async (tx) => {
     if (removeItemsGoodsIds.length > 0) {
       await tx.stock.deleteMany({
-        where: { materialIssueItemsId: { in: removeItemsGoodsIds } },
+        where: { indentItemsId: { in: removeItemsGoodsIds } },
       });
       await tx.MaterialIssueItems.deleteMany({
         where: { id: { in: removeItemsGoodsIds } },
@@ -412,6 +548,7 @@ async function update(id, body, files) {
         docDate: docDate ? new Date(docDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
+      indentType: INDENT_TYPE,
         locationId: parseInt(storeId),
         supplierId: parseInt(supplierId),
         productionType,
@@ -435,7 +572,7 @@ async function update(id, body, files) {
 async function updateinwardItems(
   tx,
   inwardItems,
-  materialIssue,
+  indentRecord,
   userId,
   storeId,
   branchId,
@@ -463,7 +600,7 @@ async function updateinwardItems(
   } else {
     createdOrUpdatedItem = await tx.IndentItems.create({
       data: {
-        indentId: parseInt(materialIssue.id),
+        indentId: parseInt(indentRecord.id),
         itemGroupId: inwardItem?.itemGroupId ? parseInt(inwardItem.itemGroupId) : null,
         itemId: inwardItem?.itemId ? parseInt(inwardItem.itemId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
@@ -884,3 +1021,52 @@ export {
   getOneBillEntry,
   getPurchaseInwardBillEntryItems,
 };
+
+async function submit(id, body) {
+  const data = await prisma.Indent.update({
+    where: { id: parseInt(id) },
+    data: { status: "SUBMITTED" }
+  });
+  return { statusCode: 0, data };
+}
+
+async function approve(id, body) {
+  const data = await prisma.Indent.update({
+    where: { id: parseInt(id) },
+    data: { status: "APPROVED" }
+  });
+  return { statusCode: 0, data };
+}
+
+async function reject(id, body) {
+  const data = await prisma.Indent.update({
+    where: { id: parseInt(id) },
+    data: { status: "REJECTED" }
+  });
+  return { statusCode: 0, data };
+}
+
+async function returnIndent(id, body) {
+  const data = await prisma.Indent.update({
+    where: { id: parseInt(id) },
+    data: { status: "RETURNED" }
+  });
+  return { statusCode: 0, data };
+}
+
+async function cancel(id, body) {
+  const data = await prisma.Indent.update({
+    where: { id: parseInt(id) },
+    data: { status: "CANCELLED" }
+  });
+  return { statusCode: 0, data };
+}
+
+export {
+  submit,
+  approve,
+  reject,
+  returnIndent,
+  cancel,
+
+}

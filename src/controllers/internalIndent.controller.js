@@ -6,6 +6,11 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
+  submit as _submit,
+  approve as _approve,
+  reject as _reject,
+  returnIndent as _returnIndent,
+  cancel as _cancel,
 } from "../services/internalIndent.service.js";
 
 async function get(req, res, next) {
@@ -90,4 +95,29 @@ async function remove(req, res, next) {
   }
 }
 
-export { get, getOne, create, update, remove };
+async function submit(req, res, next) {
+  try { res.json(await _submit(req.params.id, req.body)); } 
+  catch (error) { res.json({ statusCode: 1, message: error.message }); }
+}
+
+async function approve(req, res, next) {
+  try { res.json(await _approve(req.params.id, req.body)); } 
+  catch (error) { res.json({ statusCode: 1, message: error.message }); }
+}
+
+async function reject(req, res, next) {
+  try { res.json(await _reject(req.params.id, req.body)); } 
+  catch (error) { res.json({ statusCode: 1, message: error.message }); }
+}
+
+async function returnIndent(req, res, next) {
+  try { res.json(await _returnIndent(req.params.id, req.body)); } 
+  catch (error) { res.json({ statusCode: 1, message: error.message }); }
+}
+
+async function cancel(req, res, next) {
+  try { res.json(await _cancel(req.params.id, req.body)); } 
+  catch (error) { res.json({ statusCode: 1, message: error.message }); }
+}
+
+export { get, getOne, create, update, remove, submit, approve, reject, returnIndent, cancel };

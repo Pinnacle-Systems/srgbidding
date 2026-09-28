@@ -245,6 +245,7 @@ model User {
   MaterialReturnUpdatedBy  MaterialReturn[]     @relation(name: "updatedBy")
   IndentCreatedBy          Indent[]             @relation(name: "createdBy")
   IndentUpdatedBy          Indent[]             @relation(name: "updatedBy")
+  IndentApprovedBy         Indent[]             @relation(name: "approvedBy")
 }
 
 model Employee {
@@ -525,6 +526,7 @@ model Party {
   salesDeliveries          SalesDelivery[]
   MaterialIssue            MaterialIssue[]
   MaterialReturn           MaterialReturn[]
+  IndentItems              IndentItems[]
 }
 
 model PartyBranch {
@@ -1088,6 +1090,7 @@ model Color {
   id                     Int                      @id @default(autoincrement())
   name                   String?
   active                 Boolean?                 @default(true)
+  code                   String?
   DeliveryChallanItems   DeliveryChallanItems[]
   DeliveryInvoiceItems   DeliveryInvoiceItems[]
   poItems                PoItems[]
@@ -2916,10 +2919,15 @@ model Indent {
   Department   Department?   @relation(fields: [departmentId], references: [id])
   employeeId   Int?
   Employee     Employee?     @relation(fields: [employeeId], references: [id])
-  Priority     String?
+  priority     String?
   reason       String?
   remark       String?
   requiredDate DateTime?
+  indentType   String
+  status       String?       @default("DRAFT")
+  approvedBy   User?         @relation("approvedBy", fields: [approvedById], references: [id])
+  approvedById Int?
+  isDeleted    Boolean?      @default(false)
   IndentItems  IndentItems[]
 }
 
@@ -2941,6 +2949,48 @@ model IndentItems {
   hsnId       Int?
   Gsm         Gsm?       @relation(fields: [gsmId], references: [id])
   gsmId       Int?
+  Yarn        Yarn?      @relation(fields: [yarnId], references: [id])
+  yarnId      Int?
+  Fabric      Fabric?    @relation(fields: [fabricId], references: [id])
+  fabricId    Int?
+  YarnBlend   YarnBlend? @relation(fields: [yarnBlendId], references: [id])
+  yarnBlendId Int?
+  Counts      Counts?    @relation(fields: [countsId], references: [id])
+  countsId    Int?
+  millTo      Party?     @relation(fields: [millToId], references: [id])
+  millToId    Int?
   price       String?
   qty         String?
+}
+
+model Yarn {
+  id          Int           @id @default(autoincrement())
+  name        String?
+  active      Boolean?      @default(true)
+  code        String?
+  IndentItems IndentItems[]
+}
+
+model Fabric {
+  id          Int           @id @default(autoincrement())
+  name        String?
+  active      Boolean?      @default(true)
+  code        String?
+  IndentItems IndentItems[]
+}
+
+model YarnBlend {
+  id          Int           @id @default(autoincrement())
+  name        String?
+  active      Boolean?      @default(true)
+  code        String?
+  IndentItems IndentItems[]
+}
+
+model Counts {
+  id          Int           @id @default(autoincrement())
+  name        String?
+  active      Boolean?      @default(true)
+  code        String?
+  IndentItems IndentItems[]
 }

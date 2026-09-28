@@ -199,7 +199,7 @@ export default function Form() {
         <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
           <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
 
-            <h1 className="text-lg font-bold text-gray-800">              Material Issue Report
+            <h1 className="text-lg font-bold text-gray-800">Internal Indent Form
             </h1>
 
             <button

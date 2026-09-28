@@ -144,13 +144,13 @@ export const MultiSelectDropdown = ({
           menuPortal: (base) => ({ ...base, zIndex: 99999 }),
           control: (base) => ({
             ...base,
-            minHeight: "18px",
-            height: "18px",
+            minHeight: "30px",
+            height: "30px",
             borderRadius: "4px",
             boxShadow: "none",
             border: "1px solid #cbd5e1",
             padding: "0px",
-            fontSize: "9px",
+            fontSize: "10px",
           }),
           // control: (base) => ({
           //   ...base,

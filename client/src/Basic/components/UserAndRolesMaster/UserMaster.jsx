@@ -32,6 +32,15 @@ export default function Form() {
     const [role, setRole] = useState("");
     const [branches, setBranches] = useState([]);
     const [employee, setEmployee] = useState("");
+    const [indentCreationAccess, setIndentCreationAccess] = useState([]);
+    const [indentApprovalAccess, setIndentApprovalAccess] = useState([]);
+
+    const indentCategoryOptions = [
+        { label: "Yarn", value: "Yarn" },
+        { label: "Fabric", value: "Fabric" },
+        { label: "Spare Part", value: "Spare Part" },
+        { label: "Dyes & Chemicals", value: "Dyes & Chemicals" }
+    ];
 
 
     const [searchValue, setSearchValue] = useState("");
@@ -66,13 +75,17 @@ export default function Form() {
     const [removeData] = useDeleteUserMutation();
 
     const syncFormWithDb = useCallback((data) => {
-        if (id) setReadOnly(true);
+        // if (id) setReadOnly(true);
         setId(data?.id ? data.id : "");
         setName(data?.username ? data.username : "");
         setActive(id ? (data?.active ? data.active : false) : true);
         setRole(data?.roleId ? data.roleId : "");
         setEmployee(data?.Employee?.id ? data?.Employee?.id : "");
-        setBranches(data ? data?.UserOnBranch.map((branch) => { return { value: branch.branchId, label: branch.Branch.branchName } }) : [])
+        setBranches(data ? data?.UserOnBranch.map((branch) => { return { value: branch.branchId, label: branch.Branch.branchName } }) : []);
+        
+        const mapAccessToDropdown = (accessArray) => accessArray ? accessArray.map(item => ({ label: item, value: item })) : [];
+        setIndentCreationAccess(mapAccessToDropdown(data?.indentCreationAccess));
+        setIndentApprovalAccess(mapAccessToDropdown(data?.indentApprovalAccess));
     }, [id]);
 
     useEffect(() => {
@@ -80,7 +93,9 @@ export default function Form() {
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        username: name, password, active, roleId: role, branches: multiSelectOptionSelectedApiData(branches), employeeId: employee, id
+        username: name, password, active, roleId: role, branches: multiSelectOptionSelectedApiData(branches), employeeId: employee, id,
+        indentCreationAccess: indentCreationAccess?.map(item => item.value) || [],
+        indentApprovalAccess: indentApprovalAccess?.map(item => item.value) || []
     }
 
     const validateData = (data) => {
@@ -193,24 +208,26 @@ export default function Form() {
                     childRecord={childRecord.current}
                 />
 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-clip">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-visible">
 
-                    <div className="col-span-3 grid md:grid-cols-2 border overflow-auto">
+                    <div className="col-span-3 border overflow-visible pb-16">
                         <div className='mr-1 md:ml-2'>
                             <fieldset className='frame my-1'>
                                 <legend className='sub-heading'>User Info</legend>
-                                <form className='grid grid-cols-1 my-2' autoComplete="chrome-off">
-                                    <TextInput name="Username" type="normal" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                                <form className='grid grid-cols-1 md:grid-cols-2 gap-4 my-2' autoComplete="chrome-off">
+                                    <div className="relative z-[100]"><TextInput name="Username" type="normal" value={name} setValue={setName} required={true} readOnly={readOnly} /></div>
                                     {!id
                                         ?
-                                        <TextInput name="Password" type="password" value={password} setValue={setPassword} required={true} readOnly={readOnly} />
+                                        <div className="relative z-[90]"><TextInput name="Password" type="password" value={password} setValue={setPassword} required={true} readOnly={readOnly} /></div>
                                         :
                                         ""
                                     }
-                                    <DropdownInput name="Employee" options={!employeeList ? [] : employeeList?.data.map(employee => { return { show: `${employee.regNo}/${employee.name}/${employee.EmployeeCategory?.name}`, value: employee.id } })} value={employee} setValue={setEmployee} required={true} readOnly={readOnly} />
-                                    <DropdownInput name="Role" options={dropDownListObject(roleList ? roleList?.data : [], "name", "id")} value={role} setValue={setRole} required={true} readOnly={readOnly} />
-                                    <MultiSelectDropdown readOnly={readOnly} name="Branch" selected={branches} setSelected={setBranches} options={multiSelectOption(branchesList ? branchesList.data : [], "branchName", "id")} />
-                                    <CheckBox name="Active" value={active} setValue={setActive} />
+                                    <div className="relative z-[80]"><DropdownInput name="Employee" options={!employeeList ? [] : employeeList?.data.map(employee => { return { show: `${employee.regNo}/${employee.name}/${employee.EmployeeCategory?.name}`, value: employee.id } })} value={employee} setValue={setEmployee} required={true} readOnly={readOnly} /></div>
+                                    <div className="relative z-[70]"><DropdownInput name="Role" options={dropDownListObject(roleList ? roleList?.data : [], "name", "id")} value={role} setValue={setRole} required={true} readOnly={readOnly} /></div>
+                                    <div className="relative z-[60]"><MultiSelectDropdown readOnly={readOnly} name="Branch" selected={branches} setSelected={setBranches} options={multiSelectOption(branchesList ? branchesList.data : [], "branchName", "id")} /></div>
+                                    <div className="relative z-[50]"><MultiSelectDropdown readOnly={readOnly} name="Indent Creation Access" selected={indentCreationAccess} setSelected={setIndentCreationAccess} options={indentCategoryOptions} /></div>
+                                    <div className="relative z-[40]"><MultiSelectDropdown readOnly={readOnly} name="Indent Approval Access" selected={indentApprovalAccess} setSelected={setIndentApprovalAccess} options={indentCategoryOptions} /></div>
+                                    <div className="relative z-[30]"><CheckBox name="Active" value={active} setValue={setActive} /></div>
                                 </form>
                             </fieldset>
                         </div>

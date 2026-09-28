@@ -52,6 +52,8 @@ import {
   OrderMasterApi,
   LineMasterApi,
   MaterialMasterApi,
+  CountMasterApi,
+  FabricMasterApi,
 } from "./services";
 import paymentApi from "./services/PaymentService";
 import StyleMasterApi from "./services/StyleMasterService";
@@ -76,10 +78,19 @@ import {
   SalesDeliveryApi,
   MaterialIssueApi,
   MaterialReturnApi,
+  ContentMasterApi,
+  YarnMasterApi,
+  CountsMasterApi,
 } from "./uniformService";
 import OrderEntryApi from "./uniformService/OrderEntryService";
 import BoardMasterApi from "./services/boardService";
-
+import InternalIndentIssueApi from "./uniformService/InternalIndent";
+import YarnBlendMasterApi from "./uniformService/YarnBlendMasterServices";
+import YarnIndentApi from "./uniformService/YarnIndent";
+import FabricIndentApi from "./uniformService/FabricIndent";
+import DyesChemicalIndentApi from "./uniformService/DyesChemicalIndent";
+import GeneralIndentApi from "./uniformService/GeneralIndent";
+import SparepartIndentApi from "./uniformService/SparepartIndent";
 const commonReducers = {
   openTabs,
   countryMaster: countryMasterApi.reducer,
@@ -157,7 +168,18 @@ const commonReducers = {
   OrderMaster: OrderMasterApi.reducer,
   LineMaster: LineMasterApi.reducer,
   MaterialMaster: MaterialMasterApi.reducer,
-
+  InternalIndentIssue: InternalIndentIssueApi.reducer,
+  ContentMaster: ContentMasterApi.reducer,
+  yarnMaster: YarnMasterApi.reducer,
+  countMaster: CountMasterApi.reducer,
+  yarnBlendMaster: YarnBlendMasterApi.reducer,
+  fabricMaster: FabricMasterApi.reducer,
+  YarnIndent: YarnIndentApi.reducer,
+  FabricIndent: FabricIndentApi.reducer,
+  DyesChemicalIndent: DyesChemicalIndentApi.reducer,
+  GeneralIndent: GeneralIndentApi.reducer,
+  SparepartIndent: SparepartIndentApi.reducer,
+  countsMaster: CountsMasterApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -234,7 +256,19 @@ const commonMiddleware = [
   MaterialReturnApi.middleware,
   OrderMasterApi.middleware,
   LineMasterApi.middleware,
-  MaterialMasterApi.middleware
+  MaterialMasterApi.middleware,
+  InternalIndentIssueApi.middleware,
+  ContentMasterApi.middleware,
+  YarnMasterApi.middleware,
+  CountMasterApi.middleware,
+  YarnBlendMasterApi.middleware,
+  FabricMasterApi.middleware,
+  YarnIndentApi.middleware,
+  FabricIndentApi.middleware,
+  DyesChemicalIndentApi.middleware,
+  GeneralIndentApi.middleware,
+  SparepartIndentApi.middleware,
+  CountsMasterApi.middleware,
 ];
 
 const store = configureStore({

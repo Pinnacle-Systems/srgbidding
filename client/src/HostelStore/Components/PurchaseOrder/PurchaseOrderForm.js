@@ -165,8 +165,8 @@ const PurchaseOrderForm = ({
 
       setReadOnly(
         (["PENDING"].includes(status) && !isAdminRole) ||
-          (status === "APPROVED" && thresholdPassed && !isAdminRole) ||
-          readOnly,
+        (status === "APPROVED" && thresholdPassed && !isAdminRole) ||
+        readOnly,
       );
       setPoType(data?.poType ? data?.poType : "GENERAL");
       setDocDate(
@@ -222,9 +222,9 @@ const PurchaseOrderForm = ({
         data?.poItems
           ? data.poItems // ← use raw DB items, isVisibleRow will filter by quoteVersion
           : createPurchaseOrderRows(
-              DEFAULT_PURCHASE_ORDER_ROWS,
-              resolvedQuoteVersion,
-            ),
+            DEFAULT_PURCHASE_ORDER_ROWS,
+            resolvedQuoteVersion,
+          ),
       );
       setPayTermId(data?.payTermId ? data?.payTermId : "");
     },
@@ -406,9 +406,9 @@ const PurchaseOrderForm = ({
       submitApproval: submitApprovalFlag,
     });
 
-    if (!validateData(payload)) {
-      return;
-    }
+    // if (!validateData(payload)) {
+    //   return;
+    // }
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
         return;
@@ -460,9 +460,9 @@ const PurchaseOrderForm = ({
       if (result.statusCode === 0) {
         toast.success(
           result.message ||
-            (actionType === "APPROVE"
-              ? "Purchase Order Approved!"
-              : "Sent Back for Review!"),
+          (actionType === "APPROVE"
+            ? "Purchase Order Approved!"
+            : "Sent Back for Review!"),
         );
         setApprovalModal(false);
         invalidatePurchaseModule();
@@ -717,111 +717,111 @@ const PurchaseOrderForm = ({
     ...(isFullyLocked
       ? []
       : [
-          {
-            key: "save-close",
-            icon: (
-              <span className={actionIconPairClass}>
-                <FiSave className="h-3.5 w-3.5" />
-                <HiX className="h-3.5 w-3.5" />
-              </span>
-            ),
-            hoverLabel: "Save & Close",
-            iconOnly: true,
-            onClick: () => saveData("close"),
-            onKeyDown: (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                saveData("close");
-                e.stopPropagation();
-              }
-            },
-            disabled: readOnly,
-            className: `bg-indigo-500 hover:bg-indigo-600 ${actionButtonClass}`,
+        {
+          key: "save-close",
+          icon: (
+            <span className={actionIconPairClass}>
+              <FiSave className="h-3.5 w-3.5" />
+              <HiX className="h-3.5 w-3.5" />
+            </span>
+          ),
+          hoverLabel: "Save & Close",
+          iconOnly: true,
+          onClick: () => saveData("close"),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              saveData("close");
+              e.stopPropagation();
+            }
           },
-          ...(status === "APPROVED"
-            ? []
-            : [
-                {
-                  key: "save-new",
-                  icon: (
-                    <span className={actionIconPairClass}>
-                      <FiSave className="h-3.5 w-3.5" />
-                      <HiOutlineRefresh className="h-3.5 w-3.5" />
-                    </span>
-                  ),
-                  hoverLabel: "Save & New",
-                  iconOnly: true,
-                  onClick: () => saveData("new"),
-                  onKeyDown: (e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      saveData("new");
-                    }
-                  },
-                  disabled: readOnly,
-                  className: `bg-indigo-500 hover:bg-indigo-600 ${actionButtonClass}`,
-                },
-              ]),
-        ]),
+          disabled: readOnly,
+          className: `bg-indigo-500 hover:bg-indigo-600 ${actionButtonClass}`,
+        },
+        ...(status === "APPROVED"
+          ? []
+          : [
+            {
+              key: "save-new",
+              icon: (
+                <span className={actionIconPairClass}>
+                  <FiSave className="h-3.5 w-3.5" />
+                  <HiOutlineRefresh className="h-3.5 w-3.5" />
+                </span>
+              ),
+              hoverLabel: "Save & New",
+              iconOnly: true,
+              onClick: () => saveData("new"),
+              onKeyDown: (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  saveData("new");
+                }
+              },
+              disabled: readOnly,
+              className: `bg-indigo-500 hover:bg-indigo-600 ${actionButtonClass}`,
+            },
+          ]),
+      ]),
     ...(!id ||
-    status === "PENDING" ||
-    status === "APPROVED" ||
-    status === "SUPERSEDED" ||
-    status === "NOT_CONFIGURED"
+      status === "PENDING" ||
+      status === "APPROVED" ||
+      status === "SUPERSEDED" ||
+      status === "NOT_CONFIGURED"
       ? []
       : [
-          {
-            key: "submit-approval",
-            icon: <FiSend className="h-3.5 w-3.5" />,
-            hoverLabel: "Submit Approval",
-            iconOnly: true,
-            onClick: () => {
-              saveData("close", { submitApprovalOverride: true });
-            },
-            onKeyDown: (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopPropagation();
-                saveData("close", { submitApprovalOverride: true });
-              }
-            },
-            className: `bg-green-700 hover:bg-green-800 ${actionButtonClass}`,
+        {
+          key: "submit-approval",
+          icon: <FiSend className="h-3.5 w-3.5" />,
+          hoverLabel: "Submit Approval",
+          iconOnly: true,
+          onClick: () => {
+            saveData("close", { submitApprovalOverride: true });
           },
-        ]),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+              saveData("close", { submitApprovalOverride: true });
+            }
+          },
+          className: `bg-green-700 hover:bg-green-800 ${actionButtonClass}`,
+        },
+      ]),
     ...((id && status === "PENDING") || status === "SUPERSEDED"
       ? [
-          {
-            key: "send-back",
-            icon: <MdKeyboardDoubleArrowLeft className="h-3.5 w-3.5" />,
-            hoverLabel: "Send Back for Review",
-            iconOnly: true,
-            onClick: () => handleApprovalAction("REJECT"),
-            onKeyDown: (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopPropagation();
-                handleApprovalAction("REJECT");
-              }
-            },
-            className: `bg-blue-600 hover:bg-blue-700 ${actionButtonClass}`,
+        {
+          key: "send-back",
+          icon: <MdKeyboardDoubleArrowLeft className="h-3.5 w-3.5" />,
+          hoverLabel: "Send Back for Review",
+          iconOnly: true,
+          onClick: () => handleApprovalAction("REJECT"),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+              handleApprovalAction("REJECT");
+            }
           },
-          {
-            key: "approve",
-            icon: <FiCheck className="h-3.5 w-3.5" />,
-            hoverLabel: "Approve",
-            iconOnly: true,
-            onClick: () => handleApprovalAction("APPROVE"),
-            onKeyDown: (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.stopPropagation();
-                handleApprovalAction("APPROVE");
-              }
-            },
-            className: `bg-green-600 hover:bg-green-700 ${actionButtonClass}`,
+          className: `bg-blue-600 hover:bg-blue-700 ${actionButtonClass}`,
+        },
+        {
+          key: "approve",
+          icon: <FiCheck className="h-3.5 w-3.5" />,
+          hoverLabel: "Approve",
+          iconOnly: true,
+          onClick: () => handleApprovalAction("APPROVE"),
+          onKeyDown: (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+              handleApprovalAction("APPROVE");
+            }
           },
-        ]
+          className: `bg-green-600 hover:bg-green-700 ${actionButtonClass}`,
+        },
+      ]
       : []),
   ];
 
@@ -829,15 +829,15 @@ const PurchaseOrderForm = ({
     ...(!id || !readOnly || status === "PENDING" || status === "SUPERSEDED"
       ? []
       : [
-          {
-            key: "edit",
-            icon: <FiEdit2 className="h-3.5 w-3.5" />,
-            hoverLabel: "Edit",
-            iconOnly: true,
-            onClick: () => hasPermission(() => setReadOnly(false), "edit"),
-            className: `bg-yellow-600 hover:bg-yellow-700 ${actionButtonClass}`,
-          },
-        ]),
+        {
+          key: "edit",
+          icon: <FiEdit2 className="h-3.5 w-3.5" />,
+          hoverLabel: "Edit",
+          iconOnly: true,
+          onClick: () => hasPermission(() => setReadOnly(false), "edit"),
+          className: `bg-yellow-600 hover:bg-yellow-700 ${actionButtonClass}`,
+        },
+      ]),
     {
       key: "summary",
       icon: <FiEye className="h-3.5 w-3.5" />,
@@ -893,11 +893,10 @@ const PurchaseOrderForm = ({
     if (!isPostApprovalLock) return null;
     return (
       <div
-        className={`text-[11px] px-3 py-1.5 rounded border flex items-center gap-2 mb-2 ${
-          isDeliveryThresholdPassed
+        className={`text-[11px] px-3 py-1.5 rounded border flex items-center gap-2 mb-2 ${isDeliveryThresholdPassed
             ? "bg-red-50 border-red-200 text-red-700"
             : "bg-amber-50 border-amber-200 text-amber-700"
-        }`}
+          }`}
       >
         <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         {isDeliveryThresholdPassed ? (
@@ -1018,8 +1017,8 @@ const PurchaseOrderForm = ({
             id
               ? supplierList?.data?.filter((item) => item?.isSupplier)
               : supplierList?.data?.filter(
-                  (item) => item?.active && item?.isSupplier,
-                ),
+                (item) => item?.active && item?.isSupplier,
+              ),
             "name",
             "id",
           )}
@@ -1082,10 +1081,10 @@ const PurchaseOrderForm = ({
             options={
               deliveryType === "ToSelf"
                 ? dropDownListObject(
-                    branchList ? branchList.data : [],
-                    "branchName",
-                    "id",
-                  )
+                  branchList ? branchList.data : [],
+                  "branchName",
+                  "id",
+                )
                 : dropDownListObject(supplierListBasedOnSupply, "name", "id")
             }
             value={deliveryToId}
@@ -1240,8 +1239,8 @@ const PurchaseOrderForm = ({
             id
               ? supplierList?.data?.filter((item) => item?.isSupplier)
               : supplierList?.data?.filter(
-                  (item) => item?.active && item?.isSupplier,
-                ),
+                (item) => item?.active && item?.isSupplier,
+              ),
             "name",
             "id",
           )}
@@ -1308,10 +1307,10 @@ const PurchaseOrderForm = ({
             options={
               deliveryType === "ToSelf"
                 ? dropDownListObject(
-                    branchList ? branchList.data : [],
-                    "branchName",
-                    "id",
-                  )
+                  branchList ? branchList.data : [],
+                  "branchName",
+                  "id",
+                )
                 : dropDownListObject(supplierListBasedOnSupply, "name", "id")
             }
             value={deliveryToId}
@@ -1498,10 +1497,9 @@ const PurchaseOrderForm = ({
     ),
     summaryPair(
       "Delivery",
-      `${deliveryType || "-"} to ${
-        deliveryType === "ToSelf"
-          ? findFromList(deliveryToId, branchList?.data, "branchName") || "-"
-          : findFromList(deliveryToId, supplierList?.data, "name") || "-"
+      `${deliveryType || "-"} to ${deliveryType === "ToSelf"
+        ? findFromList(deliveryToId, branchList?.data, "branchName") || "-"
+        : findFromList(deliveryToId, supplierList?.data, "name") || "-"
       }`,
     ),
     summaryPair("Due", dueDate),
@@ -1538,7 +1536,7 @@ const PurchaseOrderForm = ({
         summaryPair(
           "Contact",
           findFromList(supplierId, supplierList?.data, "contactPersonName") ||
-            "-",
+          "-",
         ),
         summaryPair(
           "Phone",
@@ -1572,9 +1570,8 @@ const PurchaseOrderForm = ({
       >
         <div className="space-y-4">
           <h2
-            className={`text-base font-semibold ${
-              actionType === "APPROVE" ? "text-green-700" : "text-blue-700"
-            }`}
+            className={`text-base font-semibold ${actionType === "APPROVE" ? "text-green-700" : "text-blue-700"
+              }`}
           >
             {actionType === "APPROVE"
               ? "✅ Approve Purchase Order"
@@ -1595,15 +1592,14 @@ const PurchaseOrderForm = ({
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Current Approval</span>
               <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  status === "APPROVED"
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${status === "APPROVED"
                     ? "bg-green-100 text-green-700"
                     : status === "REJECTED"
                       ? "bg-red-100 text-red-700"
                       : status === "SUPERSEDED"
                         ? "bg-orange-100 text-orange-700" // ✅ NEW
                         : "bg-orange-100 text-orange-700"
-                }`}
+                  }`}
               >
                 {status === "PENDING"
                   ? "Waiting For Approval"
@@ -1657,11 +1653,10 @@ const PurchaseOrderForm = ({
                   handleConfirmAction();
                 }
               }}
-              className={`px-4 py-1.5 text-xs rounded text-white font-semibold transition ${
-                actionType === "APPROVE"
+              className={`px-4 py-1.5 text-xs rounded text-white font-semibold transition ${actionType === "APPROVE"
                   ? "bg-green-600 hover:bg-green-700"
                   : "bg-blue-600 hover:bg-blue-700"
-              } disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1`}
+                } disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1`}
             >
               {actionLoading ? (
                 <>
@@ -1786,7 +1781,7 @@ const PurchaseOrderForm = ({
               isCoreLocked ||
               (quoteVersionOptions.length > 0 &&
                 Number(quoteVersion) !==
-                  quoteVersionOptions[quoteVersionOptions.length - 1]) ||
+                quoteVersionOptions[quoteVersionOptions.length - 1]) ||
               childRecordCount > 0
             }
             styleItemList={styleItemList}
