@@ -67,7 +67,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
   // const { data: uomList } = useGetUomQuery({ params });
   // const { data: sizeTemplateList } = useGetSizeTemplateQuery({ params });
   // const { data: itemGroupList } = useGetItemGroupMasterQuery({ params });
-  const { data: materialList } = useGetMaterialMasterQuery({ params });
+  const { data: itemgroupList } = useGetItemGroupMasterQuery({ params });
   const { data: itemSubGroupList } = useGetItemSubGroupMasterQuery({
     params,
     searchParams: searchValue,
@@ -143,7 +143,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
   }, [name])
 
   const validateData = (data) => {
-    if (data.name && data.materialId) {
+    if (data.name && data.itemGroupId) {
       return true;
     }
     return false;
@@ -385,12 +385,12 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   </div>
                 </div>
 
-                <DropdownWithModal
+                {/* <DropdownWithModal
                   name="Material Category"
                   options={dropDownListObject(
                     id
-                      ? materialList?.data
-                      : materialList?.data?.filter((item) => item?.active),
+                      ? itemgroupList?.data
+                      : itemgroupList?.data?.filter((item) => item?.active),
                     "name",
                     "id",
                   )}
@@ -406,13 +406,13 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   addNewLabel="+ Add New Material Category"
                   childComponent={MaterialMaster}
                   addNewModalWidth="w-[40%] h-[45%]"
-                />
-                {/* <DropdownWithModal
+                /> */}
+                <DropdownWithModal
                   name="Item Group"
                   options={dropDownListObject(
                     id
-                      ? itemGroupList?.data
-                      : itemGroupList?.data?.filter((item) => item?.active),
+                      ? itemgroupList?.data
+                      : itemgroupList?.data?.filter((item) => item?.active),
                     "name",
                     "id",
                   )}
@@ -428,7 +428,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   addNewLabel="+ Add New Item Group"
                   childComponent={ItemGroup}
                   addNewModalWidth="w-[40%] h-[45%]"
-                /> */}
+                />
                 <div className="mb-3">
                   <DropdownWithModal
                     name="Hsn"

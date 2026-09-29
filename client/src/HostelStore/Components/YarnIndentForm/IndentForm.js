@@ -445,7 +445,7 @@ const IndentForm = ({
       leftActions={
         <>
           {(!id || allowedActions.includes("edit")) && (
-            <button onClick={() => saveData("draft")}
+            <button onClick={() => saveData("new")}
               disabled={readOnly}
               className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
@@ -551,7 +551,7 @@ const IndentForm = ({
               </div>{/*  */}
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-6 gap-1 overflow-visible">
+            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-5 gap-1 overflow-visible">
 
               <ReusableInput
                 label="Required Date"
@@ -570,29 +570,7 @@ const IndentForm = ({
                 className={`w-[150px]`}
                 addNewModalWidth="w-[40%] h-[48%]"
               />
-              {/* <ReusableInput
-                label="Delivery Location"
-                value={deliveryLocation}
-                setValue={setDeliveryLocation}
-                required={true}
-                readOnly={readOnly}
-              />
-              <ReusableInput
-                label="Estimated Value"
-                value={estimatedValue}
-                setValue={setEstimatedValue}
-                required={false}
-                readOnly={readOnly}
-              />
-              <div className="col-span-2">
-                <ReusableInput
-                  label="Purpose"
-                  value={purpose}
-                  setValue={setPurpose}
-                  required={true}
-                  readOnly={readOnly}
-                />
-              </div> */}
+
               <div className="col-span-2">
                 <TextAreaNew
                   name="Remarks"
@@ -611,41 +589,24 @@ const IndentForm = ({
 
           <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
             <div className=" px-2  pb-2  rounded-md shadow-sm min-h-[270px] bg-white overflow-hidden flex flex-col flex-1 w-full">
-              {/* <div className="flex bg-white sticky top-0 z-10 px-2 mt-2">
-                <div className="flex w-full gap-2 border-b border-gray-300">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`relative px-4 py-2 text-[14px] font-medium transition-all duration-200 focus:outline-none border border-b-0 rounded-t-md -mb-[1px] ${activeTab === tab
-                        ? "text-black border-gray-300 bg-white z-10"
-                        : "text-gray-500 border-transparent hover:text-black hover:bg-gray-50"
-                        }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div> */}
-              {activeTab == "Yarn" &&
 
-                (
-                  <YarnTable
-                    indentItems={indentItems}
-                    setIndentItems={setIndentItems}
-                    yarnList={yarnList}
-                    yarnBlendMasterList={yarnBlendMasterList}
-                    countsMasterList={countsMasterList}
-                    partyList={partyList}
-                    uomList={uomList}
-                    sizeList={sizeList}
-                    colorList={colorList}
-                    readOnly={readOnly}
-                  />
-                )
 
-              }
+
+              <YarnTable
+                indentItems={indentItems}
+                setIndentItems={setIndentItems}
+                yarnList={yarnList}
+                yarnBlendMasterList={yarnBlendMasterList}
+                countsMasterList={countsMasterList}
+                partyList={partyList}
+                uomList={uomList}
+                sizeList={sizeList}
+                colorList={colorList}
+                readOnly={readOnly}
+              />
+
+
+
 
             </div>
           </div>

@@ -17,10 +17,11 @@ import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServi
 import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService.js";
 import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
 import { useGetItemGroupMasterQuery } from "../../../redux/services/ItemGroupMasterService.js";
-import IndentForm from "./IndentForm.js";
+import IndentForm from "./DyesIndentForm.js";
 import IndentFormReport from "./IndentFormReport.js";
 import { useDeleteMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssue.js";
-import { useDeleteSparepartIndentMutation } from "../../../redux/uniformService/SparepartIndent.js";
+import { useDeleteFabricIndentMutation } from "../../../redux/uniformService/FabricIndent.js";
+import { useDeleteDyesChemicalIndentMutation } from "../../../redux/uniformService/DyesChemicalIndent.js";
 
 export default function Form() {
 
@@ -50,7 +51,7 @@ export default function Form() {
     setShowForm(true);
     setReadOnly(false);
   };
-  const [removeData] = useDeleteSparepartIndentMutation();
+  const [removeData] = useDeleteDyesChemicalIndentMutation();
 
   const [dispatchInvalidate] = useInvalidateTags();
 
@@ -59,48 +60,36 @@ export default function Form() {
     if (id) {
       if (!window.confirm("Are you sure to delete...?")) {
         return;
-      } if (data?.data?.childRecord > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "This Transaction Items used in Purchase Return",
-          text: "Data cannot be deleted!",
-        });
-      } else if (data?.data?.childRecordBill > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "This Transaction Items used in Purchase Bill",
-          text: "Data cannot be deleted!",
-        });
-      } else {
+      }
 
-        try {
-          let deldata = await removeData(id).unwrap();
-          if (deldata?.statusCode == 1) {
-            Swal.fire({
-              icon: "error",
-              title: "Child record Exists",
-              text: deldata.data?.message || "Data cannot be deleted!",
-            });
-            return;
-          }
-          setId("");
-          Swal.fire({
-            title: "Deleted Successfully",
-            icon: "success",
-            timer: 1000,
-          });
-          setShowForm(false);
-          dispatchInvalidate();
-          invalidatePurchaseModule();
-        } catch (error) {
+      try {
+        let deldata = await removeData(id).unwrap();
+        if (deldata?.statusCode == 1) {
           Swal.fire({
             icon: "error",
-            title: "Submission error",
-            text: error.data?.message || "Something went wrong!",
+            title: "Child record Exists",
+            text: deldata.data?.message || "Data cannot be deleted!",
           });
-          setShowForm(false);
+          return;
         }
+        setId("");
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+          timer: 1000,
+        });
+        setShowForm(false);
+        dispatchInvalidate();
+        invalidatePurchaseModule();
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Submission error",
+          text: error.data?.message || "Something went wrong!",
+        });
+        setShowForm(false);
       }
+
     }
   };
 
@@ -111,41 +100,11 @@ export default function Form() {
 
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
   const { data: branchList } = useGetBranchQuery({ params: { ...params } });
-  const { data: styleItemList } = useGetItemMasterQuery({ params: { ...params } });
-  const { data: itemGroupList } = useGetItemGroupMasterQuery({ params: { ...params } });
 
-  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
-  const { data: hsnList } =
-    useGetHsnMasterQuery({ params });
-  const { data: sizeList } = useGetSizeMasterQuery({ params });
-  const { data: colorList } = useGetColorMasterQuery({ params });
-  const { data: taxTypeList, isLoading: isTaxLoading, isFetching: isTaxfetching } =
-    useGetTaxTemplateQuery({ params: { ...params } });
-  const { data: gsmList } = useGetGsmMasterQuery({ params });
 
-  const tabParams = useSelector((state) =>
-    state.openTabs.tabs.find((t) => t.name === "PURCHASE INWARD")?.params
-  );
-  const lastProcessedTimestamp = useRef(null);
 
-  useEffect(() => {
-    // Skip if no params or already processed this exact timestamp
-    if (!tabParams?.supplierId || !tabParams?.timestamp) return;
-    if (tabParams.timestamp === lastProcessedTimestamp.current) return;
 
-    // ⬅️ Mark as processed BEFORE setting state
-    lastProcessedTimestamp.current = tabParams.timestamp;
 
-    setFromPoSupplierId(tabParams.supplierId);
-    setFromPoId(tabParams.poId);
-    setFromPoType(tabParams.poType === "ORDER" ? "Order Purchase Inward" : "General Purchase Inward");
-    setId("");
-    setReadOnly(false);
-    setShowForm(true);
-
-    // ❌ NO clearTabParams here — that's what's breaking it
-
-  }, [tabParams]);
 
   const handleClose = () => {
     setShowForm(false);
@@ -176,13 +135,7 @@ export default function Form() {
             setShowForm={setShowForm}
             supplierList={supplierList}
             branchList={branchList}
-            uomList={uomList}
-            styleItemList={styleItemList}
-            itemGroupList={itemGroupList}
-            hsnList={hsnList}
             onNew={onNew}
-            sizeList={sizeList}
-            colorList={colorList}
             fromPoId={fromPoId}
             fromPoSupplierId={fromPoSupplierId}
             fromPoType={fromPoType}
@@ -190,8 +143,6 @@ export default function Form() {
             setFromPoSupplierId={setFromPoSupplierId}
             setFromPoType={setFromPoType}
             handleClose={handleClose}
-            taxTypeList={taxTypeList}
-            gsmList={gsmList}
           />
         </div>
 
@@ -199,7 +150,7 @@ export default function Form() {
         <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
           <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
 
-            <h1 className="text-lg font-bold text-gray-800">SPAREPART INDENT FORM
+            <h1 className="text-lg font-bold text-gray-800">MACHINE SPARE & PARTS INDENT FORM
             </h1>
 
             <button

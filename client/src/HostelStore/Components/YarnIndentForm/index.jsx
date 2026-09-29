@@ -98,8 +98,6 @@ export default function Form() {
 
   const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
   const { data: branchList } = useGetBranchQuery({ params: { ...params } });
-  const { data: styleItemList } = useGetItemMasterQuery({ params: { ...params } });
-  const { data: itemGroupList } = useGetItemGroupMasterQuery({ params: { ...params } });
 
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
@@ -107,29 +105,9 @@ export default function Form() {
   const { data: colorList } = useGetColorMasterQuery({ params });
 
 
-  const tabParams = useSelector((state) =>
-    state.openTabs.tabs.find((t) => t.name === "PURCHASE INWARD")?.params
-  );
-  const lastProcessedTimestamp = useRef(null);
 
-  useEffect(() => {
-    // Skip if no params or already processed this exact timestamp
-    if (!tabParams?.supplierId || !tabParams?.timestamp) return;
-    if (tabParams.timestamp === lastProcessedTimestamp.current) return;
 
-    // ⬅️ Mark as processed BEFORE setting state
-    lastProcessedTimestamp.current = tabParams.timestamp;
 
-    setFromPoSupplierId(tabParams.supplierId);
-    setFromPoId(tabParams.poId);
-    setFromPoType(tabParams.poType === "ORDER" ? "Order Purchase Inward" : "General Purchase Inward");
-    setId("");
-    setReadOnly(false);
-    setShowForm(true);
-
-    // ❌ NO clearTabParams here — that's what's breaking it
-
-  }, [tabParams]);
 
   const handleClose = () => {
     setShowForm(false);
@@ -161,8 +139,6 @@ export default function Form() {
             supplierList={supplierList}
             branchList={branchList}
             uomList={uomList}
-            styleItemList={styleItemList}
-            itemGroupList={itemGroupList}
             onNew={onNew}
             sizeList={sizeList}
             colorList={colorList}

@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 
 async function get(req) {
-  const { companyId, active } = req.query;
+  const { companyId, active, isFilter, filterValue } = req.query;
 
   let data = await prisma.item.findMany({
     where: {
@@ -14,8 +14,18 @@ async function get(req) {
           IndentItems: true,
         },
       },
+      ItemGroup: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
+
+  if (isFilter && filterValue) {
+    data = data?.filter((i) => i?.ItemGroup?.name === filterValue);
+  }
+
   return {
     statusCode: 0,
     data: (data = data.map((item) => ({

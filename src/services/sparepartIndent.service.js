@@ -17,9 +17,9 @@ import {
   buildIncludeForModule,
 } from "../utils/approvalHelper.js";
 
-const REFERENCE_PAGE = "SPAREPART INDENT FORM";
-const INDENT_TYPE = "SPAREPART";
-const DOC_PREFIX = "SPR";
+const REFERENCE_PAGE = "SPARE PART INDENT FORM";
+const INDENT_TYPE = "SPARE PART";
+const DOC_PREFIX = "SPI";
 
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
@@ -34,6 +34,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
     orderBy: { id: "desc" },
   });
 
+  console.log(lastObject, "lastObject");
+
+
   const branchObj = await getTableRecordWithId(branchId, "branch");
   let newDocId = `${branchObj.branchCode}/${shortCode}/${DOC_PREFIX}/1`;
 
@@ -43,7 +46,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
         select: { docId: true },
         where: {
           branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
+          indentType: INDENT_TYPE,
           AND: [
             { createdAt: { gte: startTime } },
             { createdAt: { lte: endTime } },
@@ -150,12 +153,7 @@ async function get(req) {
   const shortCode = finYearDate
     ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
     : "";
-  let newDocId = await getNextDocId(
-    branchId,
-    shortCode,
-    finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime,
-  );
+
 
   let data = await prisma.Indent.findMany({
     where: {
@@ -227,7 +225,7 @@ async function get(req) {
         where: {
           moduleId: module.id,
           branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
+          indentType: INDENT_TYPE,
           active: true,
         },
         include: {
@@ -279,7 +277,6 @@ async function get(req) {
   return {
     statusCode: 0,
     data: resolvedData,
-    nextDocId: newDocId,
     totalCount,
   };
 }
@@ -352,22 +349,23 @@ async function create(body) {
     storeId,
     docDate,
     supplierId,
-    inwardItems: rawInwardItems,
+    indentItems,
     finYearId,
     draftSave,
-    productionType,
-    netBillValue,
     orderId,
     departmentId,
     employeeId,
+    requiredDate,
+    priority,
+    remarks
 
   } = await body;
-
-  console.log(body, "body")
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
   let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave,);
+
+  const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
 
   let data;
   await prisma.$transaction(async (tx) => {
@@ -375,24 +373,21 @@ async function create(body) {
 
       data: {
         docId: newDocId,
-        indentType: INDENT_TYPE,
+        indentType: String(INDENT_TYPE),
+        priority: String(priority),
+        remarks: String(remarks),
         docDate: docDate ? new Date(docDate) : null,
+        requiredDate: requiredDate ? new Date(requiredDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
-        locationId: parseInt(storeId),
-        supplierId: parseInt(supplierId),
-        productionType,
-        orderId: orderId ? parseInt(orderId) : null,
         departmentId: departmentId ? parseInt(departmentId) : null,
         employeeId: employeeId ? parseInt(employeeId) : null,
 
       },
     });
 
-    const inwardItems = typeof rawInwardItems === "string" ? JSON.parse(rawInwardItems) : rawInwardItems;
 
-    await createIssueItems(tx, inwardItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
+    await createIssueItems(tx, IndentItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
 
 
 
@@ -403,87 +398,43 @@ async function create(body) {
   return { statusCode: 0, data };
 }
 
-async function calculateFIFOAvailableStock(tx, stockDetail, storeId, branchId) {
-  const stockHistory = await tx.stock.findMany({
-    where: {
-      itemGroupId: stockDetail?.itemGroupId ? parseInt(stockDetail.itemGroupId) : null,
-      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
-      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      storeId: parseInt(storeId),
-      branchId: branchId ? parseInt(branchId) : undefined,
-    },
-    orderBy: { createdAt: "asc" }
-  });
-
-  const inBatches = [];
-  let totalOutQty = 0;
-
-  for (const stock of stockHistory) {
-    const qty = Number(stock.qty || 0);
-    if (stock.inOrOut === "In") {
-      inBatches.push({ ...stock, availableQty: qty });
-    } else if (stock.inOrOut === "Out") {
-      totalOutQty += Math.abs(qty);
-    }
-  }
-
-  for (const batch of inBatches) {
-    if (totalOutQty <= 0) break;
-
-    if (totalOutQty >= batch.availableQty) {
-      totalOutQty -= batch.availableQty;
-      batch.availableQty = 0;
-    } else {
-      batch.availableQty -= totalOutQty;
-      totalOutQty = 0;
-    }
-  }
-
-  return inBatches.filter(b => b.availableQty > 0);
-}
 
 // ── CREATE INWARD ITEMS ───────────────────────────────────────────────────────
 async function createIssueItems(
   tx,
   inwardItems,
-  indentRecord,
-  userId,
-  storeId,
-  branchId,
-  orderId,
-  departmentId,
-  employeeId,
+  indent
 ) {
 
+  let createdItem
+
+  for (const item of inwardItems) {
+    createdItem = await tx.IndentItems.create({
+      data: {
+        indentId: parseInt(indent.id),
+        fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
+        gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
+        sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
+        colorId: item?.colorId ? parseInt(item.colorId) : null,
+        uomId: item?.uomId ? parseInt(item.uomId) : null,
+        qty: item?.qty ? String(item.qty) : null,
+
+      },
+    });
 
 
 
-  const createdItem = await tx.IndentItems.create({
-    data: {
-      indentId: parseInt(indentRecord.id),
-      itemGroupId: stockDetail?.itemGroupId ? parseInt(stockDetail.itemGroupId) : null,
-      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
-      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
-      issueQty: String(issueQty), // Single total quantity
-      inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
-      price: firstBatchPrice,
-    },
-  });
-
+  }
+  return createdItem
 
 
 
 }
 
-function findRemovedItemsGoods(dataFound, inwardItems) {
-  return dataFound.MaterialIssueItems.filter(
+function findRemovedItemsGoods(dataFound, indentItems) {
+  return dataFound.IndentItems.filter(
     (oldItem) =>
-      !inwardItems.find(
+      !indentItems.find(
         (newItem) => parseInt(newItem.id) === parseInt(oldItem.id),
       ),
   );
@@ -497,20 +448,14 @@ async function update(id, body, files) {
     storeId,
     docDate,
     supplierId,
-    inwardItems: rawInwardItems,
-    finYearId,
-    draftSave,
+    indentItems,
     productionType,
-    netBillValue,
     orderId,
     departmentId,
     employeeId,
+    requiredDate
+
   } = await body;
-
-
-
-
-
 
 
   const dataFound = await prisma.Indent.findUnique({
@@ -519,25 +464,19 @@ async function update(id, body, files) {
       IndentItems: true
     },
   });
-  if (!dataFound) return NoRecordFound("MaterialIssue ");
+  if (!dataFound) return NoRecordFound("Indent");
 
 
-  const inwardItems =
-    typeof rawInwardItems === "string"
-      ? JSON.parse(rawInwardItems)
-      : rawInwardItems;
-  const removedItemsGoods = findRemovedItemsGoods(dataFound, inwardItems);
-  const removeItemsGoodsIds = removedItemsGoods.map((item) =>
-    parseInt(item.id),
-  );
+  const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
+  const removedItemsGoods = findRemovedItemsGoods(dataFound, indentItems);
+  const removeItemsGoodsIds = removedItemsGoods.map((item) => parseInt(item.id));
 
   let data;
+
   await prisma.$transaction(async (tx) => {
     if (removeItemsGoodsIds.length > 0) {
-      await tx.stock.deleteMany({
-        where: { indentItemsId: { in: removeItemsGoodsIds } },
-      });
-      await tx.MaterialIssueItems.deleteMany({
+
+      await tx.IndentItems.deleteMany({
         where: { id: { in: removeItemsGoodsIds } },
       });
     }
@@ -545,20 +484,13 @@ async function update(id, body, files) {
     data = await tx.Indent.update({
       where: { id: parseInt(id) },
       data: {
-        docDate: docDate ? new Date(docDate) : null,
+        requiredDate: requiredDate ? new Date(requiredDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
-        locationId: parseInt(storeId),
-        supplierId: parseInt(supplierId),
-        productionType,
-        orderId: orderId ? parseInt(orderId) : null,
-        departmentId: departmentId ? parseInt(departmentId) : null,
-        employeeId: employeeId ? parseInt(employeeId) : null,
       },
     });
 
-    await updateinwardItems(tx, inwardItems, data, userId, storeId, branchId, orderId, departmentId, employeeId,);
+    await updateinwardItems(tx, IndentItems, data);
 
 
   });
@@ -571,50 +503,39 @@ async function update(id, body, files) {
 // ── UPDATE INWARD ITEMS ───────────────────────────────────────────────────────
 async function updateinwardItems(
   tx,
-  inwardItems,
+  indentItems,
   indentRecord,
-  userId,
-  storeId,
-  branchId,
-  orderId,
-  departmentId,
-  employeeId,
 ) {
+  for (const item of indentItems) {
 
-  let createdOrUpdatedItem;
-  if (inwardItem.id) {
-    createdOrUpdatedItem = await tx.IndentItems.update({
-      where: { id: parseInt(inwardItem.id) },
-      data: {
-        itemGroupId: inwardItem?.itemGroupId ? parseInt(inwardItem.itemGroupId) : null,
-        itemId: inwardItem?.itemId ? parseInt(inwardItem.itemId) : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-        hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
-        issueQty: String(issueQty), // Single total quantity
-        inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
-        price: firstBatchPrice,
-      },
-    });
-  } else {
-    createdOrUpdatedItem = await tx.IndentItems.create({
-      data: {
-        indentId: parseInt(indentRecord.id),
-        itemGroupId: inwardItem?.itemGroupId ? parseInt(inwardItem.itemGroupId) : null,
-        itemId: inwardItem?.itemId ? parseInt(inwardItem.itemId) : null,
-        sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-        colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-        uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-        hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
-        issueQty: issueQty,
-        inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
-        price: firstBatchPrice,
-      },
-    });
+    let createdOrUpdatedItem;
+    if (item.id) {
+      createdOrUpdatedItem = await tx.IndentItems.update({
+        where: { id: parseInt(item.id) },
+        data: {
+          fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
+          gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
+          sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
+          colorId: item?.colorId ? parseInt(item.colorId) : null,
+          uomId: item?.uomId ? parseInt(item.uomId) : null,
+          qty: item?.qty ? String(item.qty) : null,
+        },
+      });
+    } else {
+      createdOrUpdatedItem = await tx.IndentItems.create({
+        data: {
+          indentId: parseInt(indentRecord.id),
+          fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
+          gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
+          sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
+          colorId: item?.colorId ? parseInt(item.colorId) : null,
+          uomId: item?.uomId ? parseInt(item.uomId) : null,
+          qty: item?.qty ? String(item.qty) : null,
+        },
+      });
+    }
+
   }
-
-
 
 }
 

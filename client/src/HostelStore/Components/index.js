@@ -74,4 +74,4 @@ export { default as YarnIndentForm } from "./YarnIndentForm";
 export { default as FabricIndentForm } from "./FabricIndentForm";
 export { default as DyesChemicalIndentForm } from "./DyesChemicalIndentForm";
 export { default as GeneralIndentForm } from "./GeneralIndentForm";
-export { default as SparepartIndentForm } from "./SparepartIndentForm";
+export { default as SparepartIndentForm } from "./MachineSparePartsForm";

@@ -209,9 +209,9 @@ const ActiveTabList = () => {
     "COUNTS MASTER": <CountMaster />,
     "YARN INDENT FORM": <YarnIndentForm />,
     "FABRIC INDENT FORM": <FabricIndentForm />,
-    "DYES/CHEMICAL INDENT FORM": <DyesChemicalIndentForm />,
+    "DYES & CHEMICALS INDENT FORM": <DyesChemicalIndentForm />,
     "GENERAL INDENT FORM": <GeneralIndentForm />,
-    "SPAREPART INDENT FORM": <SparepartIndentForm />,
+    "MACHINE SPARE & PARTS": <SparepartIndentForm />,
 
 
   };

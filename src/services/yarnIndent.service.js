@@ -18,8 +18,8 @@ import {
 } from "../utils/approvalHelper.js";
 
 const REFERENCE_PAGE = "YARN INDENT FORM";
-const INDENT_TYPE = "Yarn";
-const DOC_PREFIX = "YRN";
+const INDENT_TYPE = "YARN";
+const DOC_PREFIX = "YIN";
 
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
@@ -225,7 +225,7 @@ async function get(req) {
         where: {
           moduleId: module.id,
           branchId: parseInt(branchId),
-          indentType: INDENT_TYPE,
+          // indentType: INDENT_TYPE,
           active: true,
         },
         include: {
@@ -357,7 +357,7 @@ async function create(body) {
     employeeId,
     requiredDate,
     priority,
-    remark
+    remarks
 
   } = await body;
   let indentType = 'Yarn'
@@ -374,9 +374,9 @@ async function create(body) {
 
       data: {
         docId: newDocId,
-        indentType: String(indentType),
+        indentType: String(INDENT_TYPE),
         priority: String(priority),
-        remark: String(remark),
+        remarks: String(remarks),
         docDate: docDate ? new Date(docDate) : null,
         requiredDate: requiredDate ? new Date(requiredDate) : null,
         createdById: parseInt(userId),

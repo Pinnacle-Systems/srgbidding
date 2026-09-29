@@ -2921,7 +2921,7 @@ model Indent {
   Employee     Employee?     @relation(fields: [employeeId], references: [id])
   priority     String?
   reason       String?
-  remark       String?
+  remarks      String?
   requiredDate DateTime?
   indentType   String
   status       String?       @default("DRAFT")
@@ -2961,6 +2961,7 @@ model IndentItems {
   millToId    Int?
   price       String?
   qty         String?
+  make        String?
 }
 
 model Yarn {
