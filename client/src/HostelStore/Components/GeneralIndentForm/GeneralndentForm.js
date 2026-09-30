@@ -13,35 +13,30 @@ import {
 
 } from "../../../Utils/helper.js";
 import { toast } from "react-toastify";
-import { FiEdit2, FiSave, FiPrinter } from "react-icons/fi";
-import { HiOutlineRefresh } from "react-icons/hi";
+import { FiEdit2, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
 
-import { useGetLocationMasterQuery } from "../../../redux/services/LocationMasterService.js";
 import { invalidatePurchaseModule } from "../../../redux/Dispatch/PurchaseInvalidateTags.js";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
-import { calculateTaxWithHSNBreakupAndInsertIntoInwardItems } from "../PurchaseBillEntry/taxSummary.js";
-import PoSummary from "../PurchaseOrder/PoSummary.js";
-import Modal from "../../../UiComponents/Modal/index.js";
-import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService.js";
-import { useGetStockforMaterialIssueQuery, useGetStockReportQuery } from "../../../redux/services/StockService.js";
-import { useAddMaterialIssueMutation, useGetMaterialIssueByIdQuery, useUpdateMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssue.js";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell.jsx";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection.jsx";
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter.jsx";
-import { useGetOrderMasterQuery } from "../../../redux/services/OrderMasterService.js";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect.jsx";
-import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService.js";
 import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
-import { PDFViewer } from "@react-pdf/renderer";
-import ThermalSalesPrintFormat from "./ThermalSalesPrintFormat.jsx";
 
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService.js";
-import YarnTable from "./Tables/Yarn.jsx";
-import FabricTable from "./Tables/Fabric.jsx";
-import SparePartTable from "./Tables/SpareParts.jsx";
-import DyesAndMaintainenceTable from "./Tables/Others.jsx";
-import { useAddGeneralIndentMutation, useGetGeneralIndentByIdQuery, useUpdateGeneralIndentMutation } from "../../../redux/uniformService/GeneralIndent.js";
+import { useAddFabricIndentMutation, useGetFabricIndentByIdQuery, useUpdateFabricIndentMutation } from "../../../redux/uniformService/FabricIndent.js";
+import { useGetFabricMasterQuery } from "../../../redux/services/FabricMasterService.js";
+import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService.js";
+import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
+import { useGetSizeMasterQuery } from "../../../redux/services/SizemasterService.js";
+import { useGetColorMasterQuery } from "../../../redux/services/ColorMasterService.js";
+import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
+import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
+import { useAddDyesChemicalIndentMutation, useLazyGetDyesChemicalIndentByIdQuery, useUpdateDyesChemicalIndentMutation } from "../../../redux/uniformService/DyesChemicalIndent.js";
+import { useAddSparepartIndentMutation, useGetSparepartIndentByIdQuery, useUpdateSparepartIndentMutation } from "../../../redux/uniformService/SparepartIndent.js";
+import GeneralPartsTable from "./GeneralTableItems.jsx";
+import { useAddGeneralIndentMutation, useUpdateGeneralIndentMutation } from "../../../redux/uniformService/GeneralIndent.js";
 
 const IndentForm = ({
   onClose,
@@ -49,14 +44,7 @@ const IndentForm = ({
   setId,
   readOnly,
   setReadOnly,
-  supplierList,
-  uomList,
-  styleItemList,
-  itemGroupList,
-  branchList,
   hsnList,
-  sizeList,
-  colorList,
   fromPoId,
   fromPoSupplierId,
   fromPoType,
@@ -64,7 +52,6 @@ const IndentForm = ({
   setFromPoSupplierId,
   setFromPoType,
   taxTypeList,
-  gsmList,
 }) => {
   const today = new Date();
 
@@ -97,20 +84,27 @@ const IndentForm = ({
 
   const { userId, finYearId, branchId } = getCommonParams();
 
-
+  const params = { branchId, finYearId, userId, };
 
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetGeneralIndentByIdQuery(id, { skip: !id });
+  } = useGetSparepartIndentByIdQuery(id, { skip: !id });
 
   const [addData] = useAddGeneralIndentMutation();
   const [updateData] = useUpdateGeneralIndentMutation();
 
 
-
   const { data: departmentData } = useGetDepartmentQuery({});
+  const { data: itemData } = useGetItemMasterQuery({ params: { ...params, isFilter: true, filterValue: "MACHINE SPARE PARTS" } });
+  const { data: gsmData } = useGetGsmMasterQuery({ params: { ...params } });
+
+  const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
+
+  const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
+
 
 
 
@@ -141,7 +135,7 @@ const IndentForm = ({
       setAllowedActions(data?.allowedActions || []);
       setRowVersion(data?.rowVersion || 1);
 
-      setPriority(data?.Priority || "");
+      setPriority(data?.priority || "");
       setDeliveryDate(
         data?.requiredDate ? moment.utc(data.requiredDate).format("YYYY-MM-DD") : "",
       );
@@ -169,17 +163,7 @@ const IndentForm = ({
 
   const { data: singelUserData, isLoading: userLoding, isFetching: userFetching } = useGetUserByIdQuery(userId, { skip: !userId });
 
-  const tabs = useMemo(() => {
-    const userCreationAccess = singelUserData?.data?.indentCreationAccess;
-    if (!userCreationAccess || userCreationAccess.length === 0) return allTabs; // Fallback for legacy users
-    return allTabs.filter(tab => userCreationAccess.includes(tab));
-  }, [singelUserData, allTabs]);
 
-  useEffect(() => {
-    if (tabs.length > 0 && !tabs.includes(activeTab)) {
-      setActiveTab(tabs[0]);
-    }
-  }, [tabs, activeTab]);
 
 
 
@@ -188,17 +172,16 @@ const IndentForm = ({
     docDate,
     branchId,
     userId,
-    indentType: activeTab, // save the current tab as the type
-    Priority: priority,
+    priority,
     requiredDate: deliveryDate,
     departmentId,
     employeeId,
-    remark: remarks,
+    remarks,
     deliveryLocation,
     purpose,
     estimatedValue,
     rowVersion,
-    IndentItems: indentItems,
+    indentItems: indentItems.filter((i) => i.itemId),
   };
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
@@ -343,18 +326,25 @@ const IndentForm = ({
     }
   }
 
+  console.log(indentItems, "indentItems")
+
   const validateData = (data) => {
-    const items = data?.inwardItems || [];
-    const filledItems = items.filter((item) => item.styleItemId);
+    const items = data?.indentItems || [];
+    const filledItems = items.filter((item) => item.itemId);
     const checks = [
-      { condition: !data.priority, title: "Priority is required!" },
+      {
+        condition: !data.requiredDate, title: "Delivery Date is required!",
+        condition: !data.priority, title: "Priority is required!",
+
+      },
 
 
       {
-        condition: !isGridDatasValid(data?.inwardItems, false, [
+        condition: !isGridDatasValid(data?.indentItems?.filter((i) => i.itemId), false, [
           "itemId",
           "uomId",
-          "issueQty",
+          "qty",
+
         ]),
         title: "Please fill all required item fields!",
       },
@@ -364,7 +354,7 @@ const IndentForm = ({
         title: "Duplicate Item Found!",
         html: (() => {
           const dup = findDuplicates(filledItems)[0];
-          return `ItemGroup - ${findFromList(dup?.itemGroupId, itemGroupList?.data, "name")},Item - ${findFromList(dup?.itemId, styleItemList?.data, "name")}, Size - ${findFromList(dup?.sizeId, sizeList?.data, "name")}, Color - ${findFromList(dup?.colorId, colorList?.data, "name")}, GSM - ${findFromList(dup?.gsmId, gsmList?.data, "name")}`;
+          return `Fabric - ${findFromList(dup?.fabricId, itemData?.data, "name")},GSM - ${findFromList(dup?.gsmId, gsmData?.data, "name")}, UOM - ${findFromList(dup?.uomId, uomList?.data, "name")}`;
         })(),
       },
     ];
@@ -388,9 +378,9 @@ const IndentForm = ({
 
 
   const saveData = (nextProcess) => {
-    // if (!validateData(data)) {
-    //   return;
-    // }
+    if (!validateData(data)) {
+      return;
+    }
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
         return;
@@ -423,16 +413,6 @@ const IndentForm = ({
 
 
 
-  // useEffect(() => {
-  //   if (attachments?.length >= 5) return;
-  //   setAttachments((prev) => {
-  //     let newArray = Array.from({ length: 5 - prev?.length }, () => {
-  //       return { date: today, filePath: "", log: "" };
-  //     });
-  //     return [...prev, ...newArray];
-  //   });
-  // }, [setAttachments, attachments]);
-
 
 
 
@@ -457,9 +437,7 @@ const IndentForm = ({
   useEffect(() => {
 
 
-    const filtered = inwardItems?.filter(
-      (item) => parseInt(item.poId) === parseInt(fromPoId),
-    );
+
     const mapped = inwardItems?.map((item) => ({
       styleItemId: item.styleItemId || "",
       hsnId: item.hsnId || "",
@@ -498,7 +476,7 @@ const IndentForm = ({
       leftActions={
         <>
           {(!id || allowedActions.includes("edit")) && (
-            <button onClick={() => saveData("draft")}
+            <button onClick={() => saveData("new")}
               disabled={readOnly}
               className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
@@ -541,6 +519,30 @@ const IndentForm = ({
     label: item?.name || "",
   }));
 
+  useEffect(() => {
+    const length = standardTransactionPlaceholderRowCount
+    const currentLength = indentItems?.length || 0;
+    if (currentLength >= length) return;
+
+    setIndentItems((prev) => {
+      const actualPrev = prev || [];
+      if (actualPrev.length >= length) return actualPrev;
+
+      const padding = Array.from({ length: length - actualPrev.length }, () => ({
+        itemId: "",
+        qty: "0.00",
+        tax: "0",
+        colorId: "",
+        uomId: "",
+        price: "0.00",
+        discountValue: "0.00",
+        discountType: "",
+        noOfBags: "0",
+        id: '',
+      }));
+      return [...actualPrev, ...padding];
+    });
+  }, [id, indentItems]);
 
 
 
@@ -604,7 +606,7 @@ const IndentForm = ({
               </div>{/*  */}
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-6 gap-1 overflow-visible">
+            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-5 gap-1 overflow-visible">
 
               <ReusableInput
                 label="Required Date"
@@ -623,29 +625,7 @@ const IndentForm = ({
                 className={`w-[150px]`}
                 addNewModalWidth="w-[40%] h-[48%]"
               />
-              {/* <ReusableInput
-                label="Delivery Location"
-                value={deliveryLocation}
-                setValue={setDeliveryLocation}
-                required={true}
-                readOnly={readOnly}
-              />
-              <ReusableInput
-                label="Estimated Value"
-                value={estimatedValue}
-                setValue={setEstimatedValue}
-                required={false}
-                readOnly={readOnly}
-              />
-              <div className="col-span-2">
-                <ReusableInput
-                  label="Purpose"
-                  value={purpose}
-                  setValue={setPurpose}
-                  required={true}
-                  readOnly={readOnly}
-                />
-              </div> */}
+
               <div className="col-span-2">
                 <TextAreaNew
                   name="Remarks"
@@ -664,62 +644,20 @@ const IndentForm = ({
 
           <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
             <div className=" px-2  pb-2  rounded-md shadow-sm min-h-[270px] bg-white overflow-hidden flex flex-col flex-1 w-full">
-              {/* Category Tabs */}
-              <div className="flex bg-white sticky top-0 z-10 px-2 mt-2">
-                <div className="flex w-full gap-2 border-b border-gray-300">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`relative px-4 py-2 text-[14px] font-medium transition-all duration-200 focus:outline-none border border-b-0 rounded-t-md -mb-[1px] ${activeTab === tab
-                        ? "text-black border-gray-300 bg-white z-10"
-                        : "text-gray-500 border-transparent hover:text-black hover:bg-gray-50"
-                        }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {activeTab == "Yarn" &&
 
-                (
-                  <YarnTable
-                    inwardItems={inwardItems}
-                  />
-                )
 
-              }
-              {activeTab == "Fabric" &&
+              <GeneralPartsTable
+                indentItems={indentItems}
+                setIndentItems={setIndentItems}
+                itemData={itemData}
+                gsmData={gsmData}
+                sizeList={sizeList}
+                colorList={colorList}
+                uomList={uomList}
+              />
 
-                (
-                  <FabricTable
-                    inwardItems={inwardItems}
-                  />
-                )
 
-              }
-              {activeTab == "Spare Part" &&
 
-                (
-                  <SparePartTable
-                    inwardItems={inwardItems}
-
-                  />
-                )
-
-              }
-              {(activeTab == "Dyes & Chemicals" || activeTab == "General") &&
-
-                (
-                  <DyesAndMaintainenceTable
-                    inwardItems={inwardItems}
-
-                  />
-                )
-
-              }
             </div>
           </div>
         </div>

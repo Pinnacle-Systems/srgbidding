@@ -34,10 +34,11 @@ export default function Form() {
 
   const { branchId, companyId, finYearId, userId } = getCommonParams()
   const params = {
-    branchId, companyId, finYearId, isAddessCombined: true
+    branchId, companyId, finYearId, isAddessCombined: true, userId
   };
+  const [invalidateTagsDispatch] = useInvalidateTags();
 
-
+  console.log(params, "params")
 
   const handleView = (orderId) => {
     setId(orderId);
@@ -176,6 +177,8 @@ export default function Form() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={15}
+              params={params}
+              dispatchInvalidate={dispatchInvalidate}
             />
           </div>
         </div>

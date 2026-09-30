@@ -15,6 +15,8 @@ import {
   evaluateConfigTrigger,
   getTriggeredConfig,
   buildIncludeForModule,
+  approveRecord,
+  rejectRecord,
 } from "../utils/approvalHelper.js";
 
 const REFERENCE_PAGE = "YARN INDENT FORM";
@@ -67,6 +69,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
 }
 
 function getPOApprovalStatus(log, isApprovalConfigured = false) {
+  // console.log(log,"log")
   if (!log) {
     return isApprovalConfigured
       ? {
@@ -241,36 +244,23 @@ async function get(req) {
       })
       : [];
 
+  console.log(approvalLogMap, "approvalLogMap")
+
   const resolvedData = data.map((po) => {
     const log = approvalLogMap[po.id] ?? null;
+
+    // ✅ PRIORITY: If log exists → use log.status (single source of truth)
+    // Only evaluate configs if NO log exists yet (to decide if rule would trigger)
     let shouldTrigger = false;
     if (!log && hasApproval && activeConfigs.length > 0) {
       shouldTrigger = evaluateConfigs(activeConfigs, po);
     }
 
-    // Compute allowedActions based on status
-    let allowedActions = [];
-    const status = po.status || "DRAFT";
-    if (status === "DRAFT") {
-      allowedActions = ["edit", "submit", "discard"];
-    } else if (status === "SUBMITTED") {
-      // Typically you'd check if user is approver here, but we simplify for now
-      allowedActions = ["approve", "reject", "return"];
-    } else if (status === "APPROVED") {
-      allowedActions = ["cancel"]; // if not consumed
-    } else if (status === "REJECTED") {
-      allowedActions = ["edit", "discard"];
-    } else if (status === "RETURNED") {
-      allowedActions = ["edit", "submit"];
-    } else if (status === "CANCELLED") {
-      allowedActions = [];
-    }
-
     return {
       ...po,
-      allowedActions,
+      // If log exists → derive from log; otherwise from shouldTrigger
       approvalStatus: getPOApprovalStatus(log, !!log || shouldTrigger),
-      childRecord: 0,
+      // childRecord: po._count.inwardItems + po._count.purchaseCancelItems,
     };
   });
 
@@ -368,6 +358,11 @@ async function create(body) {
 
   const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
 
+  const { module, hasApproval } = await getModuleApprovalSetup(
+    REFERENCE_PAGE,
+    branchId,
+  );
+
   let data;
   await prisma.$transaction(async (tx) => {
     data = await tx.Indent.create({
@@ -386,6 +381,28 @@ async function create(body) {
 
       },
     });
+
+
+    if (hasApproval && module) {
+
+      const includeClause = await buildIncludeForModule(module.id);
+
+      const fullRecord = await tx.Indent.findUnique({
+        where: { id: data.id },
+        include: includeClause,
+      });
+
+      await createApprovalLog(
+        tx,
+        branchId,
+        module.id,
+        data.id,
+        REFERENCE_PAGE,
+        fullRecord,
+        data.docId,
+        userId,
+      );
+    }
 
 
     await createIssueItems(tx, IndentItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
@@ -965,11 +982,40 @@ async function submit(id, body) {
 }
 
 async function approve(id, body) {
-  const data = await prisma.Indent.update({
-    where: { id: parseInt(id) },
-    data: { status: "APPROVED" }
-  });
-  return { statusCode: 0, data };
+  try {
+    const {
+      userId,
+      remarks,
+      recordData,
+      referencePage,
+      referenceId,
+      actionType,
+    } = body;
+    console.log(body, "body")
+
+    if (!userId) return { statusCode: 1, message: "userId is required" };
+    if (actionType === "REJECT" && !remarks?.trim()) {
+      return { statusCode: 1, message: "Remarks required for rejection" };
+    }
+
+    console.log(actionType === "APPROVE")
+
+    if (actionType === "APPROVE") {
+      return await approveRecord(
+        referenceId,
+        referencePage,
+        userId,
+        remarks,
+        recordData ?? {},
+      );
+    } else if (actionType === "REJECT") {
+      return await rejectRecord(referenceId, referencePage, userId, remarks);
+    }
+
+    return { statusCode: 1, message: "Invalid action type" };
+  } catch (err) {
+    return { statusCode: 400, message: err.message };
+  }
 }
 
 async function reject(id, body) {

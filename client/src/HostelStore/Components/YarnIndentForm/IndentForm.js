@@ -113,7 +113,7 @@ const IndentForm = ({
       setAllowedActions(data?.allowedActions || []);
       setRowVersion(data?.rowVersion || 1);
 
-      setPriority(data?.Priority || "");
+      setPriority(data?.priority || "");
       setDeliveryDate(
         data?.requiredDate ? moment.utc(data.requiredDate).format("YYYY-MM-DD") : "",
       );
@@ -161,7 +161,7 @@ const IndentForm = ({
     branchId,
     userId,
     indentType: activeTab, // save the current tab as the type
-    Priority: priority,
+    priority,
     requiredDate: deliveryDate,
     departmentId,
     employeeId,
@@ -288,7 +288,6 @@ const IndentForm = ({
     console.log(isRequiredAllData, "isRequiredAllData");
     console.log(mandatoryFields, "mandatoryFields")
 
-    // If the array is empty, we consider it invalid because there must be at least one row.
     if (!datas || datas.length === 0) {
       return false;
     }

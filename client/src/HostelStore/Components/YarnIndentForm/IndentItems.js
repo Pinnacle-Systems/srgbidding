@@ -594,7 +594,7 @@ const IssueItems = ({
                           className="text-right px-1 w-full table-data-input"
                           onFocus={(e) => {
                             e.target.select();
-                            setFocusedField(`${index}-issueQty`);
+                            // setFocusedField(`${index}-issueQty`);
                           }}
                           value={
                             focusedField === `${index}-issueQty`
@@ -606,11 +606,11 @@ const IssueItems = ({
                           onChange={(e) =>
                             handleInputChange(e.target.value, index, "issueQty", row)
                           }
-                          onBlur={(e) => {
-                            const val = e.target.value;
-                            handleInputChange(val ? Number(val).toFixed(2) : "", index, "issueQty", row);
-                            setFocusedField(null);
-                          }}
+                          // onBlur={(e) => {
+                          //   const val = e.target.value;
+                          //   handleInputChange(val ? Number(val).toFixed(2) : "", index, "issueQty", row);
+                          //   setFocusedField(null);
+                          // }}
                           disabled={(row.netQty ?? 0) <= 0 || readOnly || isAlreadyReturned}
                           readOnly={readOnly}
                         />

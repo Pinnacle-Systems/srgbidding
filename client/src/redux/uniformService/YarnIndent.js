@@ -115,12 +115,15 @@ const YarnIndentApi = createApi({
       invalidatesTags: ["YarnIndent"],
     }),
     approveIndent: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `${YARN_INDENT_API}/${id}/approve`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["YarnIndent"],
+      query: (payload) => {
+        const { id, ...body } = payload
+        return {
+          url: `${YARN_INDENT_API}/${id}/approve`,
+          method: "POST",
+          body
+        }
+      }
+      , invalidatesTags: ["InternalIndentIssue"],
     }),
     rejectIndent: builder.mutation({
       query: ({ id, body }) => ({

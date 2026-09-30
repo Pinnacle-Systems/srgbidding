@@ -21,13 +21,10 @@ import { Receipt, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssue";
-import { useApproveIndentMutation, useGetYarnIndentQuery } from "../../../redux/uniformService/YarnIndent";
-import StatusBadge from "./components/StatusBadge";
-import { ApprovalBadge } from "../../../Utils/ApprovalHelper";
-import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
-import { FiCheck } from "react-icons/fi";
-import ReusableIndentApprovalForm from "../ReusableComponents/IndentMoudleReusabelForms";
-import { toast } from "react-toastify";
+import { useGetFabricIndentQuery } from "../../../redux/uniformService/FabricIndent";
+import { useGetDyesChemicalIndentQuery } from "../../../redux/uniformService/DyesChemicalIndent";
+import { useGetSparepartIndentQuery } from "../../../redux/uniformService/SparepartIndent";
+import { useGetGeneralIndentQuery } from "../../../redux/uniformService/GeneralIndent";
 
 const IndentFormReport = ({
   onClick,
@@ -36,8 +33,6 @@ const IndentFormReport = ({
   onEdit,
   onDelete,
   rowActions = true,
-  params,
-  dispatchInvalidate
 }) => {
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId",
@@ -45,7 +40,9 @@ const IndentFormReport = ({
 
   const [dataPerPage, setDataPerPage] = useState("10");
   const [serachDocNo, setSerachDocNo] = useState("");
+  const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
+  const [searchDeliveryDate, setSearchDeliveryDate] = useState("");
   const [searchSupplier, setSearchSupplier] = useState("");
   const [searchIndentType, setSearchIndentType] = useState("");
   const [searchStatus, setSearchStatus] = useState("");
@@ -56,62 +53,9 @@ const IndentFormReport = ({
   const [searchFollowedBy, setSearchFollowedBy] = useState("");
   const dispatch = useDispatch();
 
-  const [approvalModal, setApprovalModal] = useState(false);
-  const [actionType, setActionType] = useState("");
-  const [selectedIndent, setSelectedIndent] = useState(null);
-  const [remarks, setRemarks] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const handleApprovalAction = (indent, type) => {
-    setSelectedIndent(indent);
-    setActionType(type);
-    setRemarks("");
-    setApprovalModal(true);
+  const handleOnclick = (e) => {
+    setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
   };
-  const [approveIndent] = useApproveIndentMutation();
-
-  const handleConfirmAction = async () => {
-    if (actionType === "REJECT" && !remarks.trim()) {
-      toast.warning("Remarks required for sending back!");
-      return;
-    }
-    setActionLoading(true);
-
-    try {
-      const result = await approveIndent({
-        userId: params?.userId,
-        id: selectedIndent.id,
-        remarks: remarks || null,
-        actionType,
-        referenceId: selectedIndent.id,
-        referencePage: "YARN INDENT FORM",
-        recordData: {},
-      }).unwrap();
-
-      if (result.statusCode === 0) {
-        toast.success(
-          result.message
-            ? result?.message
-            : actionType === "APPROVE"
-              ? "Indent Has Approved"
-              : "Sent Back for Review!",
-        );
-        setApprovalModal(false);
-        dispatchInvalidate()
-      } else {
-        toast.error(result.message || "Action failed");
-        setApprovalModal(false);
-      }
-    } catch (err) {
-      console.log(err, "errerr")
-      toast.error(err?.data?.message || "Something went wrong!");
-      setApprovalModal(false);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-
   const searchFields = {
     searchDocId: serachDocNo,
     searchDocDate: searchDate,
@@ -131,14 +75,23 @@ const IndentFormReport = ({
   const companyId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userCompanyId",
   );
-
+  const params = {
+    branchId,
+    companyId,
+  };
 
   const {
     data: allData,
     isFetching,
     isLoading,
-  } = useGetYarnIndentQuery({
-    params: { branchId, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber, },
+  } = useGetGeneralIndentQuery({
+    params: {
+      branchId,
+      ...searchFields,
+      pagination: true,
+      dataPerPage,
+      pageNumber: currentPageNumber,
+    },
   });
 
   useEffect(() => {
@@ -287,9 +240,6 @@ const IndentFormReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Status</div>
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Approval Actions</div>
-                  </th>
                   <th
                     className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center "
                     rowSpan={2}
@@ -325,15 +275,28 @@ const IndentFormReport = ({
                     />
                   </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
-
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchIndentType}
+                      onChange={(e) => {
+                        setSearchIndentType(e.target.value);
+                      }}
+                    />
                   </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                   </th>
-
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
-
-                  </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
+                    <input
+                      type="text"
+                      className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                      placeholder="Search"
+                      value={searchStatus}
+                      onChange={(e) => {
+                        setSearchStatus(e.target.value);
+                      }}
+                    />
                   </th>
                 </tr>
               </thead>
@@ -374,60 +337,14 @@ const IndentFormReport = ({
                           {dataObj.indentType}{" "}
                         </td>
                         <td className="py-1.5 text-center">
-                          {dataObj.priority}{" "}
+                          {dataObj.Priority}{" "}
                         </td>
                         <td className="py-1.5 text-center">
-                          <ApprovalBadge approvalStatus={dataObj?.approvalStatus} />
+                          {/* <StatusBadge status={dataObj?.status} /> */}
                         </td>
-                        <td className="px-2 py-1">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {["PENDING"].includes(
-                              dataObj?.approvalStatus?.status,
-                            ) && (
-                                <Tooltip title="Send Back for Review" arrow>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedIndent(dataObj);
-                                      setActionType("REJECT");
-                                      setRemarks("");
-                                      setApprovalModal(true);
-                                    }
-                                    }
-                                    className="p-1.5 rounded-md bg-blue-200 text-blue-700 hover:bg-blue-300 transition"
-                                  >
-                                    <MdKeyboardDoubleArrowLeft size={16} />
-                                  </button>
-                                </Tooltip>
-                              )}
-
-                            {dataObj?.approvalStatus?.status ===
-                              "PENDING" && (
-                                <Tooltip title="Approve" arrow>
-                                  <button
-                                    onClick={() =>
-                                      handleApprovalAction(dataObj, "APPROVE")
-                                    }
-                                    className="p-1.5 rounded-md bg-green-200 text-green-700 hover:bg-green-300 transition"
-                                  >
-                                    <FiCheck size={16} />
-                                  </button>
-                                </Tooltip>
-                              )}
-
-
-                            {dataObj?.approvalStatus?.status ===
-                              "NOT_CONFIGURED" && (
-                                <span className="text-[10px] text-gray-400 italic">
-                                  —
-                                </span>
-                              )}
-                          </div>
-                        </td>
-
                         {rowActions && (
                           <td className="px-2 py-1">
                             <div className="flex items-center justify-center">
-
 
                               <div className="flex items-center gap-1 pl-2">
                                 {onView && (
@@ -452,7 +369,7 @@ const IndentFormReport = ({
                                     </button>
                                   </Tooltip>
                                 )}
-                                {onEdit && (
+                                {onEdit && dataObj.allowedActions?.includes("edit") && (
                                   <Tooltip title="Edit" arrow>
                                     <button
                                       className="text-green-600 gap-1 px-1   bg-green-50 rounded"
@@ -469,7 +386,7 @@ const IndentFormReport = ({
                                     </button>
                                   </Tooltip>
                                 )}
-                                {onDelete && (
+                                {onDelete && dataObj.allowedActions?.includes("discard") && (
                                   <Tooltip
                                     title="Delete"
                                     arrow
@@ -509,19 +426,6 @@ const IndentFormReport = ({
           </div>
         </div>
       </>
-      {approvalModal && (
-        <ReusableIndentApprovalForm
-          title={"Yarn Indent Request"}
-          approvalModal={approvalModal}
-          setApprovalModal={setApprovalModal}
-          actionType={actionType}
-          selectedIndent={selectedIndent}
-          remarks={remarks}
-          setRemarks={setRemarks}
-          actionLoading={actionLoading}
-          handleConfirmAction={handleConfirmAction}
-        />
-      )}
     </div>
   );
 };

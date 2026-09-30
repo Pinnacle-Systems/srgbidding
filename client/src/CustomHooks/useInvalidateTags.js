@@ -195,8 +195,8 @@ const useInvalidateTags = () => {
       payload: ["MaterialIssue"],
     },
     {
-      type: `MaterialReturn/invalidateTags`,
-      payload: ["MaterialReturn"],
+      type: `YarnIndent/invalidateTags`,
+      payload: ["YarnIndent"],
     },
   ];
 

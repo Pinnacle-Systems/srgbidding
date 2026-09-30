@@ -389,11 +389,14 @@ export async function approveRecord(
         LevelLogs: true,
       },
     });
+    console.log(log, "log")
+
     if (!log) return { statusCode: 1, message: "Approval log not found" };
     if (log.status === "APPROVED")
       return { statusCode: 1, message: "Already approved" };
     if (log.status === "REJECTED")
       return { statusCode: 1, message: "Already rejected" };
+
 
     const config = log.ApprovalConfig;
     const applicableLevels = config.approvalLevels;
@@ -574,19 +577,19 @@ export function getApprovalStatus(log, isApprovalConfigured = false) {
   if (!log) {
     return isApprovalConfigured
       ? {
-          status: "NOTAPPROVED",
-          label: "Not Approved",
-          color: "orange",
-          currentLevel: 1,
-          levelLogs: [],
-        }
+        status: "NOTAPPROVED",
+        label: "Not Approved",
+        color: "orange",
+        currentLevel: 1,
+        levelLogs: [],
+      }
       : {
-          status: "NOT_CONFIGURED",
-          label: "No Approval",
-          color: "gray",
-          currentLevel: null,
-          levelLogs: [],
-        };
+        status: "NOT_CONFIGURED",
+        label: "No Approval",
+        color: "gray",
+        currentLevel: null,
+        levelLogs: [],
+      };
   }
   const base = {
     currentLevel: log.currentLevel,

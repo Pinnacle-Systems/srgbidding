@@ -115,12 +115,15 @@ const InternalIndentIssueApi = createApi({
       invalidatesTags: ["InternalIndentIssue"],
     }),
     approveIndent: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `${INTERNAL_INDENT_API}/${id}/approve`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["InternalIndentIssue"],
+      query: (payload) => {
+        const { id, ...body } = payload
+        return {
+          url: `${INTERNAL_INDENT_API}/${id}/approve`,
+          method: "POST",
+          body
+        }
+      }
+      , invalidatesTags: ["InternalIndentIssue"],
     }),
     rejectIndent: builder.mutation({
       query: ({ id, body }) => ({
