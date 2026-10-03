@@ -115,11 +115,14 @@ const DyesChemicalIndentApi = createApi({
       invalidatesTags: ["DyesChemicalIndent"],
     }),
     approveIndent: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `${DYESCHEMICAL_INDENT_API}/${id}/approve`,
-        method: "POST",
-        body,
-      }),
+      query: (payload) => {
+        const { id, ...body } = payload
+        return {
+          url: `${DYESCHEMICAL_INDENT_API}/${id}/approve`,
+          method: "POST",
+          body,
+        }
+      },
       invalidatesTags: ["DyesChemicalIndent"],
     }),
     rejectIndent: builder.mutation({

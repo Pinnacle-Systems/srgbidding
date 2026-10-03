@@ -91,8 +91,8 @@ const IndentForm = ({
     isLoading: isSingleLoading,
   } = useLazyGetDyesChemicalIndentByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddSparepartIndentMutation();
-  const [updateData] = useUpdateSparepartIndentMutation();
+  const [addData] = useAddDyesChemicalIndentMutation();
+  const [updateData] = useUpdateDyesChemicalIndentMutation();
 
 
   const { data: departmentData } = useGetDepartmentQuery({});

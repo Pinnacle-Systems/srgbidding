@@ -204,6 +204,7 @@ async function get(req) {
       status: true,
       remarks: true,
       currentLevel: true,
+      approvalConfigId: true,
       LevelLogs: {
         select: {
           action: true,
@@ -236,7 +237,7 @@ async function get(req) {
             include: { Field: true, Operator: true, CompareField: true },
           },
           approvalLevels: {
-            include: { LevelUsers: true },
+            include: { LevelUsers: { include: { User: true } } },
             orderBy: { levelNo: "asc" },
           },
         },
@@ -248,6 +249,29 @@ async function get(req) {
 
   const resolvedData = data.map((po) => {
     const log = approvalLogMap[po.id] ?? null;
+    let pendingApprovers = null;
+
+    if (log && log.status === "PENDING" && activeConfigs.length > 0) {
+      const config = activeConfigs.find((c) => c.id === log.approvalConfigId);
+      if (config) {
+        const currentLevel = config.approvalLevels.find(
+          (l) => l.levelNo === log.currentLevel,
+        );
+        if (currentLevel) {
+          const approvedUserIds = log.LevelLogs.filter(
+            (ll) => ll.levelNo === log.currentLevel && ll.action === "APPROVED",
+          ).map((ll) => ll.userId);
+
+          const pendingUsers = currentLevel.LevelUsers.filter(
+            (lu) => !approvedUserIds.includes(lu.userId),
+          );
+
+          pendingApprovers = pendingUsers
+            .map((lu) => lu.User?.username || lu.User?.name || lu.userId)
+            .join(", ");
+        }
+      }
+    }
 
     // ✅ PRIORITY: If log exists → use log.status (single source of truth)
     // Only evaluate configs if NO log exists yet (to decide if rule would trigger)
@@ -255,12 +279,13 @@ async function get(req) {
     if (!log && hasApproval && activeConfigs.length > 0) {
       shouldTrigger = evaluateConfigs(activeConfigs, po);
     }
-
+    console.log(pendingApprovers, "pendingApprovers")
     return {
       ...po,
+      pendingApprovers: pendingApprovers || "NA",
       // If log exists → derive from log; otherwise from shouldTrigger
       approvalStatus: getPOApprovalStatus(log, !!log || shouldTrigger),
-      // childRecord: po._count.inwardItems + po._count.purchaseCancelItems,
+      activeConfigs
     };
   });
 
@@ -574,6 +599,13 @@ async function remove(id) {
   const data = await prisma.Indent.delete({
     where: {
       id: parseInt(id)
+    },
+  })
+
+  await prisma.approvalLog.deleteMany({
+    where: {
+      referenceId: parseInt(id),
+      referencePage: "YARN INDENT FORM"
     },
   })
   return { statusCode: 0, data };

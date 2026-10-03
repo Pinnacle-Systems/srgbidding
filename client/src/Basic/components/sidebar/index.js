@@ -167,7 +167,7 @@ const Sidebar = ({
   const order = [
     "APPROVAL",
     "INDENT",
-    "PURCHASE",
+    "BIDDING",
     "PRODUCTION",
     "OUTSIDE PROCESS",
     "SALES",

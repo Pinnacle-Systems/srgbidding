@@ -115,11 +115,15 @@ const SparepartIndentApi = createApi({
       invalidatesTags: ["SparepartIndent"],
     }),
     approveIndent: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `${SPAREPART_INDENT_API}/${id}/approve`,
-        method: "POST",
-        body,
-      }),
+      query: (payload) => {
+        const { id, ...body } = payload;
+        return {
+          url: `${SPAREPART_INDENT_API}/${id}/approve`,
+          method: "POST",
+          body,
+        }
+
+      },
       invalidatesTags: ["SparepartIndent"],
     }),
     rejectIndent: builder.mutation({

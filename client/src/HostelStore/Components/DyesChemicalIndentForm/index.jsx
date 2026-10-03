@@ -3,26 +3,12 @@ import { getCommonParams } from "../../../Utils/helper.js";
 import { FaPlus } from "react-icons/fa";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService.js";
-import { useGetStyleItemMasterQuery } from "../../../redux/services/StyleItemMasterService.js";
-import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices.js";
-import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import Swal from "sweetalert2";
-import { useDeletePurchaseInwardEntryMutation, useLazyGetPurchaseInwardEntryByIdQuery } from "../../../redux/uniformService/PurchaseInwardEntry.js";
-import { useGetSizeMasterQuery } from "../../../redux/services/SizemasterService.js";
-import { useGetColorMasterQuery } from "../../../redux/services/ColorMasterService.js";
 import { invalidatePurchaseModule } from "../../../redux/Dispatch/PurchaseInvalidateTags.js";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
-import { useSelector } from "react-redux";
-import { useGetTaxTemplateQuery } from "../../../redux/services/TaxTemplateServices.js";
-import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService.js";
-import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
-import { useGetItemGroupMasterQuery } from "../../../redux/services/ItemGroupMasterService.js";
 import IndentForm from "./DyesIndentForm.js";
 import IndentFormReport from "./IndentFormReport.js";
-import { useDeleteMaterialIssueMutation } from "../../../redux/uniformService/MaterialIssue.js";
-import { useDeleteFabricIndentMutation } from "../../../redux/uniformService/FabricIndent.js";
-import { useDeleteDyesChemicalIndentMutation } from "../../../redux/uniformService/DyesChemicalIndent.js";
-import { useDeleteSparepartIndentMutation, useGetSparepartIndentQuery } from "../../../redux/uniformService/SparepartIndent.js";
+import { useDeleteSparepartIndentMutation } from "../../../redux/uniformService/SparepartIndent.js";
 
 export default function Form() {
 
@@ -36,7 +22,7 @@ export default function Form() {
 
   const { branchId, companyId, finYearId, userId } = getCommonParams()
   const params = {
-    branchId, companyId, finYearId, isAddessCombined: true
+    branchId, companyId, finYearId, isAddessCombined: true, userId
   };
 
 
@@ -171,6 +157,8 @@ export default function Form() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={15}
+              params={params}
+              dispatchInvalidate={dispatchInvalidate}
             />
           </div>
         </div>

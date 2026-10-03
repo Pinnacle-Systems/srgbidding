@@ -97,7 +97,7 @@ const IndentForm = ({
 
 
   const { data: departmentData } = useGetDepartmentQuery({});
-  const { data: itemData } = useGetItemMasterQuery({ params: { ...params, isFilter: true, filterValue: "MACHINE SPARE PARTS" } });
+  const { data: itemData } = useGetItemMasterQuery({ params: { ...params, isFilter: true, filterValue: "GENERAL" } });
   const { data: gsmData } = useGetGsmMasterQuery({ params: { ...params } });
 
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });

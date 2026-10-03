@@ -1,7 +1,8 @@
 import { FiTrash2 } from "react-icons/fi";
-import TransactionLineItemsSection from "../../ReusableComponents/TransactionLineItemsSection";
-import SearchableTableCellSelect from "../../ReusableComponents/SearchableTableCellSelect";
-import { dropDownListObject } from "../../../../Utils/contructObject";
+import TransactionLineItemsSection from "../ReusableComponents/TransactionLineItemsSection";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import { dropDownListObject } from "../../../Utils/contructObject";
+
 
 export default function YarnTable({
     indentItems = [],
@@ -115,6 +116,7 @@ export default function YarnTable({
                                                 value={row?.qty || ""}
                                                 disabled={disabled}
                                                 onChange={(e) => handleInputChange(e.target.value, index, "qty")}
+                                                onFocus={(e) => e.target.select()}
                                                 className={numInputClasses}
                                                 placeholder="0.00"
                                             />

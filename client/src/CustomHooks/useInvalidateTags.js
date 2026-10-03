@@ -198,6 +198,22 @@ const useInvalidateTags = () => {
       type: `YarnIndent/invalidateTags`,
       payload: ["YarnIndent"],
     },
+    {
+      type: `FabricIndent/invalidateTags`,
+      payload: ["FabricIndent"],
+    },
+    {
+      type: `SparepartIndent/invalidateTags`,
+      payload: ["SparepartIndent"],
+    },
+    {
+      type: `DyesChemicalIndent/invalidateTags`,
+      payload: ["DyesChemicalIndent"],
+    },
+    {
+      type: `GeneralIndent/invalidateTags`,
+      payload: ["GeneralIndent"],
+    },
   ];
 
   function dispatchInvalidate() {

@@ -9,9 +9,9 @@ async function get(req) {
         where: {
             active: active ? Boolean(active) : undefined,
         },
-        orderBy : {
-            id : "asc"
-        }    
+        orderBy: {
+            order: "asc"
+        }
     });
     return { statusCode: 0, data };
 }

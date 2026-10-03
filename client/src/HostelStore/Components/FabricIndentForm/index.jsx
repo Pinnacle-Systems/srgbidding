@@ -34,7 +34,7 @@ export default function Form() {
 
   const { branchId, companyId, finYearId, userId } = getCommonParams()
   const params = {
-    branchId, companyId, finYearId, isAddessCombined: true
+    branchId, companyId, finYearId, isAddessCombined: true, userId
   };
 
 
@@ -169,6 +169,8 @@ export default function Form() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               itemsPerPage={15}
+              params={params}
+              dispatchInvalidate={dispatchInvalidate}
             />
           </div>
         </div>

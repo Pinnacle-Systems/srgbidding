@@ -115,11 +115,15 @@ const FabricIndentApi = createApi({
       invalidatesTags: ["FabricIndent"],
     }),
     approveIndent: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `${FABRIC_INDENT_API}/${id}/approve`,
-        method: "POST",
-        body,
-      }),
+      query: (payload) => {
+        const { id, ...body } = payload
+        return {
+          url: `${FABRIC_INDENT_API}/${id}/approve`,
+          method: "POST",
+          body,
+        }
+
+      },
       invalidatesTags: ["FabricIndent"],
     }),
     rejectIndent: builder.mutation({

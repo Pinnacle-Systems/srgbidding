@@ -381,7 +381,7 @@ export async function approveRecord(
         ApprovalConfig: {
           include: {
             approvalLevels: {
-              include: { LevelUsers: true },
+              include: { LevelUsers: { include: { User: true } } },
               orderBy: { levelNo: "asc" },
             },
           },
@@ -403,10 +403,15 @@ export async function approveRecord(
     const currentLevel = applicableLevels.find(
       (l) => l.levelNo === log.currentLevel,
     );
+
+    console.log(applicableLevels, "applicableLevels");
+    console.log(currentLevel, "currentLevel");
+
     if (!currentLevel)
       return { statusCode: 1, message: "Current level not found" };
 
-    // Auth check
+
+
     const isAuthorised = currentLevel.LevelUsers.some(
       (lu) => lu.userId === parseInt(userId),
     );
@@ -452,9 +457,17 @@ export async function approveRecord(
         : uniqueApprovers.size >= requiredCount;
 
     if (!levelSatisfied) {
+      const pendingUsers = currentLevel.LevelUsers.filter(
+        (lu) => !uniqueApprovers.has(lu.userId)
+      );
+      const pendingNames = pendingUsers
+        .map((lu) => lu.User?.username || lu.User?.name || lu.userId)
+        .join(", ");
+
       return {
         statusCode: 0,
-        message: "Approval recorded. Waiting for other approvers.",
+        message: `Approval recorded. Waiting for approval from: ${pendingNames}`,
+        pendingApprovers: pendingNames,
         data: log,
       };
     }
@@ -468,7 +481,24 @@ export async function approveRecord(
       userId,
       remarks,
     );
-    return { statusCode: 0, data: updated };
+
+    if (updated.status !== "APPROVED") {
+      const nextLevel = applicableLevels.find(
+        (l) => l.levelNo === updated.currentLevel
+      );
+      const nextNames = nextLevel?.LevelUsers.map(
+        (lu) => lu.User?.username || lu.User?.name || lu.userId
+      ).join(", ");
+
+      return {
+        statusCode: 0,
+        message: `Approval recorded. Waiting for level ${updated.currentLevel} approval by: ${nextNames}`,
+        pendingApprovers: nextNames,
+        data: updated,
+      };
+    }
+
+    return { statusCode: 0, message: "Record fully approved", data: updated };
   });
 }
 

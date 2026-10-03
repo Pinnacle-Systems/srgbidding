@@ -1,28 +1,14 @@
-import React from "react";
 import { useEffect, useState } from "react";
-import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { Loader } from "../../../Basic/components";
 import {
-  findFromList,
-  getCommonParams,
   getDateFromDateTimeToDisplay,
 } from "../../../Utils/helper";
-import { showEntries } from "../../../Utils/DropdownData";
 import secureLocalStorage from "react-secure-storage";
-import {
-  pageNumberToReactPaginateIndex,
-  reactPaginateIndexToPageNumber,
-} from "../../../Utils/helper";
-import ReactPaginate from "react-paginate";
+
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useGetPurchaseInwardEntryQuery } from "../../../redux/uniformService/PurchaseInwardEntry";
 import { Tooltip } from "@mui/material";
-import { Receipt, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { push } from "../../../redux/features/opentabs";
-import { useGetMaterialIssueQuery } from "../../../redux/uniformService/MaterialIssue";
 import { useApproveIndentMutation, useGetYarnIndentQuery } from "../../../redux/uniformService/YarnIndent";
-import StatusBadge from "./components/StatusBadge";
 import { ApprovalBadge } from "../../../Utils/ApprovalHelper";
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 import { FiCheck } from "react-icons/fi";
@@ -290,6 +276,10 @@ const IndentFormReport = ({
                   <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
                     <div>Approval Actions</div>
                   </th>
+                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                    <div>Pending Approvers
+                    </div>
+                  </th>
                   <th
                     className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center "
                     rowSpan={2}
@@ -332,6 +322,8 @@ const IndentFormReport = ({
 
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
 
+                  </th>
+                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                   </th>
                   <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-40">
                   </th>
@@ -423,7 +415,9 @@ const IndentFormReport = ({
                               )}
                           </div>
                         </td>
-
+                        <td className="py-1.5 text-center">
+                          {dataObj.pendingApprovers}{" "}
+                        </td>
                         {rowActions && (
                           <td className="px-2 py-1">
                             <div className="flex items-center justify-center">

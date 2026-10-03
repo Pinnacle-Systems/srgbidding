@@ -25,12 +25,12 @@ import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCell
 import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService.js";
 import { PDFViewer } from "@react-pdf/renderer";
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService.js";
-import YarnTable from "./Tables/Yarn.jsx";
 import { useAddYarnIndentMutation, useGetYarnIndentByIdQuery, useUpdateYarnIndentMutation } from "../../../redux/uniformService/YarnIndent.js";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
 import { useGetYarnBlendMasterQuery } from "../../../redux/uniformService/YarnBlendMasterServices.js";
 import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
+import YarnTable from "./YarnIndentTable.jsx";
 
 const IndentForm = ({
   onClose,

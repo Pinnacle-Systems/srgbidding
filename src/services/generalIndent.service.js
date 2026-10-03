@@ -15,6 +15,8 @@ import {
   evaluateConfigTrigger,
   getTriggeredConfig,
   buildIncludeForModule,
+  approveRecord,
+  rejectRecord,
 } from "../utils/approvalHelper.js";
 
 const REFERENCE_PAGE = "GENERAL INDENT FORM";
@@ -225,7 +227,6 @@ async function get(req) {
         where: {
           moduleId: module.id,
           branchId: parseInt(branchId),
-          indentType: INDENT_TYPE,
           active: true,
         },
         include: {
@@ -358,7 +359,6 @@ async function create(body) {
     requiredDate,
     priority,
     remarks
-
   } = await body;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -366,6 +366,10 @@ async function create(body) {
   let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave,);
 
   const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
+
+  const { module, hasApproval } = await getModuleApprovalSetup(REFERENCE_PAGE, branchId);
+
+  console.log(module, "module", hasApproval)
 
   let data;
   await prisma.$transaction(async (tx) => {
@@ -385,6 +389,27 @@ async function create(body) {
 
       },
     });
+
+    if (hasApproval && module) {
+
+      const includeClause = await buildIncludeForModule(module.id);
+
+      const fullRecord = await tx.Indent.findUnique({
+        where: { id: data.id },
+        include: includeClause,
+      });
+
+      await createApprovalLog(
+        tx,
+        branchId,
+        module.id,
+        data.id,
+        REFERENCE_PAGE,
+        fullRecord,
+        data.docId,
+        userId,
+      );
+    }
 
 
     await createIssueItems(tx, IndentItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
@@ -541,6 +566,13 @@ async function remove(id) {
   const data = await prisma.Indent.delete({
     where: {
       id: parseInt(id)
+    },
+  })
+
+  await prisma.approvalLog.deleteMany({
+    where: {
+      referenceId: parseInt(id),
+      referencePage: REFERENCE_PAGE
     },
   })
   return { statusCode: 0, data };
@@ -949,11 +981,39 @@ async function submit(id, body) {
 }
 
 async function approve(id, body) {
-  const data = await prisma.Indent.update({
-    where: { id: parseInt(id) },
-    data: { status: "APPROVED" }
-  });
-  return { statusCode: 0, data };
+  try {
+    const {
+      userId,
+      remarks,
+      recordData,
+      referencePage,
+      referenceId,
+      actionType,
+    } = body;
+
+    if (!userId) return { statusCode: 1, message: "userId is required" };
+    if (actionType === "REJECT" && !remarks?.trim()) {
+      return { statusCode: 1, message: "Remarks required for rejection" };
+    }
+
+    console.log(actionType === "APPROVE")
+
+    if (actionType === "APPROVE") {
+      return await approveRecord(
+        referenceId,
+        referencePage,
+        userId,
+        remarks,
+        recordData ?? {},
+      );
+    } else if (actionType === "REJECT") {
+      return await rejectRecord(referenceId, referencePage, userId, remarks);
+    }
+
+    return { statusCode: 1, message: "Invalid action type" };
+  } catch (err) {
+    return { statusCode: 400, message: err.message };
+  }
 }
 
 async function reject(id, body) {
