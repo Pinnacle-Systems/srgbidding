@@ -5,11 +5,12 @@
 html,
 body,
 label {
-  font-family: "Roboto", sans-serif;
+  font-family: "Inter", sans-serif;
   z-index: 0;
 }
+
 .table-data {
-  font-family: "Roboto", sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .Select {
@@ -29,11 +30,11 @@ label {
 }
 
 @media print {
-  html {
-  }
+  html {}
 }
 
 @layer base {
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -45,6 +46,7 @@ label {
     min-height: 90%;
     max-height: 90%;
   }
+
   .download-table-xls-button {
     background: #064209;
     color: white;
@@ -64,7 +66,7 @@ label {
   }
 
   .page-heading {
-    @apply bg-emerald-800    text-white;
+    @apply bg-emerald-800 text-white;
   }
 
   .nav-bar-bg {
@@ -76,7 +78,7 @@ label {
   }
 
   .logo-footer {
-    @apply text-sm text-white bg-emerald-800    font-bold;
+    @apply text-sm text-white bg-emerald-800 font-bold;
   }
 
   .nav-dropdown-bg {
@@ -171,35 +173,45 @@ label {
 }
 
 .table-data-input {
-  border: 1px solid transparent; /* ✅ important */
+  border: 1px solid transparent;
+  /* ✅ important */
   transition: all 0.15s ease-in-out;
-   height: 22px;        /* ⬅️ add this */
-  line-height: 1;      /* ⬅️ add this */
-  padding-top: 0;      /* ⬅️ add this */
+  height: 22px;
+  /* ⬅️ add this */
+  line-height: 1;
+  /* ⬅️ add this */
+  padding-top: 0;
+  /* ⬅️ add this */
   padding-bottom: 0;
 }
 
 .table-data-input:focus {
   outline: none !important;
-  border-color: #2563eb; /* 🔵 blue-600 */
+  border-color: #2563eb;
+  /* 🔵 blue-600 */
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
-} 
+}
 
 
 .new-data-input {
-  border: 1px solid transparent; /* ✅ important */
+  border: 1px solid transparent;
+  /* ✅ important */
   transition: all 0.15s ease-in-out;
-   height: 26px;        /* ⬅️ add this */
-  line-height: 1;      /* ⬅️ add this */
-  padding-top: 0;      /* ⬅️ add this */
+  height: 26px;
+  /* ⬅️ add this */
+  line-height: 1;
+  /* ⬅️ add this */
+  padding-top: 0;
+  /* ⬅️ add this */
   padding-bottom: 0;
 }
 
 .new-data-input:focus {
   outline: none !important;
-  border-color: #2563eb; /* 🔵 blue-600 */
+  border-color: #2563eb;
+  /* 🔵 blue-600 */
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
-} 
+}
 
 .grid-editable-cell {
   transition:
@@ -217,6 +229,7 @@ label {
     display: none;
   }
 }
+
 .swal2-styled.swal2-confirm,
 .swal2-styled.swal2-cancel {
   color: gray !important;
@@ -229,7 +242,8 @@ label {
 }
 
 .swal-custom-height {
-  min-height: 10px; /* control height */
+  min-height: 10px;
+  /* control height */
 }
 
 .custom-multiselect .dropdown-content {
@@ -316,6 +330,7 @@ label {
   background: #4f46e5 !important;
   height: 3px !important;
 }
+
 /* Remove all borders/outlines from react-multiselect-checkboxes */
 .custom-multiselectBorderNo .dropdown-container {
   border: none !important;
@@ -332,20 +347,34 @@ label {
 .custom-multiselectBorderNo .dropdown-heading-dropdown-arrow {
   display: none !important;
 }
+
 .custom-multiselectBorderNo .clear-selected-button {
   display: none !important;
 }
+
 .custom-multiselectBorderNo .dropdown-container {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
   background: transparent !important;
 }
+
 .custom-multiselectBorderNo .dropdown-container:focus-within {
   border: none !important;
   box-shadow: none !important;
 }
+
 .custom-multiselectBorderNo .dropdown-heading {
   background: transparent !important;
   padding: 0 6px !important;
+}
+
+@layer utilities {
+  .text-inter-semibold-11 {
+    @apply font-['Inter'] font-semibold text-[11px];
+  }
+
+  .text-inter-regular-11 {
+    @apply font-['Inter'] font-normal text-[11px];
+  }
 }

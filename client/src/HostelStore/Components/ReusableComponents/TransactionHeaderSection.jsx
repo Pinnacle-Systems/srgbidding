@@ -20,7 +20,7 @@ const TransactionHeaderSection = ({
   //   .filter(Boolean)
   //   .join(" ");
   const legendClasses = [
-    "text-sm font-bold text-gray-800",
+    "text-[12px] font-bold text-[#5147B8]",
     titleClassName,
   ]
     .filter(Boolean)

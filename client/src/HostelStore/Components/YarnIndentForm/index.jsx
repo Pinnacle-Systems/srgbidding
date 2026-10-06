@@ -154,14 +154,14 @@ export default function Form() {
         </div>
 
       ) : (
-        <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
-          <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
+        <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F5F6F8] ">
+          <div className="flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg   px-1 py-0.5 shadow-sm sm:flex-row sm:items-center border-b border-gray-300">
 
-            <h1 className="text-lg font-bold text-gray-800">YARN INDENT FORM
+            <h1 className="text-lg font-bold text-gray-800 ">Yarn Indent Form
             </h1>
 
             <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-[11px]"
               onClick={() => {
                 setShowForm(true);
                 onNew();

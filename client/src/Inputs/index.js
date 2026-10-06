@@ -37,11 +37,11 @@ import { UserPermissions } from "../Utils/UserPermissions";
 import Swal from "sweetalert2";
 import { usePermissionForUsers } from "../Basic/components/HasPermission";
 
-const FORM_LABEL_CLASS = "block text-[11px] font-bold text-slate-700 mb-1";
-const FORM_LABEL_MUTED_CLASS = "block text-[11px] font-bold text-gray-600 mb-1";
+const FORM_LABEL_CLASS = "block text-inter-regular-11  font-bold text-[#697386] mb-1";
+const FORM_LABEL_MUTED_CLASS = "block text-inter-regular-11  font-bold text-[#697386] mb-1";
 const INLINE_LABEL_CLASS =
-  "md:text-start flex text-[11px] font-bold text-slate-700";
-const FORM_INPUT_TEXT_CLASS = "text-[11px]";
+  "md:text-start flex text-inter-regular-11  text-[#697386]";
+const FORM_INPUT_TEXT_CLASS = "text-inter-regular-11 text-[12px] text-[#263145]";
 
 export const handleOnChange = (event, setValue, type) => {
   const inputValue = event.target.value;
@@ -365,7 +365,7 @@ export const TextInput = forwardRef(
           onFocus={onFocus}
           disabled={disabled}
           tabIndex={tabIndex ?? undefined}
-          className={`h-7 w-full px-3 py-0 border border-gray-300 rounded-lg
+          className={`h-7 w-full px-3 py-0 border border-gray-300 rounded-[5px]
           outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm
           ${readOnly || disabled
@@ -1014,7 +1014,7 @@ export function ReusableInput({
         readOnly={readOnly}
         onKeyDown={onKeyDown}
         disabled={disabled}
-        className={`h-7 w-full px-2 py-0 border border-slate-300 rounded-md 
+        className={`h-7 w-full px-2 py-0 border border-slate-300 rounded-[5px] 
           focus:border-indigo-300 outline-none transition-all duration-200
           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
           } ${FORM_INPUT_TEXT_CLASS} ${className}`}
@@ -3257,7 +3257,7 @@ export const TextAreaNew = ({
         onChange={(e) => handleOnChange(e, setValue)}
         onBlur={onBlur}
         placeholder={name}
-        className={`w-full px-3 py-1.5 border border-gray-300 rounded-lg
+        className={`w-full px-3 py-1.5 border border-gray-300 rounded-[5px]
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
           transition-all duration-150 shadow-sm  resize-y
 

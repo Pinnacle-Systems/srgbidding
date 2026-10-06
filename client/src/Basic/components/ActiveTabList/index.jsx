@@ -225,27 +225,31 @@ const ActiveTabList = () => {
     // <div className="relative ">
     <div
       className="w-full h-full min-h-0 flex flex-col overflow-hidden"
-      style={{ backgroundColor: "#F1F1F0" }}
+      style={{ backgroundColor: "#F8F9FA" }}
     >
-      <div className="flex justify-between shrink-0">
-        <div className="flex gap-2 ">
+      <div className="flex justify-between shrink-0 border-b border-gray-300"
+        style={{ backgroundColor: "#F8F9FA" }}
+      >
+        {/* <div className="flex gap-1 pt-2 px-2 items-end">
           {currentShowingTabs.map((tab, index) => (
             <div
               key={index}
-              className={`px-2 rounded-lg text-[11px] d-flex content-center items-center gap-1 hover:bg-gray-500 hover:text-white transition my-1 ${tab.active
-                ? "bg-gray-500 text-white border border-gray-500"
-                : "text-gray-500 border border-gray-500"
+              className={`px-4 py-2 text-xs flex content-center items-center gap-3 transition-colors duration-150 cursor-pointer ${tab.active
+                ? "bg-white text-indigo-700 font-semibold border-t-[3px] border-indigo-700 rounded-t-md relative -mb-[1px] border-b border-b-white shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
+                : "bg-[#e5e7eb] text-gray-700 hover:bg-gray-300 rounded-t-md border border-transparent"
                 }`}
             >
               <button
                 onClick={() => {
                   dispatch(push({ name: tab.name }));
                 }}
+                className="whitespace-nowrap"
               >
                 {tab.name}
               </button>
               <button
-                className="px-1 rounded-xs transition"
+                className={`p-0.5 rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active ? "hover:bg-indigo-100 text-indigo-700" : "hover:bg-gray-400 text-gray-600"
+                  }`}
                 onClick={() => {
                   dispatch(remove({ name: tab.name }));
                 }}
@@ -291,7 +295,101 @@ const ActiveTabList = () => {
               </li>
             ))}
           </ul>
-        )}
+        )} */}
+        <div
+          className="relative flex justify-between shrink-0 "
+          style={{ backgroundColor: "#F8F9FA" }}
+        >
+          {/* Tab strip */}
+          <div
+            role="tablist"
+            className="flex  items-end overflow-hidden"
+          >
+            {currentShowingTabs.map((tab) => (
+              <div
+                key={tab.name}
+                role="tab"
+                aria-selected={tab.active}
+                tabIndex={0}
+                onClick={() => dispatch(push({ name: tab.name }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") dispatch(push({ name: tab.name }));
+                  if (e.key === "Delete") dispatch(remove({ name: tab.name }));
+                }}
+                className={` shrink-0 px-2 py-1 text-[11px] uppercase flex items-center gap-3 bg-[#F5F6F8]  cursor-pointer transition-colors duration-150 ${tab.active
+                  ? "bg-white text-indigo-700 font-semibold border-r-[1px] border-b-[2px] border-indigo-700 relative -mb-px shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
+                  : " text-gray-700  border-transparent"
+                  }`}
+              >
+                <span className="whitespace-nowrap">{tab.name}</span>
+
+                <button
+                  type="button"
+                  aria-label={`Close ${tab.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation(); // don't also select the tab
+                    dispatch(remove({ name: tab.name }));
+                  }}
+                  className={`rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active
+                    ? "text-indigo-700 hover:bg-indigo-100"
+                    : "text-gray-600 hover:bg-gray-400"
+                    }`}
+                >
+                  {CLOSE_ICON}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Overflow button */}
+          {hiddenTabs.length !== 0 && (
+            <div className="flex items-center px-2">
+              <button
+                type="button"
+                aria-label="Show hidden tabs"
+                onClick={() => setShowHidden(true)}
+                className="p-1 rounded hover:bg-gray-200"
+              >
+                {DOUBLE_NEXT_ICON}
+              </button>
+            </div>
+          )}
+
+          {/* Hidden tabs dropdown */}
+          {showHidden && (
+            <ul
+              ref={ref}
+              className="absolute right-2 top-full mt-1 min-w-[200px] bg-white border border-gray-200 rounded-md shadow-lg z-50 text-xs p-1"
+            >
+              {hiddenTabs.map((tab) => (
+                <li
+                  key={tab.name}
+                  onClick={() => {
+                    dispatch(push({ name: tab.name }));
+                    setShowHidden(false);
+                  }}
+                  className={`flex justify-between items-center gap-3 px-3 py-2 rounded cursor-pointer uppercase ${tab.active
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                >
+                  <span className="whitespace-nowrap">{tab.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Close ${tab.name}`}
+                    className="hover:bg-red-100 text-gray-600 hover:text-red-600 px-1 rounded transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dispatch(remove({ name: tab.name }));
+                    }}
+                  >
+                    {CLOSE_ICON}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
       {openTabs.tabs.map((tab, index) => (
         <div

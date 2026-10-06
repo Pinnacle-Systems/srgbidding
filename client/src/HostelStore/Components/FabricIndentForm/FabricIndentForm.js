@@ -476,45 +476,51 @@ const IndentForm = ({
   }, [fromPoId]);
 
   console.log(inwardItems, " inwardItems")
+  const totalQty = indentItems.reduce((sum, item) => sum + parseFloat(item.qty || 0), 0);
 
   const footerContent = (
     <CommonFormFooter
       readOnly={readOnly}
+      totalQty={totalQty}
+      remarks={remarks}
+      setRemarks={setRemarks}
       leftActions={
         <>
           {(!id || allowedActions.includes("edit")) && (
-            <button onClick={() => saveData("new")}
+            <button onClick={() => saveData("close")}
               disabled={readOnly}
-              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+              className="bg-[#5147B8] text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
               <FiSave className="w-4 h-4 mr-2" />
-              Save Draft
+              Save & Close
             </button>
           )}
+          <button
+            className="bg-[#8B93A2] text-white px-4 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
+            onClick={() => {
+              saveData("new");
+            }}
+          >
+            Save & New
+          </button>
         </>
       }
       rightActions={
         <>
-          {id && allowedActions.includes("edit") && readOnly && (
-            <button
-              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-              onClick={() => {
-                setReadOnly(false);
-              }}
-            >
-              <FiEdit2 className="w-4 h-4 mr-2" />
-              Edit
-            </button>
-          )}
-          {(!id || allowedActions.includes("submit")) && (
-            <button
-              className="bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
-              onClick={() => {
-                saveData("submit");
-              }}
-            >
-              Submit
-            </button>
-          )}
+          <button
+            className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+            onClick={() => {
+              setReadOnly(false);
+            }}
+          >
+            <FiEdit2 className="w-4 h-4 mr-2" />
+            Edit
+          </button>
+          <button
+            className="bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700 flex items-center text-sm"
+
+          >
+            Print
+          </button>
         </>
       }
     />
@@ -569,15 +575,15 @@ const IndentForm = ({
       <TransactionEntryShell
         id={id}
         readOnly={readOnly}
-        title="FABRIC INDENT FORM"
+        title="Fabric Indent Form"
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
         openStateClassName="max-h-[400px] opacity-100 overflow-visible"
         footer={footerContent}
         headerContent={(
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 overflow-visible">
-            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 overflow-visible px-2">
+            <TransactionHeaderSection title="Basic Details" className="col-span-3  rounded-md bg-white border border-gray-200 p-2" bodyClassName="grid-cols-2 gap-2">
               <ReusableInput
                 label="Indent No"
                 readOnly
@@ -591,35 +597,31 @@ const IndentForm = ({
                 readOnly={true}
                 disabled
               />
-
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Basic Details" className="col-span-2" bodyClassName="grid-cols-4">
-              <div className="col-span-2  ">
+            <TransactionHeaderSection title="Department Details" className="col-span-4 shadow-sm border border-gray-200 rounded-md bg-white p-2" bodyClassName="grid-cols-2 gap-2">
+              <div className="col-span-1">
                 <SearchableTableCellSelect
-                  name="Department "
+                  name="Department"
                   options={departmentOptions}
                   value={departmentId}
                   setValue={setDepartmentId}
                   required={true}
                   readOnly={true}
-                  className={`w-[150px]`}
+                  className={`w-full`}
                   addNewModalWidth="w-[40%] h-[48%]"
                 />
               </div>
-              <div className="col-span-2">
-
-
+              <div className="col-span-1">
                 <TextInput
                   name={"User Name"}
-                  value={(singelUserData?.data?.username).toUpperCase()}
+                  value={singelUserData?.data?.username ? (singelUserData.data.username).toUpperCase() : ""}
                   readOnly={true}
                 />
-              </div>{/*  */}
+              </div>
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Other Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-5 gap-1 overflow-visible">
-
+            <TransactionHeaderSection title="Other Details" className="col-span-5 shadow-sm border border-gray-200 rounded-md bg-white p-2 overflow-visible" bodyClassName="grid-cols-4 gap-2">
               <ReusableInput
                 label="Required Date"
                 value={deliveryDate}
@@ -629,16 +631,15 @@ const IndentForm = ({
                 readOnly={readOnly}
               />
               <SearchableTableCellSelect
-                name="Priority "
+                name="Priority"
                 options={requestPriority}
                 value={priority}
                 setValue={setPriority}
                 required={true}
-                className={`w-[150px]`}
+                className={`w-full`}
                 addNewModalWidth="w-[40%] h-[48%]"
               />
-
-              <div className="col-span-2">
+              {/* <div className="col-span-2">
                 <TextAreaNew
                   name="Remarks"
                   value={remarks}
@@ -646,16 +647,15 @@ const IndentForm = ({
                   readOnly={readOnly}
                   rows={1}
                 />
-              </div>
-            </TransactionHeaderSection >
-
-          </div >
+              </div> */}
+            </TransactionHeaderSection>
+          </div>
         )}
       >
         <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
 
           <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
-            <div className=" px-2  pb-2  rounded-md shadow-sm min-h-[270px] bg-white overflow-hidden flex flex-col flex-1 w-full">
+            <div className=" px-2   min-h-[250px]  overflow-hidden flex flex-col flex-1 w-full">
 
 
               <FabricTable

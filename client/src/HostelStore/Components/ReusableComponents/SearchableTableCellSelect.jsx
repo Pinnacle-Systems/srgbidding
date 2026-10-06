@@ -23,7 +23,7 @@ const SearchableTableCellSelect = forwardRef(({
   readOnly = false,
   required = false,
   align = "left",
-  placeholder = "Select",
+  placeholder = "",
   childComponent = null,
   addNewLabel = "+ Add New",
   addNewModalWidth = "w-[40%] h-[45%]",
@@ -177,7 +177,7 @@ const SearchableTableCellSelect = forwardRef(({
       onBlur={handleBlur}
     >
       {name && (
-        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+        <label className="block text-[11px]  text-[#697386] mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -185,7 +185,7 @@ const SearchableTableCellSelect = forwardRef(({
       <div
         className={
           isFormLayout
-            ? `relative flex h-7 w-full items-center justify-between border border-gray-300 rounded-lg px-3 py-0 text-left
+            ? `relative flex h-7 w-full items-center justify-between border border-gray-300 rounded-[5px] px-3 py-0 text-left
               ${isDisabled ? "bg-slate-100 cursor-not-allowed" : "bg-white cursor-pointer"}
               focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500
               transition-all duration-150 shadow-sm ${className}`
@@ -200,12 +200,10 @@ const SearchableTableCellSelect = forwardRef(({
           disabled={isDisabled}
           className={
             isFormLayout
-              ? `h-full w-full border-0 bg-transparent py-0 text-[11px] text-gray-800 shadow-none outline-none placeholder:text-gray-400 ${
-                  align === "right" ? "text-right" : "text-left"
-                }`
-              : `h-full w-full border-0 bg-transparent py-0 text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input ${
-                  align === "right" ? "text-right" : "text-left"
-                }`
+              ? `h-full w-full border-0 bg-transparent py-0 text-[10.5px] text-gray-800 shadow-none outline-none placeholder:text-gray-400 ${align === "right" ? "text-right" : "text-left"
+              }`
+              : `h-full w-full border-0 bg-transparent py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input h-2 ${align === "right" ? "text-right" : "text-left"
+              }`
           }
           onFocus={(event) => {
             if (isDisabled) return;
@@ -338,16 +336,14 @@ const SearchableTableCellSelect = forwardRef(({
         {isOpen && !isDisabled && (
           <div
             ref={listRef}
-            className={`absolute left-0 z-50 max-h-48 min-w-full w-max max-w-[300px] overflow-auto border border-slate-300 rounded-lg bg-white shadow-lg ${
-              openUp ? "bottom-[calc(100%+4px)]" : "top-[calc(100%+4px)]"
-            }`}
+            className={`absolute left-0 z-50 max-h-48 min-w-full w-max max-w-[300px] overflow-auto border border-slate-300 rounded-lg bg-white shadow-lg ${openUp ? "bottom-[calc(100%+4px)]" : "top-[calc(100%+4px)]"
+              }`}
           >
             {childComponent && (
               <button
                 type="button"
-                className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${
-                  highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
-                }`}
+                className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
+                  }`}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   setIsOpen(false);
@@ -366,13 +362,12 @@ const SearchableTableCellSelect = forwardRef(({
                   ref={handlers?.secondInputRef}
                   key={option.value}
                   type="button"
-                  className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] transition-colors ${
-                    index === highlightedIndex
-                      ? "bg-blue-600 text-white"
-                      : String(option.value) === String(value)
-                        ? "bg-blue-50 font-medium text-blue-600"
-                        : "text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] transition-colors ${index === highlightedIndex
+                    ? "bg-blue-600 text-white"
+                    : String(option.value) === String(value)
+                      ? "bg-blue-50 font-medium text-blue-600"
+                      : "text-slate-700 hover:bg-slate-50"
+                    }`}
                   onMouseDown={(event) => {
                     event.preventDefault();
                     commitSelection(option.value);

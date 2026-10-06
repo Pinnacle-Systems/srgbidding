@@ -153,20 +153,20 @@ const Header = ({ profile, setProfile, setIsGlobalOpen }) => {
         <Logout setLogout={setLogout} />
       </Modal>
       <div className="w-32 ms-3">
-        <img className="rounded-lg h-9" src={logo} alt="" />
+        <img className="rounded-lg h-8" src={logo} alt="" />
       </div>
       <div className="mr-5 flex items-center space-x-5 text-sm">
         <div className="relative">
           <PageSearch pageList={allowedPages} />
         </div>
         <div
-          className="text-lg cursor-pointer"
+          className="text-md cursor-pointer"
           onClick={() => { setIsGlobalOpen(true) }}>
           {GLOBE_ICON}
         </div>
         {/* <Notification /> */}
-        <p>WELCOME</p> &nbsp;{" "}
-        <div className="text-black">{userName?.toUpperCase()}</div>
+        <p className="text-[11px]" >WELCOME</p> &nbsp;{" "}
+        <div className="text-[11px] text-black">{userName?.toUpperCase()}</div>
         <div className="relative text-left" ref={ref}>
           <button
             onClick={toggleNavMenu}

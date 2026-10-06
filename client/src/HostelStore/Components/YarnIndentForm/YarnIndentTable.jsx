@@ -18,9 +18,9 @@ export default function YarnTable({
     colorList,
     onChange // Added onChange handler for future use
 }) {
-    const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-slate-700 uppercase tracking-wider border border-gray-300";
+    const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-white  tracking-wider border border-gray-300";
     const cellClasses = "px-0.5 py-0 border border-gray-300 relative";
-    const inputClasses = "w-full h-6 border border-transparent bg-transparent px-2 text-[11px] text-gray-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded transition-all disabled:bg-slate-50 disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400";
+    const inputClasses = "w-full h-5 border border-transparent bg-transparent px-2 text-[10px] text-gray-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded transition-all disabled:bg-slate-50 disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400";
     const numInputClasses = `${inputClasses} text-right`;
 
     const handleInputChange = (value, index, field) => {
@@ -30,24 +30,23 @@ export default function YarnTable({
     };
 
     return (
-        <fieldset className="h-full min-h-0 bg-white rounded-lg shadow-sm border border-gray-200">
+        <fieldset className="h-full min-h-0 bg-white rounded-lg ">
             <TransactionLineItemsSection
                 panelClassName="h-full min-h-0"
-                contentClassName="min-h-0 overflow-hidden rounded-b-lg border-t border-gray-200 !py-0 bg-white"
+                contentClassName="min-h-0 overflow-hidden rounded-b-lg !py-0 bg-white"
             >
                 <div className="h-full overflow-x-auto overflow-y-auto custom-scrollbar">
                     <table className="w-full border-collapse bg-white">
-                        <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                        <thead className="bg-[#5147B8] sticky top-0 z-10 ">
                             <tr>
                                 <th className={`${headerClasses} w-12 text-center`}>S.no</th>
-                                <th className={`${headerClasses} w-48`}>Yarn Name</th>
-                                <th className={`${headerClasses} w-32`}>Composition/Blend</th>
-                                <th className={`${headerClasses} w-32`}>Counts</th>
-                                <th className={`${headerClasses} w-32`}>Mill</th>
-                                <th className={`${headerClasses} w-32`}>Color</th>
-                                <th className={`${headerClasses} w-24`}>UOM</th>
-                                <th className={`${headerClasses} w-24 text-right`}>Qty</th>
-                                <th className={`${headerClasses} w-12 text-center`}></th>
+                                <th className={`${headerClasses} w-64`}>Yarn Name</th>
+                                <th className={`${headerClasses} w-48`}>Composition/Blend</th>
+                                <th className={`${headerClasses} w-16`}>Counts</th>
+                                <th className={`${headerClasses} w-64`}>Mill</th>
+                                <th className={`${headerClasses} w-24`}>Color</th>
+                                <th className={`${headerClasses} w-16`}>UOM</th>
+                                <th className={`${headerClasses} w-16 text-right`}>Qty</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -55,8 +54,9 @@ export default function YarnTable({
                                 const disabled = readOnly;
 
                                 return (
-                                    <tr key={index} className="hover:bg-blue-50/50 transition-colors group">
-                                        <td className="px-2 py-0 border border-gray-300 text-[11px] font-medium text-slate-500 text-center">
+                                    <tr key={index} className={`  
+                                        ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50/50'} hover:bg-blue-50/50  transition-colors group`}>
+                                        <td className="px-2 py-0 border border-gray-300 text-[10px] font-medium text-slate-500 text-center">
                                             {index + 1}
                                         </td>
                                         <td className={cellClasses}>
@@ -113,6 +113,7 @@ export default function YarnTable({
                                         <td className={cellClasses}>
                                             <input
                                                 type="number"
+                                                cla
                                                 value={row?.qty || ""}
                                                 disabled={disabled}
                                                 onChange={(e) => handleInputChange(e.target.value, index, "qty")}
@@ -121,21 +122,24 @@ export default function YarnTable({
                                                 placeholder="0.00"
                                             />
                                         </td>
-                                        <td className="px-2 py-0 border border-gray-300 text-center">
-                                            {!disabled && (
-                                                <button
-                                                    type="button"
-                                                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-all focus:outline-none opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                                    title="Remove row"
-                                                >
-                                                    <FiTrash2 size={14} />
-                                                </button>
-                                            )}
-                                        </td>
+
                                     </tr>
                                 );
                             })}
                         </tbody>
+                        <tfoot className="sticky bottom-0  z-10 bg-[#E1E7FC] h-[4px] ">
+                            <tr>
+                                <td colSpan={1} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
+                                </td>
+                                <td colSpan={2} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
+                                    Total  {indentItems?.filter(i => i?.yarnId)?.length || 0} Items
+                                </td>
+                                <td colSpan={4} className="px-2 py-1.5 text-[11px] border justify-end"></td>
+                                <td colSpan={5} className="px-2 py-1.5 text-[11px] border text-end">
+                                    {indentItems?.filter(i => i?.yarnId)?.reduce((acc, item) => acc + Number(item?.qty || 0), 0).toFixed(2)}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </TransactionLineItemsSection>

@@ -99,9 +99,9 @@ const PageSearch = ({ pageList }) => {
         <input
           type="text"
           placeholder="SEARCH PAGES..."
-          className="w-full pl-8 pr-4 py-2.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-xl 
+          className="w-full pl-8 pr-4 py-1 text-[11px] font-medium text-gray-700 bg-white border border-gray-200  
       focus:outline-none outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 
-      hover:border-gray-300 transition-all duration-200 shadow-sm h-8
+      hover:border-gray-300 transition-all duration-200 shadow-sm h-7
       placeholder:text-gray-400 placeholder:font-normal"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -143,7 +143,7 @@ const PageSearch = ({ pageList }) => {
             {filteredPages.map((page, index) => (
               <li
                 key={page.id}
-                className={`group px-1.5 py-0.5 mx-1 my-0.5 text-xs font-medium cursor-pointer transition-all duration-150 flex items-center justify-between rounded-lg
+                className={`group px-1.5 py-0.5 mx-1 my-0.5 text-[11px] font-medium cursor-pointer transition-all duration-150 flex items-center justify-between rounded-lg
               ${index === focusedIndex
                     ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700"
                     : "text-gray-600 hover:bg-gray-50"

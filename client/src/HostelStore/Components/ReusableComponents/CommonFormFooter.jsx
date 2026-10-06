@@ -5,7 +5,7 @@ const defaultTotalsRows = ({ totalQty, subtotal, taxAmount, netAmount }) => [
   {
     key: "totalQty",
     label: "Total Quantity",
-    value: totalQty || 0,
+    value: parseFloat(totalQty).toFixed(2) || 0,
     summaryColumn: "left",
   },
   {
@@ -62,7 +62,8 @@ const CommonFormFooter = ({
   rightActions = null,
   remarksPlaceholder = "Additional notes...",
   termsPlaceholder = "Select or type Terms & Conditions...",
-  saveCloseButtonRef
+  saveCloseButtonRef,
+  showterms = false,
 }) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -77,9 +78,9 @@ const CommonFormFooter = ({
   const rightSummaryRows = resolvedTotalsRows.filter((row) => resolveSummaryColumn(row) === "right");
 
   const showTemplateControl = showTermSelect && !readOnly;
-  const termsColumnClassName = "md:col-span-4";
-  const remarksColumnClassName = "md:col-span-2";
-  const totalsColumnClassName = "md:col-span-6";
+  const termsColumnClassName = "md:col-span-3";
+  const remarksColumnClassName = "md:col-span-3";
+  const totalsColumnClassName = "md:col-span-3";
   const visibleChargeOptions = chargeOptions.filter((option) => {
     if (!option) {
       return false;
@@ -194,7 +195,7 @@ const CommonFormFooter = ({
     }
 
     return (
-      <div className="border-t border-slate-100 pt-1.5">
+      <div className=" pt-1.5">
         <div className="space-y-1">
           {visibleChargeOptions.map((option) => (
             <label
@@ -223,39 +224,52 @@ const CommonFormFooter = ({
     <div className="space-y-1.5">
 
 
-      {/* <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
         <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
-          <div className="flex h-full flex-col gap-1">
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
-              {showTemplateControl ? (
-                <button
-                  ref={saveCloseButtonRef}
-                  onKeyDown={(e) => {
-                    if (e.key == "Enter") {
-                      e.preventDefault();
-                      setIsTemplateModalOpen(true);
-                    }
-                  }}
-                  type="button"
-                  className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
-                  onClick={() => setIsTemplateModalOpen(true)}
-                >
-                  Apply template
-                </button>
-              ) : null}
-            </div>
-            <textarea
-              ref={termsTextareaRef}
-              disabled={readOnly}
-              className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-              value={terms || ""}
-              onChange={(e) => setTerms(e.target.value)}
-              placeholder={termsPlaceholder}
-            />
-          </div>
+
+          {showterms ?
+            <>
+
+              <div className="flex h-full flex-col gap-1">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
+                  {showTemplateControl ? (
+                    <button
+                      ref={saveCloseButtonRef}
+                      onKeyDown={(e) => {
+                        if (e.key == "Enter") {
+                          e.preventDefault();
+                          setIsTemplateModalOpen(true);
+                        }
+                      }}
+                      type="button"
+                      className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                      onClick={() => setIsTemplateModalOpen(true)}
+                    >
+                      Apply template
+                    </button>
+                  ) : null}
+                </div>
+
+
+                <textarea
+                  ref={termsTextareaRef}
+                  disabled={readOnly}
+                  className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                  value={terms || ""}
+                  onChange={(e) => setTerms(e.target.value)}
+                  placeholder={termsPlaceholder}
+                />
+
+              </div>
+
+            </>
+            : <></>}
         </div>
 
+        <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
+
+        </div>
         <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
           <h2 className="mb-1 text-[12px] font-bold text-slate-700">Remarks</h2>
           <textarea
@@ -266,19 +280,18 @@ const CommonFormFooter = ({
             placeholder={remarksPlaceholder}
           />
         </div>
+        <div className={`grid grid-cols-1 gap-2 md:grid-cols-1 ${totalsColumnClassName}`}>
 
-        <div className={`grid grid-cols-1 gap-2 md:grid-cols-2 ${totalsColumnClassName}`}>
+
           <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <h2 className="mb-1 text-[12px] font-bold text-slate-700">Summary</h2>
+
             {renderSummaryRows(leftSummaryRows)}
             {renderChargeOptions()}
             {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
           </div>
-          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
-            {renderSummaryRows(rightSummaryRows)}
-            {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
-          </div>
         </div>
-      </div> */}
+      </div>
 
       {leftActions || rightActions ? (
         <div className="mt-0.5 flex flex-col justify-between gap-1.5 md:flex-row md:items-center">
