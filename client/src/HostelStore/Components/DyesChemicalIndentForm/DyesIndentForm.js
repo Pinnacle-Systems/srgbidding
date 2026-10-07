@@ -33,9 +33,9 @@ import { useGetSizeMasterQuery } from "../../../redux/services/SizemasterService
 import { useGetColorMasterQuery } from "../../../redux/services/ColorMasterService.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
 import DyesTable from "./DyesTableItems.jsx";
-import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
 import { useAddDyesChemicalIndentMutation, useLazyGetDyesChemicalIndentByIdQuery, useUpdateDyesChemicalIndentMutation } from "../../../redux/uniformService/DyesChemicalIndent.js";
 import { useAddSparepartIndentMutation, useUpdateSparepartIndentMutation } from "../../../redux/uniformService/SparepartIndent.js";
+import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
 
 const IndentForm = ({
   onClose,
@@ -77,11 +77,22 @@ const IndentForm = ({
 
   const allTabs = ["Yarn", "Fabric", "Spare Part", "Dyes & Chemicals", "General"];
   const [activeTab, setActiveTab] = useState("");
+  const [customData, setCustomData] = useState({});
 
   const supplierRef = useRef(null);
   const [dispatchInvalidate] = useInvalidateTags();
 
   const { userId, finYearId, branchId } = getCommonParams();
+
+  // Fetch the dynamic schema for this Indent Type
+  const { data: dynamicSchemaResponse } = useGetIndentTypeMasterByNameQuery("Dyes & Chemicals");
+  const dynamicFields = useMemo(() => {
+    let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
+    if (typeof schema === 'string') {
+      try { schema = JSON.parse(schema); } catch(e) { schema = []; }
+    }
+    return schema;
+  }, [dynamicSchemaResponse]);
 
   const params = { branchId, finYearId, userId, };
 
@@ -147,6 +158,17 @@ const IndentForm = ({
         // Map backend indentType back to activeTab if needed, though they might match exactly
         setActiveTab(data.indentType);
       }
+      
+      // Load the dynamic custom data if it exists
+      if (data?.customData) {
+        let parsed = data.customData;
+        if (typeof parsed === 'string') {
+          try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+        }
+        setCustomData(parsed || {});
+      } else {
+        setCustomData({});
+      }
     },
     [id],
   );
@@ -191,6 +213,7 @@ const IndentForm = ({
     estimatedValue,
     rowVersion,
     indentItems: indentItems.filter((i) => i.itemId),
+    customData,
   };
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
@@ -663,6 +686,7 @@ const IndentForm = ({
                 sizeList={sizeList}
                 colorList={colorList}
                 uomList={uomList}
+                dynamicFields={dynamicFields}
               />
 
 

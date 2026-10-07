@@ -43,7 +43,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
         select: { docId: true },
         where: {
           branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
+          indentType: INDENT_TYPE,
           AND: [
             { createdAt: { gte: startTime } },
             { createdAt: { lte: endTime } },
@@ -147,20 +147,10 @@ async function get(req) {
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
-    : "";
-  let newDocId = await getNextDocId(
-    branchId,
-    shortCode,
-    finYearDate?.startDateStartTime,
-    finYearDate?.endDateEndTime,
-  );
 
   let data = await prisma.Indent.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
-      indentType: INDENT_TYPE,
       status: searchStatus ? searchStatus : undefined,
       docId: searchDocId ? { contains: searchDocId } : undefined,
       AND: finYearDate
@@ -188,98 +178,19 @@ async function get(req) {
       pageNumber * dataPerPage,
     );
   }
-  const poIds = data.map((po) => po.id);
 
-  const { module, hasApproval } = await getModuleApprovalSetup(
-    REFERENCE_PAGE,
-    branchId,
-  );
 
-  const approvalLogs = await prisma.approvalLog.findMany({
-    where: { referencePage: REFERENCE_PAGE, referenceId: { in: poIds } },
-    select: {
-      id: true,
-      referenceId: true,
-      status: true,
-      remarks: true,
-      currentLevel: true,
-      LevelLogs: {
-        select: {
-          action: true,
-          levelNo: true,
-          userId: true,
-          createdAt: true,
-          User: { select: { id: true, username: true } },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
 
-  const approvalLogMap = approvalLogs.reduce((acc, log) => {
-    acc[log.referenceId] = log;
-    return acc;
-  }, {});
 
-  const activeConfigs =
-    hasApproval && module
-      ? await prisma.approvalConfig.findMany({
-        where: {
-          moduleId: module.id,
-          branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
-          active: true,
-        },
-        include: {
-          ConfigConditions: {
-            include: { Field: true, Operator: true, CompareField: true },
-          },
-          approvalLevels: {
-            include: { LevelUsers: true },
-            orderBy: { levelNo: "asc" },
-          },
-        },
-        // orderBy: { priority: "asc" },
-      })
-      : [];
 
-  const resolvedData = data.map((po) => {
-    const log = approvalLogMap[po.id] ?? null;
-    let shouldTrigger = false;
-    if (!log && hasApproval && activeConfigs.length > 0) {
-      shouldTrigger = evaluateConfigs(activeConfigs, po);
-    }
 
-    // Compute allowedActions based on status
-    let allowedActions = [];
-    const status = po.status || "DRAFT";
-    if (status === "DRAFT") {
-      allowedActions = ["edit", "submit", "discard"];
-    } else if (status === "SUBMITTED") {
-      // Typically you'd check if user is approver here, but we simplify for now
-      allowedActions = ["approve", "reject", "return"];
-    } else if (status === "APPROVED") {
-      allowedActions = ["cancel"]; // if not consumed
-    } else if (status === "REJECTED") {
-      allowedActions = ["edit", "discard"];
-    } else if (status === "RETURNED") {
-      allowedActions = ["edit", "submit"];
-    } else if (status === "CANCELLED") {
-      allowedActions = [];
-    }
 
-    return {
-      ...po,
-      allowedActions,
-      approvalStatus: getPOApprovalStatus(log, !!log || shouldTrigger),
-      childRecord: 0,
-    };
-  });
+
+
 
   return {
     statusCode: 0,
-    data: resolvedData,
-    nextDocId: newDocId,
+    data: data,
     totalCount,
   };
 }
@@ -379,7 +290,7 @@ async function create(body) {
         docDate: docDate ? new Date(docDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
+        indentType: INDENT_TYPE,
         locationId: parseInt(storeId),
         supplierId: parseInt(supplierId),
         productionType,
@@ -548,7 +459,7 @@ async function update(id, body, files) {
         docDate: docDate ? new Date(docDate) : null,
         createdById: parseInt(userId),
         branchId: parseInt(branchId),
-      indentType: INDENT_TYPE,
+        indentType: INDENT_TYPE,
         locationId: parseInt(storeId),
         supplierId: parseInt(supplierId),
         productionType,

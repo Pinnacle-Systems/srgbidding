@@ -105,6 +105,7 @@ import {
   GeneralIndentForm,
   SparepartIndentForm,
 } from "../../../HostelStore/Components";
+import BiddingApp from "../../../Bidding";
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
@@ -212,7 +213,7 @@ const ActiveTabList = () => {
     "DYES & CHEMICALS INDENT FORM": <DyesChemicalIndentForm />,
     "GENERAL INDENT FORM": <GeneralIndentForm />,
     "MACHINE SPARE & PARTS": <SparepartIndentForm />,
-
+    "BIDDING": <BiddingApp />
 
   };
   const innerWidth = window.innerWidth;

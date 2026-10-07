@@ -13,6 +13,7 @@ export default function DyesTable({
     gsmData,
     colorList,
     uomList,
+    dynamicFields = [] // Dynamic fields from Control Panel
 }) {
     const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-white  tracking-wider border border-gray-300";
     const cellClasses = "px-0.5 py-0 border border-gray-300 relative";
@@ -22,6 +23,15 @@ export default function DyesTable({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(indentItems);
         newBlend[index][field] = value;
+        setIndentItems(newBlend);
+    };
+
+    const handleCustomInputChange = (value, index, field) => {
+        const newBlend = structuredClone(indentItems);
+        if (!newBlend[index].customData) {
+            newBlend[index].customData = {};
+        }
+        newBlend[index].customData[field] = value;
         setIndentItems(newBlend);
     };
 
@@ -40,6 +50,9 @@ export default function DyesTable({
                                 <th className={`${headerClasses} w-32`}>Make</th>
                                 <th className={`${headerClasses} w-32`}>Color</th>
                                 <th className={`${headerClasses} w-24`}>Uom</th>
+                                {dynamicFields.map(field => (
+                                    <th key={field.name} className={`${headerClasses} w-32`}>{field.label}</th>
+                                ))}
                                 <th className={`${headerClasses} w-24`}>Qty</th>
 
                             </tr>
@@ -91,6 +104,39 @@ export default function DyesTable({
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                             />
                                         </td>
+                                        
+                                        {/* RENDER DYNAMIC CUSTOM FIELDS */}
+                                        {dynamicFields.map(field => {
+                                            const customVal = row?.customData?.[field.name] || "";
+                                            
+                                            if (field.type === 'select') {
+                                                const options = field.options ? field.options.split(',').map(o => ({ id: o.trim(), name: o.trim() })) : [];
+                                                return (
+                                                    <td key={field.name} className={cellClasses}>
+                                                        <SearchableTableCellSelect
+                                                            value={customVal}
+                                                            options={dropDownListObject(options, "name", "id")}
+                                                            disabled={disabled}
+                                                            onChange={(nextValue) => handleCustomInputChange(nextValue, index, field.name)}
+                                                            className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
+                                                        />
+                                                    </td>
+                                                );
+                                            }
+                                            
+                                            return (
+                                                <td key={field.name} className={cellClasses}>
+                                                    <input
+                                                        type={field.type}
+                                                        value={customVal}
+                                                        disabled={disabled}
+                                                        onChange={(e) => handleCustomInputChange(e.target.value, index, field.name)}
+                                                        className={inputClasses}
+                                                    />
+                                                </td>
+                                            );
+                                        })}
+
                                         <td className={cellClasses}>
                                             <input
                                                 type="number"
@@ -114,7 +160,7 @@ export default function DyesTable({
                                 <td colSpan={1} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
                                     Total  {indentItems?.filter(i => i?.itemId)?.length || 0} Items
                                 </td>
-                                <td colSpan={3} className="px-2 py-1.5 text-[11px] border justify-end"></td>
+                                <td colSpan={3 + dynamicFields.length} className="px-2 py-1.5 text-[11px] border justify-end"></td>
                                 <td colSpan={1} className="px-2 py-1.5 text-[11px] border text-end">
                                     {indentItems?.filter(i => i?.itemId)?.reduce((acc, item) => acc + Number(item?.qty || 0), 0).toFixed(2)}
                                 </td>

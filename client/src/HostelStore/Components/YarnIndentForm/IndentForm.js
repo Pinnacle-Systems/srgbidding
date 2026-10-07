@@ -31,6 +31,7 @@ import { useGetYarnBlendMasterQuery } from "../../../redux/uniformService/YarnBl
 import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
 import YarnTable from "./YarnIndentTable.jsx";
+import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
 
 const IndentForm = ({
   onClose,
@@ -87,7 +88,15 @@ const IndentForm = ({
   const [addData] = useAddYarnIndentMutation();
   const [updateData] = useUpdateYarnIndentMutation();
 
-
+  // Fetch the dynamic schema for this Indent Type ("Fabric" in this case)
+  const { data: dynamicSchemaResponse } = useGetIndentTypeMasterByNameQuery("Yarn");
+  const dynamicFields = useMemo(() => {
+    let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
+    if (typeof schema === 'string') {
+      try { schema = JSON.parse(schema); } catch (e) { schema = []; }
+    }
+    return schema;
+  }, [dynamicSchemaResponse]);
 
   const { data: departmentData } = useGetDepartmentQuery({});
   const { data: yarnList } = useGetYarnMasterQuery({});
@@ -587,6 +596,7 @@ const IndentForm = ({
                 sizeList={sizeList}
                 colorList={colorList}
                 readOnly={readOnly}
+                dynamicFields={dynamicFields}
               />
 
 

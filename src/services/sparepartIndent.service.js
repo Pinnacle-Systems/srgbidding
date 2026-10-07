@@ -440,6 +440,7 @@ async function createIssueItems(
         sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
         colorId: item?.colorId ? parseInt(item.colorId) : null,
         uomId: item?.uomId ? parseInt(item.uomId) : null,
+        customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
 
       },
@@ -541,6 +542,7 @@ async function updateinwardItems(
           sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
+          customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
         },
       });
@@ -553,6 +555,7 @@ async function updateinwardItems(
           sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
+          customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
         },
       });

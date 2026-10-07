@@ -2905,31 +2905,34 @@ model Material {
 }
 
 model Indent {
-  id           Int           @id @default(autoincrement())
-  docId        String
-  docDate      DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    User?         @relation("createdBy", fields: [createdById], references: [id])
-  createdById  Int?
-  updatedBy    User?         @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById  Int?
-  Branch       Branch?       @relation(fields: [branchId], references: [id])
-  branchId     Int?
-  departmentId Int?
-  Department   Department?   @relation(fields: [departmentId], references: [id])
-  employeeId   Int?
-  Employee     Employee?     @relation(fields: [employeeId], references: [id])
-  priority     String?
-  reason       String?
-  remarks      String?
-  requiredDate DateTime?
-  indentType   String
-  status       String?       @default("DRAFT")
-  approvedBy   User?         @relation("approvedBy", fields: [approvedById], references: [id])
-  approvedById Int?
-  isDeleted    Boolean?      @default(false)
-  IndentItems  IndentItems[]
+  id                 Int               @id @default(autoincrement())
+  docId              String
+  docDate            DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  createdBy          User?             @relation("createdBy", fields: [createdById], references: [id])
+  createdById        Int?
+  updatedBy          User?             @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  Branch             Branch?           @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  departmentId       Int?
+  Department         Department?       @relation(fields: [departmentId], references: [id])
+  employeeId         Int?
+  Employee           Employee?         @relation(fields: [employeeId], references: [id])
+  priority           String?
+  reason             String?
+  remarks            String?
+  requiredDate       DateTime?
+  indentType         String
+  status             String?           @default("DRAFT")
+  approvedBy         User?             @relation("approvedBy", fields: [approvedById], references: [id])
+  approvedById       Int?
+  isDeleted          Boolean?          @default(false)
+  IndentTypeMaster   IndentTypeMaster? @relation(fields: [indentTypeMasterId], references: [id])
+  indentTypeMasterId Int?
+  customData         Json?
+  IndentItems        IndentItems[]
 }
 
 model IndentItems {
@@ -2963,6 +2966,7 @@ model IndentItems {
   price       String?
   qty         String?
   make        String?
+  customData  Json?
 }
 
 model Yarn {
@@ -2995,4 +2999,13 @@ model Counts {
   active      Boolean?      @default(true)
   code        String?
   IndentItems IndentItems[]
+}
+
+model IndentTypeMaster {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  fieldSchema Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Indent      Indent[]
 }

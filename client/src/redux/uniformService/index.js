@@ -19,3 +19,4 @@ export { default as ContentMasterApi } from "./ContentMasterServices";
 export { default as CountsMasterApi } from "./CountsMasterServices";
 export { default as YarnBlendApi } from "./YarnBlendMasterServices";
 export { default as YarnMasterApi } from "./YarnMasterServices";
+export { default as IndentTypeMasterApi } from "./IndentTypeMasterService";

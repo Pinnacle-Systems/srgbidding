@@ -31,6 +31,7 @@ import { useGetGsmMasterQuery } from "../../../redux/services/GsmMasterService.j
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices.js";
 import { useGetSizeMasterQuery } from "../../../redux/services/SizemasterService.js";
 import { useGetColorMasterQuery } from "../../../redux/services/ColorMasterService.js";
+import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
 import FabricTable from "./FabricTableItems.jsx";
 
@@ -74,11 +75,22 @@ const IndentForm = ({
 
   const allTabs = ["Yarn", "Fabric", "Spare Part", "Dyes & Chemicals", "General"];
   const [activeTab, setActiveTab] = useState("");
+  const [customData, setCustomData] = useState({});
 
   const supplierRef = useRef(null);
   const [dispatchInvalidate] = useInvalidateTags();
 
   const { userId, finYearId, branchId } = getCommonParams();
+
+  // Fetch the dynamic schema for this Indent Type ("Fabric" in this case)
+  const { data: dynamicSchemaResponse } = useGetIndentTypeMasterByNameQuery("Fabric");
+  const dynamicFields = useMemo(() => {
+    let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
+    if (typeof schema === 'string') {
+      try { schema = JSON.parse(schema); } catch(e) { schema = []; }
+    }
+    return schema;
+  }, [dynamicSchemaResponse]);
 
   const params = { branchId, finYearId, userId };
 
@@ -144,6 +156,17 @@ const IndentForm = ({
         // Map backend indentType back to activeTab if needed, though they might match exactly
         setActiveTab(data.indentType);
       }
+      
+      // Load the dynamic custom data if it exists
+      if (data?.customData) {
+        let parsed = data.customData;
+        if (typeof parsed === 'string') {
+          try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+        }
+        setCustomData(parsed || {});
+      } else {
+        setCustomData({});
+      }
     },
     [id],
   );
@@ -188,6 +211,7 @@ const IndentForm = ({
     estimatedValue,
     rowVersion,
     indentItems: indentItems.filter((i) => i.fabricId),
+    customData,
   };
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
@@ -666,6 +690,7 @@ const IndentForm = ({
                 sizeList={sizeList}
                 colorList={colorList}
                 uomList={uomList}
+                dynamicFields={dynamicFields}
               />
 
 

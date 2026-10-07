@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { Login, Home } from "../Basic/pages";
 import { ProtectedRoute } from "../Basic/components";
 import { LOGIN, HOME_PATH, PRODUCT_ADMIN_HOME_PATH } from "./urlPaths";
+import BiddingApp from "../Bidding";
 
 export default function Routing() {
   return (
@@ -26,6 +27,7 @@ export default function Routing() {
             </ProtectedRoute>
           }
         />
+        <Route path="/bidding/*" element={<BiddingApp />} />
       </Routes>
     </HashRouter>
   );

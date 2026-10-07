@@ -1,21 +1,21 @@
 import React, { useState } from 'react'
 import BranchIdSettings from './BranchIdSettings';
-// import InternalIndentControlPanel from './InternaIndenet';
+import IndentCustomFields from './IndentCustomFields';
 
 const UserRoles = () => {
     const [activeNavBar, setActiveNavBar] = useState("Id Card Settings");
 
     const subMenus = [
         "Id Card Settings",
+        "Indent Custom Fields"
     ]
 
     const getShowSubMenu = () => {
         switch (activeNavBar) {
             case "Id Card Settings":
                 return <BranchIdSettings />
-            // case "Internal Indent":
-            //     return <InternalIndentControlPanel />
-
+            case "Indent Custom Fields":
+                return <IndentCustomFields />
             default:
                 return ""
         }

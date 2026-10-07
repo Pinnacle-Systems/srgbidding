@@ -81,6 +81,7 @@ import {
   ContentMasterApi,
   YarnMasterApi,
   CountsMasterApi,
+  IndentTypeMasterApi,
 } from "./uniformService";
 import OrderEntryApi from "./uniformService/OrderEntryService";
 import BoardMasterApi from "./services/boardService";
@@ -180,6 +181,7 @@ const commonReducers = {
   GeneralIndent: GeneralIndentApi.reducer,
   SparepartIndent: SparepartIndentApi.reducer,
   countsMaster: CountsMasterApi.reducer,
+  IndentTypeMaster: IndentTypeMasterApi.reducer,
 };
 const commonMiddleware = [
   countryMasterApi.middleware,
@@ -269,6 +271,7 @@ const commonMiddleware = [
   GeneralIndentApi.middleware,
   SparepartIndentApi.middleware,
   CountsMasterApi.middleware,
+  IndentTypeMasterApi.middleware
 ];
 
 const store = configureStore({

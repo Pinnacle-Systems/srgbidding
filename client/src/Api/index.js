@@ -89,3 +89,5 @@ export const FABRIC_INDENT_API = "fabricIndent";
 export const DYESCHEMICAL_INDENT_API = "dyesChemicalIndent";
 export const GENERAL_INDENT_API = "generalIndent";
 export const SPAREPART_INDENT_API = "sparepartIndent";
+export const BIDDING_API = "bidding";
+export const INDENT_TYPE_MASTER_API = "indentTypeMaster";
