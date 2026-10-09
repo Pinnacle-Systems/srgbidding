@@ -26,6 +26,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
 
   const [activeLotId, setActiveLotId] = useState(null);
   const [modalSelections, setModalSelections] = useState([]);
+  const [viewMode, setViewMode] = useState("list");
 
   const openModal = (lot) => {
     setActiveLotId(lot.id);
@@ -69,14 +70,38 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
 
   return (
     <div className="space-y-6 relative">
-      <h3 className="text-md font-semibold text-slate-800">Assign Indents to Lots</h3>
-      <p className="text-sm text-slate-500">Select a lot and assign multiple indents to it.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="text-md font-semibold text-slate-800">Assign Indents to Lots</h3>
+          <p className="text-sm text-slate-500">Select a lot and assign multiple indents to it.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex bg-slate-100 p-1 rounded-md border border-slate-200">
+            <button
+              onClick={() => setViewMode("card")}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'card' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+              title="Card View"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+              title="List View"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {bidData.lots.length === 0 ? (
         <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-sm">
           Please go back and create at least one lot first.
         </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <div className="space-y-4">
           {bidData.lots.map((lot, index) => (
             <div key={lot.id} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
@@ -105,7 +130,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                       let bgClass = "bg-slate-100";
                       let textClass = "text-slate-800";
                       let borderClass = "border-slate-200";
-                      
+
                       if (type.includes("Yarn")) {
                         bgClass = "bg-amber-100/60";
                         textClass = "text-amber-900";
@@ -126,6 +151,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                             <div className={`w-2 h-2 rounded-full ${textClass.replace('text-', 'bg-')}`}></div>
                             <span className={`font-bold text-sm ${textClass}`}>{type} Indents ({group.length})</span>
                           </div>
+
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
                               <thead className={`bg-slate-50/50 text-slate-500 border-b ${borderClass} text-xs`}>
@@ -158,7 +184,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                                 {group.map((indent) => {
                                   const displayId = indent.docId || indent.id;
                                   const rawDesc = indent.remarks || indent.desc || '';
-                                  
+
                                   // Mock parser for the screenshot format
                                   let cols = [];
                                   if (type.includes("Yarn") && rawDesc.includes('·')) {
@@ -220,6 +246,51 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
             </div>
           ))}
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {bidData.lots.map((lot, index) => {
+            const totalIndents = lot.indents ? lot.indents.length : 0;
+            const typeSummary = lot.indents ? lot.indents.reduce((acc, indent) => {
+              const type = indent.indentType || indent.type || 'Other';
+              if (!acc[type]) acc[type] = 0;
+              acc[type]++;
+              return acc;
+            }, {}) : {};
+
+            return (
+              <div key={lot.id} className="border border-slate-200 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-800 text-lg mb-1">Lot {index + 1}: {lot.name}</h4>
+                  <p className="text-sm text-slate-500 mb-4">Total Indents: <span className="font-semibold text-slate-700">{totalIndents}</span></p>
+
+                  {totalIndents > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {Object.entries(typeSummary).map(([type, count]) => {
+                        let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+                        if (type.includes("Yarn")) badgeClass = "bg-amber-50 text-amber-800 border-amber-200";
+                        if (type.includes("Spares")) badgeClass = "bg-rose-50 text-rose-800 border-rose-200";
+                        if (type.includes("Fabric")) badgeClass = "bg-teal-50 text-teal-800 border-teal-200";
+
+                        return (
+                          <span key={type} className={`border text-xs font-semibold px-2.5 py-1 rounded-full ${badgeClass}`}>
+                            {type}: {count}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => openModal(lot)}
+                  className="w-full text-center text-sm text-blue-600 font-medium border border-blue-200 hover:bg-blue-50 py-2 rounded-lg transition-colors mt-2"
+                >
+                  {totalIndents > 0 ? "Manage Indents" : "+ Assign Indents"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Modal Overlay */}
@@ -243,7 +314,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                     const displayId = indent.docId || indent.id;
                     const type = indent.indentType || indent.type || 'Indent';
                     const desc = indent.remarks || indent.desc || 'No description available';
-                    const typeColor = indent.typeColor || 'bg-slate-100 text-slate-700';
+                    const typeColor = 'bg-slate-100 text-slate-700';
 
                     return (
                       <div
@@ -266,7 +337,6 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                               {type}
                             </span>
                           </div>
-                          <p className="text-sm text-slate-500">{desc}</p>
                         </div>
                       </div>
                     );

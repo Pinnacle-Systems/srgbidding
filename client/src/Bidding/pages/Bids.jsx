@@ -23,14 +23,22 @@ const getStatusColor = (status) => {
 
 const filterTabs = ["All", "Draft", "Published", "Closing", "Awarded", "Closed", "Cancelled"];
 
-export default function Bids() {
+export default function Bids({ setCurrentView }) {
   const [activeTab, setActiveTab] = useState("All");
 
   const filteredBids = activeTab === "All" ? bidsData : bidsData.filter(b => b.status === activeTab);
 
   return (
     <div className="animate-in fade-in duration-500 max-w-full">
-
+      <div className="flex justify-between items-center mb-4 mt-2">
+        <h1 className="text-2xl font-bold text-slate-800">Bids Overview</h1>
+        <button 
+          onClick={() => setCurrentView && setCurrentView("create")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+        >
+          + Create bid
+        </button>
+      </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-2">
@@ -54,29 +62,29 @@ export default function Bids() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-white border-b border-slate-200 text-slate-500 font-medium">
               <tr>
-                <th className="px-6 py-4 font-medium">Bid</th>
-                <th className="px-6 py-4 font-medium">Title</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Lots</th>
-                <th className="px-6 py-4 font-medium">Vendors</th>
-                <th className="px-6 py-4 font-medium">Quotes in</th>
-                <th className="px-6 py-4 font-medium">Closes</th>
+                <th className="px-6 py-1.5 font-medium">Bid</th>
+                <th className="px-6 py-1.5 font-medium">Title</th>
+                <th className="px-6 py-1.5 font-medium">Status</th>
+                <th className="px-6 py-1.5 font-medium">Lots</th>
+                <th className="px-6 py-1.5 font-medium">Vendors</th>
+                <th className="px-6 py-1.5 font-medium">Quotes in</th>
+                <th className="px-6 py-1.5 font-medium">Closes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {filteredBids.map((bid) => (
                 <tr key={bid.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-900">{bid.id}</td>
-                  <td className="px-6 py-4">{bid.title}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-2 font-bold text-slate-900">{bid.id}</td>
+                  <td className="px-6 py-2">{bid.title}</td>
+                  <td className="px-6 py-2">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(bid.status)}`}>
                       {bid.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{bid.lots}</td>
-                  <td className="px-6 py-4">{bid.vendors}</td>
-                  <td className="px-6 py-4">{bid.quotesIn}</td>
-                  <td className="px-6 py-4">{bid.closes}</td>
+                  <td className="px-6 py-2">{bid.lots}</td>
+                  <td className="px-6 py-2">{bid.vendors}</td>
+                  <td className="px-6 py-2">{bid.quotesIn}</td>
+                  <td className="px-6 py-2">{bid.closes}</td>
                 </tr>
               ))}
               {filteredBids.length === 0 && (

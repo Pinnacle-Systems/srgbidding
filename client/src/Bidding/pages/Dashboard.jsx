@@ -6,11 +6,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <header>
+      {/* <header>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
         <p className="text-slate-500 mt-1">Welcome back, <span className="font-semibold text-slate-700">{role}</span>. Here's what's happening.</p>
-      </header>
-      
+      </header> */}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard title="Active Bids" value="12" color="blue" />

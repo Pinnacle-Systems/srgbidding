@@ -5,7 +5,7 @@ const BiddingAuthContext = createContext();
 export const useBiddingAuth = () => useContext(BiddingAuthContext);
 
 export const BiddingAuthProvider = ({ children }) => {
-  const [role, setRole] = useState("Buyer"); // Admin, Buyer, Approver, Vendor
+  const [role, setRole] = useState("Admin"); // Admin,  Approver, Vendor
   const [vendorId, setVendorId] = useState(null);
 
   const loginAs = (newRole, newVendorId = null) => {

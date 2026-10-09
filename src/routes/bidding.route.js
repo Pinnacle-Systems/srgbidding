@@ -8,4 +8,9 @@ router.post("/", biddingController.create);
 router.put("/:id", biddingController.update);
 router.delete("/:id", biddingController.deleteRecord);
 
+// Lots endpoints
+router.post("/:id/lots", biddingController.createLot);
+router.put("/lots/:lotId", biddingController.updateLot);
+router.delete("/lots/:lotId", biddingController.deleteLot);
+
 module.exports = router;

@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { encryptData, decryptData } from "./src/utils/encryption.js";
 
 import {
   employees,
@@ -97,7 +98,6 @@ import {
 import { setIo } from "./src/utils/notificationHelper.js";
 import { socketMain } from "./src/sockets/socket.js";
 import middleware from "./src/middlewares/middleware.js";
-import { decryptData, encryptData } from "./src/utils/encryption.js";
 
 const app = express();
 // app.use(express.json());
@@ -121,42 +121,35 @@ const __dirname = dirname(__filename);
 
 app.use(express.json());
 
+// Encryption/Decryption Middleware
+app.use((req, res, next) => {
+    // 1. Decrypt incoming body if it has payload
+    if (req.body && req.body.payload) {
+        const decrypted = decryptData(req.body.payload);
+        if (decrypted) {
+            req.body = decrypted;
+        }
+    }
+
+    // 2. Override res.json to encrypt outgoing response
+    const originalJson = res.json;
+    res.json = function (data) {
+        // Skip encryption for specific routes or errors if needed, but encrypting everything by default
+        if (data && typeof data === 'object') {
+            const encryptedStr = encryptData(data);
+            if (encryptedStr) {
+                return originalJson.call(this, { payload: encryptedStr });
+            }
+        }
+        return originalJson.call(this, data);
+    };
+
+    next();
+});
+
 const path = __dirname + "/client/dist/";
 
 app.use(express.static(path));
-
-app.use((req, res, next) => {
-  // 1. Decrypt incoming body if it has payload
-  if (req.body && req.body.payload) {
-    const decrypted = decryptData(req.body.payload);
-    if (decrypted) {
-      req.body = decrypted;
-    }
-  }
-
-  // Decrypt incoming query parameters if it has payload
-  if (req.query && req.query.payload) {
-    const decryptedQuery = decryptData(req.query.payload);
-    if (decryptedQuery) {
-      req.query = decryptedQuery;
-    }
-  }
-
-  // 2. Override res.json to encrypt outgoing response
-  const originalJson = res.json;
-  res.json = function (data) {
-    // Skip encryption for specific routes or errors if needed, but encrypting everything by default
-    if (data && typeof data === 'object') {
-      const encryptedStr = encryptData(data);
-      if (encryptedStr) {
-        return originalJson.call(this, { payload: encryptedStr });
-      }
-    }
-    return originalJson.call(this, data);
-  };
-
-  next();
-});
 
 app.get("/", function (req, res) {
   res.sendFile(path + "index.html");

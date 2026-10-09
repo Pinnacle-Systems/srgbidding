@@ -1,9 +1,13 @@
 const { prisma } = require("../configs/prisma");
 
 exports.getAll = async (req) => {
-  // Assuming a generic Bidding model, update model name if different
   const data = await prisma.Bidding.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: {
+      BiddingLots: true,
+      Branch: true,
+      createdBy: { select: { id: true, firstName: true, lastName: true } },
+    }
   });
   
   return {
@@ -15,7 +19,16 @@ exports.getAll = async (req) => {
 
 exports.getById = async (id) => {
   const data = await prisma.Bidding.findUnique({
-    where: { id: parseInt(id) }
+    where: { id: parseInt(id) },
+    include: {
+      BiddingLots: {
+        include: {
+          BiddingIndent: true
+        }
+      },
+      Branch: true,
+      createdBy: { select: { id: true, firstName: true, lastName: true } },
+    }
   });
   
   return {
@@ -26,7 +39,10 @@ exports.getById = async (id) => {
 
 exports.create = async (body, req) => {
   const data = await prisma.Bidding.create({
-    data: body
+    data: {
+      ...body,
+      createdById: req.user?.id,
+    }
   });
   
   return {
@@ -39,7 +55,10 @@ exports.create = async (body, req) => {
 exports.update = async (id, body, req) => {
   const data = await prisma.Bidding.update({
     where: { id: parseInt(id) },
-    data: body
+    data: {
+      ...body,
+      updatedById: req.user?.id,
+    }
   });
   
   return {
@@ -57,5 +76,45 @@ exports.deleteRecord = async (id) => {
   return {
     statusCode: 0,
     message: "Bid deleted successfully"
+  };
+};
+
+// Lot endpoints
+exports.createLot = async (biddingId, body, req) => {
+  const data = await prisma.BiddingLots.create({
+    data: {
+      ...body,
+      biddingId: parseInt(biddingId)
+    }
+  });
+  
+  return {
+    statusCode: 0,
+    data: data,
+    message: "Lot created successfully"
+  };
+};
+
+exports.updateLot = async (lotId, body, req) => {
+  const data = await prisma.BiddingLots.update({
+    where: { id: parseInt(lotId) },
+    data: body
+  });
+  
+  return {
+    statusCode: 0,
+    data: data,
+    message: "Lot updated successfully"
+  };
+};
+
+exports.deleteLot = async (lotId) => {
+  await prisma.BiddingLots.delete({
+    where: { id: parseInt(lotId) }
+  });
+  
+  return {
+    statusCode: 0,
+    message: "Lot deleted successfully"
   };
 };
