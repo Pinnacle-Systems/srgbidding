@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import { Check, Power } from "lucide-react";
 import {
   DropdownInput,
+  MultiSelectDropdownNew,
   ReusableTable,
   TextInputNew,
   TextInputNew1,
@@ -20,7 +21,7 @@ import {
 } from "../../../Inputs";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
-import { dropDownListObject } from "../../../Utils/contructObject";
+import { dropDownListObject, multiSelectOption } from "../../../Utils/contructObject";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 import { useGetSizeTemplateQuery } from "../../../redux/services/SizeTemplateMaster";
@@ -34,6 +35,7 @@ import { UserPermissions } from "../../../Utils/UserPermissions";
 import { ItemSubGroupMaster } from "../../../Basic/components";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../../redux/services/ItemMasterService";
 import { useGetMaterialMasterQuery } from "../../../redux/services/MaterialMasterServices";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 
 const MODEL = "Item Master";
 export default function Form({ onSuccess, defaultName = "" }) {
@@ -54,6 +56,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const [gsmId, setGsmId] = useState("");
   const [materialId, setMaterialId] = useState("");
   const [childRecord, setChildRecord] = useState(0);
+  const [itemVendors, setItemVendors] = useState([])
 
   const [dispatchInvalidate] = useInvalidateTags();
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -87,6 +90,10 @@ export default function Form({ onSuccess, defaultName = "" }) {
   } = useGetItemMasterByIdQuery(id, { skip: !id });
   const [trigger, { data: LazyData }] = useLazyGetStyleItemMasterByIdQuery();
 
+  const {
+    data: partyData,
+  } = useGetPartyQuery({ params, searchParams: searchValue });
+
   const [addData] = useAddItemMasterMutation();
   const [updateData] = useUpdateItemMasterMutation();
   const [removeData] = useDeleteItemMasterMutation();
@@ -112,6 +119,10 @@ export default function Form({ onSuccess, defaultName = "" }) {
       setGsmId(data?.gsmId ? data?.gsmId : "");
       setMaterialId(data?.materialId ? data?.materialId : "")
       setChildRecord(data?.childRecord ? data?.childRecord : 0)
+      setItemVendors(data?.ItemVendors?.map((item) => ({
+        label: item?.name,
+        value: item?.vendorId,
+      })) || [])
     },
     [id],
   );
@@ -134,7 +145,8 @@ export default function Form({ onSuccess, defaultName = "" }) {
     sizeTemplateId,
     uomId,
     gsmId,
-    materialId
+    materialId,
+    itemVendors
   };
 
   useEffect(() => {
@@ -450,7 +462,16 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   // required={true}
                   />
                 </div>
-
+                <div className="mb-2 col-span-1">
+                  <MultiSelectDropdownNew
+                    name="Vendors"
+                    selected={itemVendors}
+                    setSelected={setItemVendors}
+                    options={multiSelectOption(partyData?.data || [], "name", "id")}
+                    readOnly={readOnly}
+                    disabled={readOnly}
+                  />
+                </div>
 
 
                 <div className="mb-5">

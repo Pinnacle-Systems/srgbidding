@@ -20,6 +20,9 @@ async function get(req) {
         },
       },
     },
+    orderBy: {
+      id: "desc"
+    }
   });
 
   if (isFilter && filterValue) {
@@ -51,6 +54,7 @@ async function getOne(id) {
     },
     include: {
       Hsn: true,
+      ItemVendors: true
     },
   });
   if (!data) return NoRecordFound("Item");
@@ -94,6 +98,7 @@ async function create(body) {
     itemGroupId,
     itemSubGroupId,
     materialId,
+    itemVendors
   } = await body;
   const data = await prisma.item.create({
     data: {
@@ -104,7 +109,14 @@ async function create(body) {
       hsnId: parseInt(hsnId) || null,
       itemGroupId: parseInt(itemGroupId) || null,
       materialId: parseInt(materialId) || null,
-      active: active ? Boolean(active) : false
+      active: active ? Boolean(active) : false,
+      ItemVendors: {
+        create: itemVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };
@@ -122,6 +134,7 @@ async function update(id, body) {
     itemGroupId,
     itemSubGroupId,
     materialId,
+    itemVendors
   } = await body;
 
   const dataFound = await prisma.item.findUnique({
@@ -142,7 +155,17 @@ async function update(id, body) {
       hsnId: parseInt(hsnId) || null,
       itemGroupId: parseInt(itemGroupId) || null,
       materialId: parseInt(materialId) || null,
-      active: active ? Boolean(active) : false
+      active: active ? Boolean(active) : false,
+      ItemVendors: {
+        deleteMany: {
+          itemId: parseInt(id),
+        },
+        create: itemVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };

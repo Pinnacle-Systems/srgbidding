@@ -7,10 +7,13 @@ import {
   create,
   update,
   remove,
+  getYarnVendors,
+
 } from "../controllers/yarn.controller.js";
 
 router.post("/", create);
 router.get("/", get);
+router.get("/getYarnVendors", getYarnVendors);
 router.get("/:id", getOne);
 router.get("/search/:searchKey", getSearch);
 router.put("/:id", update);

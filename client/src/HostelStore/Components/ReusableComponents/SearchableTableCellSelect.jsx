@@ -48,6 +48,7 @@ const SearchableTableCellSelect = forwardRef(({
   const [search, setSearch] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-2);
   const [showAddNew, setShowAddNew] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [openUp, setOpenUp] = useState(false);
 
   const normalizedOptions = useMemo(() => {
@@ -135,10 +136,19 @@ const SearchableTableCellSelect = forwardRef(({
     }, 0);
   };
 
-  const handleAddNewSuccess = (newValue) => {
+  const handleAddNewSuccess = (newValue, additionalData) => {
+
     if (setValue) setValue(newValue);
-    if (onChange) onChange(newValue);
+    if (onChange) onChange(newValue, additionalData);
     setShowAddNew(false);
+    closeDropdown();
+  };
+
+  const handleEditSuccess = (newValue, additionalData) => {
+    // console.log(additionalData, "additionalData")
+    if (setValue && newValue) setValue(newValue);
+    if (onChange && newValue) onChange(newValue, additionalData);
+    setShowEdit(false);
     closeDropdown();
   };
 
@@ -340,20 +350,36 @@ const SearchableTableCellSelect = forwardRef(({
               }`}
           >
             {childComponent && (
-              <button
-                type="button"
-                className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
-                  }`}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  setIsOpen(false);
-                  setSearch("");
-                  setShowAddNew(true);
-                }}
-                onMouseEnter={() => setHighlightedIndex(-1)}
-              >
-                {addNewLabel}
-              </button>
+              <div className="flex border-b border-slate-100">
+                <button
+                  type="button"
+                  className={`block w-full px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
+                    }`}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    setIsOpen(false);
+                    setSearch("");
+                    setShowAddNew(true);
+                  }}
+                  onMouseEnter={() => setHighlightedIndex(-1)}
+                >
+                  {addNewLabel}
+                </button>
+                {selectedOption && (
+                  <button
+                    type="button"
+                    className="block px-3 py-1.5 border-l border-slate-200 text-[11px] font-semibold text-orange-600 hover:bg-orange-50 whitespace-nowrap"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      setIsOpen(false);
+                      setSearch("");
+                      setShowEdit(true);
+                    }}
+                  >
+                    Edit Selected
+                  </button>
+                )}
+              </div>
             )}
 
             {filteredOptions.length > 0 ? (
@@ -389,6 +415,15 @@ const SearchableTableCellSelect = forwardRef(({
         return (
           <Modal isOpen={showAddNew} onClose={() => setShowAddNew(false)} widthClass={addNewModalWidth}>
             <AddNew onSuccess={handleAddNewSuccess} onClose={() => setShowAddNew(false)} />
+          </Modal>
+        );
+      })()}
+
+      {showEdit && childComponent && (() => {
+        const EditComponent = childComponent;
+        return (
+          <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} widthClass={addNewModalWidth}>
+            <EditComponent editId={value} onSuccess={handleEditSuccess} onClose={() => setShowEdit(false)} />
           </Modal>
         );
       })()}

@@ -324,7 +324,7 @@ const SidebarComponent = ({
       )}
 
       {isMainDropdownOpen && (
-        <div className="bg-white p-4 rounded-lg shadow-2xl outline outline-1 outline-gray-300 h-[650px] overflow-y-auto w-[400px] transition-all duration-200 space-y-4">
+        <div className="bg-white p-4 rounded-lg shadow-2xl outline outline-1 outline-gray-300 h-[590px] overflow-y-auto w-[400px] transition-all duration-200 space-y-4">
           <div className="relative">
             <input
               type="text"

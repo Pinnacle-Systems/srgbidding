@@ -12,6 +12,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Check, Power } from "lucide-react";
 import {
+  MultiSelectDropdownNew,
   ReusableTable,
   TextInputNew1,
   ToggleButton,
@@ -21,20 +22,30 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { UserPermissions } from "../../../Utils/UserPermissions";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { multiSelectOption } from "../../../Utils/contructObject";
 
-export default function Form({ onSuccess, defaultName = "" }) {
+export default function Form({ onSuccess, editId, defaultName = "" }) {
   const [form, setForm] = useState(false);
 
   const [readOnly, setReadOnly] = useState(false);
-  const [id, setId] = useState("");
+  const [id, setId] = useState(editId || "");
   const [name, setName] = useState(defaultName || "");
   const [code, setCode] = useState("");
   const [active, setActive] = useState(true);
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const [fabricVendors, setFabricVendors] = useState([]);
 
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const [dispatchInvalidate] = useInvalidateTags();
+
+  useEffect(() => {
+    if (editId) {
+      setId(editId);
+      setForm(true);
+    }
+  }, [editId]);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -59,6 +70,10 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const [updateData] = useUpdateFabricMasterMutation();
   const [removeData] = useDeleteFabricMasterMutation();
 
+  const {
+    data: partyData,
+  } = useGetPartyQuery({ params, searchParams: searchValue });
+
   const { hasPermission } = UserPermissions();
   const handleCreate = () => {
     hasPermission(() => {
@@ -79,6 +94,12 @@ export default function Form({ onSuccess, defaultName = "" }) {
         setName(data?.name || "");
         setCode(data?.code || "");
         setActive(id ? (data?.active ?? false) : true);
+        setFabricVendors((data?.FabricVendors ?? [])?.map((item) => {
+          return {
+            label: item.name,
+            value: item.vendorId
+          }
+        }))
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
     },
@@ -95,6 +116,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
     code,
     active,
     id,
+    fabricVendors
   };
 
   const validateData = (data) => {
@@ -309,39 +331,46 @@ export default function Form({ onSuccess, defaultName = "" }) {
           <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
             <div className="space-y-4 ">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <fieldset className="my-1 space-y-2">
-                  <TextInputNew1
-                    name="Name"
-                    type="text"
-                    value={name}
-                    setValue={setName}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    ref={countryNameRef}
-                    onKeyDown={handlers.handleLastInputKeyDown}
-                  />
+                <TextInputNew1
+                  name="Name"
+                  type="text"
+                  value={name}
+                  setValue={setName}
+                  required={true}
+                  readOnly={readOnly}
+                  disabled={childRecord.current > 0}
+                  ref={countryNameRef}
+                  onKeyDown={handlers.handleLastInputKeyDown}
+                />
 
-                  <TextInputNew1
-                    name="Code"
-                    type="text"
-                    value={code}
-                    setValue={setCode}
-                    readOnly={readOnly}
-                    onKeyDown={handlers.handleLastInputKeyDown}
-                  />
-
-                  <ToggleButton
-                    name="Status"
-                    options={statusDropdown}
-                    value={active}
-                    setActive={setActive}
+                <TextInputNew1
+                  name="Code"
+                  type="text"
+                  value={code}
+                  setValue={setCode}
+                  readOnly={readOnly}
+                  onKeyDown={handlers.handleLastInputKeyDown}
+                />
+                <div className="mb-2 col-span-1">
+                  <MultiSelectDropdownNew
+                    name="Vendors"
+                    selected={fabricVendors}
+                    setSelected={setFabricVendors}
+                    options={multiSelectOption(partyData?.data || [], "name", "id")}
                     readOnly={readOnly}
                     disabled={readOnly}
-                    ref={toggleButtonRef}
-                    onKeyDown={handlers.handleToggleKeyDown}
                   />
-                </fieldset>
+                </div>
+                <ToggleButton
+                  name="Status"
+                  options={statusDropdown}
+                  value={active}
+                  setActive={setActive}
+                  readOnly={readOnly}
+                  disabled={readOnly}
+                  ref={toggleButtonRef}
+                  onKeyDown={handlers.handleToggleKeyDown}
+                />
                 <div></div>
               </div>
             </div>

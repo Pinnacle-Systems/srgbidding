@@ -4219,3 +4219,197 @@ export function childRecordCount(count) {
   return Object.values(count).some(v => v > 0);
 
 }
+
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <input
+        type="checkbox"
+        checked={props.isSelected}
+        onChange={() => null}
+        style={{ marginRight: 8 }}
+      />
+      {props.label}
+    </components.Option>
+  );
+};
+
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue } = props;
+  const selected = getValue();
+
+  const MAX_DISPLAY = 5;
+
+  let displayText = "";
+
+  if (selected.length > 0) {
+    const labels = selected.slice(0, MAX_DISPLAY).map((item) => item.label);
+
+    if (selected.length > MAX_DISPLAY) {
+      displayText = `${labels.join(", ")} +${selected.length - MAX_DISPLAY
+        } more`;
+    } else {
+      displayText = labels.join(", ");
+    }
+  }
+
+  return (
+    <components.ValueContainer {...props}>
+      <div
+        style={{
+          fontSize: "13px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {displayText}
+      </div>
+      {children[1]}
+    </components.ValueContainer>
+  );
+};
+
+export const MultiSelectDropdownNew = ({
+  name,
+  selected,
+  label,
+  setSelected,
+  options,
+  readOnly = false,
+  tabIndex = null,
+  className = "",
+  required,
+  disabled,
+  labelHidden = false,
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused
+        ? "#f3f4f6"
+        : "#ffffff",
+      color: "#111827",
+      fontSize: "11px",
+      paddingTop: "4px",
+      paddingBottom: "4px",
+    }),
+
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 important
+    }),
+
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 for modals
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      height: "28px",
+    }),
+
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
+
+    multiValue: (base) => ({
+      ...base,
+      padding: "0 4px",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
+  return (
+    <div className={`block text-inter-regular-11  font-bold text-[#697386] mb-1 ${className} `}>
+      {!labelHidden && (
+        <span className="mb-3">
+          {required ? <RequiredLabel name={label ? label : name} /> : (label || name)}
+        </span>
+      )}
+
+      <div className="mt-1 ">
+        <Select
+          isMulti
+          options={options}
+          value={selected}
+          onChange={setSelected}
+          components={{ Option, ValueContainer }}
+          closeMenuOnSelect={false}
+          hideSelectedOptions={false}
+          placeholder=""
+          maxMenuHeight={200}
+          styles={customStyles}
+          menuPortalTarget={document.body}
+        />
+      </div>
+
+      {selected?.length > 0 && (
+        <div className="mt-1 flex justify-end">
+          <button
+            type="button"
+            className="text-[11px] text-blue-600 hover:text-blue-800 font-medium underline"
+            onClick={() => setIsModalOpen(true)}
+          >
+            View {selected.length} selected
+          </button>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          widthClass={"w-[400px] h-auto min-h-[200px] max-h-[400px]"}
+        >
+          <div className="p-4 bg-white rounded-md h-full w-full">
+            <h3 className="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Selected {label || name}</h3>
+            <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[300px]">
+              {selected?.length > 0 ? selected.map((item) => (
+                <div
+                  key={item.value}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded border border-gray-200"
+                >
+                  <span className="truncate max-w-[250px]">{item.label}</span>
+                  {!readOnly && !disabled && (
+                    <button
+                      type="button"
+                      onClick={() => setSelected(selected.filter((v) => v.value !== item.value))}
+                      className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
+                      title="Remove item"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )) : (
+                <p className="text-xs text-gray-500">No items selected.</p>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};

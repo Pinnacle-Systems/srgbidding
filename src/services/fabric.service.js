@@ -7,6 +7,9 @@ async function get(req) {
     where: {
       active: active ? Boolean(active) : undefined,
     },
+    orderBy: {
+      id: "desc"
+    }
   });
   return {
     statusCode: 0,
@@ -18,6 +21,9 @@ async function getOne(id) {
   const data = await prisma.fabric.findUnique({
     where: {
       id: parseInt(id),
+    },
+    include: {
+      FabricVendors: true,
     },
   });
   if (!data) return NoRecordFound("fabric");
@@ -43,19 +49,26 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const { name, code, active } = await body;
+  const { name, code, active, fabricVendors } = await body;
   const data = await prisma.fabric.create({
     data: {
       name,
       code,
       active,
+      FabricVendors: {
+        create: fabricVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-  const { name, code, active } = await body;
+  const { name, code, active, fabricVendors } = await body;
   const dataFound = await prisma.fabric.findUnique({
     where: {
       id: parseInt(id),
@@ -70,6 +83,16 @@ async function update(id, body) {
       name,
       code,
       active,
+      FabricVendors: {
+        deleteMany: {
+          fabricId: parseInt(id),
+        },
+        create: fabricVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };

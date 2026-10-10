@@ -82,6 +82,21 @@ const YarnMasterApi = createApi({
       }),
       invalidatesTags: ["Yarn"],
     }),
+
+
+    getYarnVendors: builder.query({
+      query: ({ params }) => {
+        return {
+          url: `${YARN_API}/getYarnVendors`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Yarn"],
+    }),
   }),
 });
 
@@ -92,7 +107,8 @@ export const {
   useAddYarnMasterMutation,
   useUpdateYarnMasterMutation,
   useDeleteYarnMasterMutation,
-  useLazyGetYarnMasterByIdQuery
+  useLazyGetYarnMasterByIdQuery,
+  useGetYarnVendorsQuery,
 } = YarnMasterApi;
 
 export default YarnMasterApi;

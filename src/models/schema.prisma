@@ -531,6 +531,11 @@ model Party {
   MaterialIssue            MaterialIssue[]
   MaterialReturn           MaterialReturn[]
   IndentItems              IndentItems[]
+  YarnVendors              YarnVendors[]
+  FabricVendors            FabricVendors[]
+  ItemVendors              ItemVendors[]
+  IndentItemVendors        IndentItemVendors[]       @relation("Vendor")
+  IndentItemVendorslabel   IndentItemVendors[]       @relation("VendorValue")
 }
 
 model PartyBranch {
@@ -1753,6 +1758,16 @@ model Item {
   MaterialIssueItems  MaterialIssueItems[]
   MaterialReturnItems MaterialReturnItems[]
   IndentItems         IndentItems[]
+  ItemVendors         ItemVendors[]
+}
+
+model ItemVendors {
+  id       Int     @id @default(autoincrement())
+  itemId   Int?
+  Item     Item?   @relation(fields: [itemId], references: [id])
+  vendorId Int?
+  name     String?
+  Vendor   Party?  @relation(fields: [vendorId], references: [id])
 }
 
 model ItemGroup {
@@ -2939,37 +2954,49 @@ model Indent {
 }
 
 model IndentItems {
-  id          Int        @id @default(autoincrement())
-  Indent      Indent?    @relation(fields: [indentId], references: [id], onDelete: Cascade)
-  indentId    Int?
-  Itemgroup   ItemGroup? @relation(fields: [itemGroupId], references: [id])
-  itemGroupId Int?
-  Item        Item?      @relation(fields: [itemId], references: [id])
-  itemId      Int?
-  Size        Size?      @relation(fields: [sizeId], references: [id])
-  sizeId      Int?
-  Color       Color?     @relation(fields: [colorId], references: [id])
-  colorId     Int?
-  Uom         Uom?       @relation(fields: [uomId], references: [id])
-  uomId       Int?
-  Hsn         Hsn?       @relation(fields: [hsnId], references: [id])
-  hsnId       Int?
-  Gsm         Gsm?       @relation(fields: [gsmId], references: [id])
-  gsmId       Int?
-  Yarn        Yarn?      @relation(fields: [yarnId], references: [id])
-  yarnId      Int?
-  Fabric      Fabric?    @relation(fields: [fabricId], references: [id])
-  fabricId    Int?
-  YarnBlend   YarnBlend? @relation(fields: [yarnBlendId], references: [id])
-  yarnBlendId Int?
-  Counts      Counts?    @relation(fields: [countsId], references: [id])
-  countsId    Int?
-  millTo      Party?     @relation(fields: [millToId], references: [id])
-  millToId    Int?
-  price       String?
-  qty         String?
-  make        String?
-  customData  Json?
+  id                Int                 @id @default(autoincrement())
+  Indent            Indent?             @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  indentId          Int?
+  Itemgroup         ItemGroup?          @relation(fields: [itemGroupId], references: [id])
+  itemGroupId       Int?
+  Item              Item?               @relation(fields: [itemId], references: [id])
+  itemId            Int?
+  Size              Size?               @relation(fields: [sizeId], references: [id])
+  sizeId            Int?
+  Color             Color?              @relation(fields: [colorId], references: [id])
+  colorId           Int?
+  Uom               Uom?                @relation(fields: [uomId], references: [id])
+  uomId             Int?
+  Hsn               Hsn?                @relation(fields: [hsnId], references: [id])
+  hsnId             Int?
+  Gsm               Gsm?                @relation(fields: [gsmId], references: [id])
+  gsmId             Int?
+  Yarn              Yarn?               @relation(fields: [yarnId], references: [id])
+  yarnId            Int?
+  Fabric            Fabric?             @relation(fields: [fabricId], references: [id])
+  fabricId          Int?
+  YarnBlend         YarnBlend?          @relation(fields: [yarnBlendId], references: [id])
+  yarnBlendId       Int?
+  Counts            Counts?             @relation(fields: [countsId], references: [id])
+  countsId          Int?
+  millTo            Party?              @relation(fields: [millToId], references: [id])
+  millToId          Int?
+  price             String?
+  qty               String?
+  make              String?
+  customData        Json?
+  IndentItemVendors IndentItemVendors[]
+}
+
+model IndentItemVendors {
+  id           Int          @id @default(autoincrement())
+  IndentItems  IndentItems? @relation(fields: [indentItemId], references: [id], onDelete: Cascade)
+  indentItemId Int?
+  vendorId     Int?
+  Vendor       Party?       @relation("Vendor", fields: [vendorId], references: [id])
+  label        String?
+  value        Int?
+  VendorValue  Party?       @relation("VendorValue", fields: [value], references: [id])
 }
 
 model Yarn {
@@ -2978,14 +3005,34 @@ model Yarn {
   active      Boolean?      @default(true)
   code        String?
   IndentItems IndentItems[]
+  YarnVendors YarnVendors[]
 }
 
 model Fabric {
-  id          Int           @id @default(autoincrement())
-  name        String?
-  active      Boolean?      @default(true)
-  code        String?
-  IndentItems IndentItems[]
+  id            Int             @id @default(autoincrement())
+  name          String?
+  active        Boolean?        @default(true)
+  code          String?
+  IndentItems   IndentItems[]
+  FabricVendors FabricVendors[]
+}
+
+model YarnVendors {
+  id       Int     @id @default(autoincrement())
+  yarnId   Int?
+  Yarn     Yarn?   @relation(fields: [yarnId], references: [id])
+  name     String?
+  vendorId Int?
+  Vendor   Party?  @relation(fields: [vendorId], references: [id])
+}
+
+model FabricVendors {
+  id       Int     @id @default(autoincrement())
+  fabricId Int?
+  Fabric   Fabric? @relation(fields: [fabricId], references: [id])
+  name     String?
+  vendorId Int?
+  Vendor   Party?  @relation(fields: [vendorId], references: [id])
 }
 
 model YarnBlend {

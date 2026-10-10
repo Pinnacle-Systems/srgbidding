@@ -404,6 +404,7 @@ async function create(body) {
         departmentId: departmentId ? parseInt(departmentId) : null,
         employeeId: employeeId ? parseInt(employeeId) : null,
 
+
       },
     });
 
@@ -466,7 +467,13 @@ async function createIssueItems(
         uomId: item?.uomId ? parseInt(item.uomId) : null,
         customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
-
+        IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+          create: item.IndentItemVendors.map((vendor) => ({
+            label: vendor?.label ? String(vendor.label) : null,
+            value: vendor?.value ? parseInt(vendor.value) : null,
+            vendorId: vendor?.value ? parseInt(vendor.value) : null,
+          }))
+        } : [],
       },
     });
 

@@ -1,7 +1,10 @@
 import { FiTrash2 } from "react-icons/fi";
 import TransactionLineItemsSection from "../ReusableComponents/TransactionLineItemsSection";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
-import { dropDownListObject } from "../../../Utils/contructObject";
+import SearchableTableMultiCellSelect from "../ReusableComponents/SearchableTableMultiCellSelect";
+import { dropDownListObject, multiSelectOption } from "../../../Utils/contructObject";
+import { YarnMaster } from "..";
+import { useEffect, useRef } from "react";
 
 
 export default function YarnTable({
@@ -16,19 +19,35 @@ export default function YarnTable({
     uomList,
     sizeList,
     colorList,
-    onChange, // Added onChange handler for future use
-    dynamicFields = [] // Dynamic fields from Control Panel
+    onChange,
+    yarnVendorList,
+    dynamicFields = [],
 }) {
+
+
     const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-white  tracking-wider border border-gray-300";
     const cellClasses = "px-0.5 py-0 border border-gray-300 relative";
     const inputClasses = "w-full h-5 border border-transparent bg-transparent px-2 text-[10px] text-gray-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded transition-all disabled:bg-slate-50 disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400";
     const numInputClasses = `${inputClasses} text-right`;
 
-    const handleInputChange = (value, index, field) => {
+
+
+    const handleInputChange = (value, index, field, VendorList) => {
         const newBlend = structuredClone(indentItems);
+
+        if (field === 'yarnId') {
+            const vendors = yarnList?.data?.find(i => i.id === value)?.YarnVendors || [];
+            console.log(vendors, "vendors")
+
+
+            newBlend[index]['IndentItemVendors'] = vendors?.length > 1 ? vendors.map(v => ({ label: v.name, value: v.vendorId })) : [];
+        }
+
         newBlend[index][field] = value;
         setIndentItems(newBlend);
     };
+
+
 
     const handleCustomInputChange = (value, index, field) => {
         const newBlend = structuredClone(indentItems);
@@ -38,6 +57,10 @@ export default function YarnTable({
         newBlend[index].customData[field] = value;
         setIndentItems(newBlend);
     };
+
+
+    console.log(indentItems?.filter((i) => i.yarnId)?.[0]?.yarnVendors, "indentItems")
+
 
     return (
         <fieldset className="h-full min-h-0 bg-white rounded-lg ">
@@ -77,8 +100,15 @@ export default function YarnTable({
                                                 value={row?.yarnId || ""}
                                                 options={dropDownListObject(id ? yarnList?.data : yarnList?.data?.filter(i => i.active) || [], "name", "id")}
                                                 disabled={disabled}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "yarnId")}
+                                                onChange={(nextValue, additionalData) => {
+                                                    handleInputChange(nextValue, index, "yarnId", additionalData == undefined ? yarnList?.data : additionalData)
+                                                    console.log(additionalData == undefined, "additionalData")
+                                                }
+                                                }
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
+                                                addNewModalWidth="w-[40%] h-[60%]"
+                                                childComponent={YarnMaster}
+                                                addNewLabel="+ Add New Yarn"
                                             />
                                         </td>
                                         <td className={cellClasses}>
@@ -99,11 +129,12 @@ export default function YarnTable({
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                             />
                                         </td>
+
                                         <td className={cellClasses}>
-                                            <SearchableTableCellSelect
-                                                value={row?.millId || ""}
+                                            <SearchableTableMultiCellSelect
+                                                value={row?.IndentItemVendors || []}
                                                 options={dropDownListObject(id ? partyList?.data : partyList?.data?.filter(i => i.active) || [], "name", "id")} disabled={disabled}
-                                                onChange={(nextValue) => handleInputChange(nextValue, index, "millId")}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "IndentItemVendors")}
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                             />
                                         </td>
@@ -123,11 +154,11 @@ export default function YarnTable({
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                             />
                                         </td>
-                                        
+
                                         {/* RENDER DYNAMIC CUSTOM FIELDS */}
                                         {dynamicFields.map(field => {
                                             const customVal = row?.customData?.[field.name] || "";
-                                            
+
                                             if (field.type === 'select') {
                                                 const options = field.options ? field.options.split(',').map(o => ({ id: o.trim(), name: o.trim() })) : [];
                                                 return (
@@ -142,7 +173,7 @@ export default function YarnTable({
                                                     </td>
                                                 );
                                             }
-                                            
+
                                             return (
                                                 <td key={field.name} className={cellClasses}>
                                                     <input

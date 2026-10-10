@@ -3,7 +3,12 @@ import CryptoJS from 'crypto-js';
 // Fallback key if env var is missing, though env var should be provided.
 const ENCRYPTION_KEY = process.env.REACT_APP_ENCRYPTION_KEY || 'SuperSecretKey123!@#';
 
+// Check if encryption is explicitly enabled
+const isEncryptionEnabled = process.env.REACT_APP_ENABLE_ENCRYPTION === 'true';
+
 export const encryptData = (data) => {
+    // If not enabled, returning null signals interceptors to use raw data
+    if (!isEncryptionEnabled) return null; 
     if (!data) return data;
     try {
         const jsonString = JSON.stringify(data);

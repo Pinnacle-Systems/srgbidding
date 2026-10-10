@@ -171,8 +171,8 @@ const useInvalidateTags = () => {
       payload: ["salesInvoice"],
     },
     {
-      type: `salesDelivery/invalidateTags`,
-      payload: ["salesDelivery"],
+      type: `yarnMaster/invalidateTags`,
+      payload: ["Yarn"],
     },
     {
       type: `salesReturn/invalidateTags`,

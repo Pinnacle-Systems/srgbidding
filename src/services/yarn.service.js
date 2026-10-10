@@ -7,6 +7,13 @@ async function get(req) {
     where: {
       active: active ? Boolean(active) : undefined,
     },
+    include: {
+      YarnVendors: true
+
+    },
+    orderBy: {
+      id: "desc"
+    }
   });
   return {
     statusCode: 0,
@@ -19,6 +26,10 @@ async function getOne(id) {
     where: {
       id: parseInt(id),
     },
+    include: {
+      YarnVendors: true
+    }
+
   });
   if (!data) return NoRecordFound("yarn");
   return { statusCode: 0, data: { ...data, childRecord: 0 } };
@@ -43,19 +54,26 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const { name, code, active } = await body;
+  const { name, code, active, yarnVendors } = await body;
   const data = await prisma.yarn.create({
     data: {
       name,
       code,
       active,
+      YarnVendors: {
+        create: yarnVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-  const { name, code, active } = await body;
+  const { name, code, active, yarnVendors } = await body;
   const dataFound = await prisma.yarn.findUnique({
     where: {
       id: parseInt(id),
@@ -66,10 +84,24 @@ async function update(id, body) {
     where: {
       id: parseInt(id),
     },
+    include: {
+      YarnVendors: true
+
+    },
     data: {
       name,
       code,
       active,
+      YarnVendors: {
+        deleteMany: {
+          yarnId: parseInt(id),
+        },
+        create: yarnVendors.map((item) => ({
+          vendorId: item.value,
+          name: item.label,
+
+        })),
+      },
     },
   });
   return { statusCode: 0, data };
@@ -84,4 +116,14 @@ async function remove(id) {
   return { statusCode: 0, data };
 }
 
-export { get, getOne, getSearch, create, update, remove };
+
+async function getYarnVendors(req) {
+  const { companyId, active } = req.query;
+  const data = await prisma.yarnVendors.findMany();
+  return {
+    statusCode: 0,
+    data: data,
+  };
+}
+
+export { get, getOne, getSearch, create, update, remove, getYarnVendors };

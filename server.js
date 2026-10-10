@@ -145,8 +145,10 @@ app.use((req, res, next) => {
   // 2. Override res.json to encrypt outgoing response
   const originalJson = res.json;
   res.json = function (data) {
-    // Skip encryption for specific routes or errors if needed, but encrypting everything by default
-    if (data && typeof data === 'object') {
+    // Only encrypt if enabled in environment
+    const isEncryptionEnabled = process.env.ENABLE_ENCRYPTION === 'true';
+    
+    if (isEncryptionEnabled && data && typeof data === 'object') {
       const encryptedStr = encryptData(data);
       if (encryptedStr) {
         return originalJson.call(this, { payload: encryptedStr });

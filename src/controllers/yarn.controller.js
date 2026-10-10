@@ -1,6 +1,6 @@
 import { Prisma } from '../lib/prisma.js'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from "../services/yarn.service.js";
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, getYarnVendors as _getYarnVendors } from "../services/yarn.service.js";
 
 async function get(req, res, next) {
     try {
@@ -74,4 +74,13 @@ async function remove(req, res, next) {
     }
 }
 
-export { get, getOne, getSearch, create, update, remove };
+async function getYarnVendors(req, res, next) {
+    try {
+        res.json(await _getYarnVendors(req));
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+
+export { get, getOne, getSearch, create, update, remove, getYarnVendors };

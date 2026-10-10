@@ -570,9 +570,7 @@ export default function Form({
     if (!isCustomer && !isSupplier) {
       return showAlert("Select Customer or Supplier");
     }
-    if (!inHouse && !outside) {
-      return showAlert("Select Production Type ");
-    }
+
     // Duplicate check
     let foundItem;
 
@@ -1004,7 +1002,7 @@ export default function Form({
                         </label>
                       </div>
                     </div>
-                    <div className="col-span-2 mb-2 flex items-center gap-2">
+                    {/* <div className="col-span-2 mb-2 flex items-center gap-2">
                       <label className="text-xs font-bold text-gray-600 whitespace-nowrap">
                         Production Type
                       </label>
@@ -1034,7 +1032,7 @@ export default function Form({
                           Outside
                         </span>
                       </label>
-                    </div>
+                    </div> */}
                     <div className="col-span-2">
                       <DropdownInputNew
                         name="Customer/supplier"
@@ -1630,7 +1628,7 @@ export default function Form({
                   </label>
                 </div>
               </div>
-              <div className="col-span-2 mb-2 flex items-center gap-2">
+              {/* <div className="col-span-2 mb-2 flex items-center gap-2">
                 <label className="text-xs font-bold text-gray-600 whitespace-nowrap">
                   Production Type
                 </label>
@@ -1660,7 +1658,7 @@ export default function Form({
                     Outside
                   </span>
                 </label>
-              </div>
+              </div> */}
               <div className="col-span-2">
                 <DropdownInputNew
                   name="Customer/supplier"

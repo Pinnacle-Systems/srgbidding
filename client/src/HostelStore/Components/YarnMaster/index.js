@@ -12,6 +12,8 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { Check, Power } from "lucide-react";
 import {
+  MultiSelectDropdown,
+  MultiSelectDropdownNew,
   ReusableTable,
   TextInputNew1,
   ToggleButton,
@@ -21,12 +23,14 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { UserPermissions } from "../../../Utils/UserPermissions";
 import { statusDropdown } from "../../../Utils/DropdownData";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { multiSelectOption } from "../../../Utils/contructObject";
 
-export default function Form({ onSuccess, defaultName = "" }) {
+export default function Form({ onSuccess, editId, defaultName = "" }) {
   const [form, setForm] = useState(false);
 
   const [readOnly, setReadOnly] = useState(false);
-  const [id, setId] = useState("");
+  const [id, setId] = useState(editId || "");
   const [name, setName] = useState(defaultName || "");
   const [code, setCode] = useState("");
   const [active, setActive] = useState(true);
@@ -35,12 +39,22 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const [searchValue, setSearchValue] = useState("");
   const childRecord = useRef(0);
   const [dispatchInvalidate] = useInvalidateTags();
+  const [yarnVendors, setYarnVendors] = useState([]);
+
+  useEffect(() => {
+    if (editId) {
+      setId(editId);
+      setForm(true);
+    }
+  }, [editId]);
 
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId",
     ),
   };
+
+
 
   const [trigger, { data: LazyData }] = useLazyGetYarnMasterByIdQuery();
 
@@ -59,6 +73,13 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const [updateData] = useUpdateYarnMasterMutation();
   const [removeData] = useDeleteYarnMasterMutation();
 
+
+  const {
+    data: partyData,
+  } = useGetPartyQuery({ params, searchParams: searchValue });
+
+  // console.log(yarnVendors, "yarnVendors")
+
   const { hasPermission } = UserPermissions();
   const handleCreate = () => {
     hasPermission(() => {
@@ -75,11 +96,19 @@ export default function Form({ onSuccess, defaultName = "" }) {
         setCode("");
         setActive(id ? data?.active : true);
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
+        setYarnVendors(data?.YarnVendors ?? [])
       } else {
         setName(data?.name || "");
         setCode(data?.code || "");
         setActive(id ? (data?.active ?? false) : true);
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
+        setYarnVendors((data?.YarnVendors ?? [])?.map((item) => {
+          return {
+            label: item.name,
+            value: item.vendorId
+          }
+        }))
+
       }
     },
     [id, defaultName],
@@ -95,6 +124,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
     code,
     active,
     id,
+    yarnVendors
   };
 
   const validateData = (data) => {
@@ -107,14 +137,14 @@ export default function Form({ onSuccess, defaultName = "" }) {
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
       let returnData = await callback(data).unwrap();
-      setId(returnData?.data?.id);
       setForm(false);
       if (onSuccess) {
         await Swal.fire({
           title: text + "  " + "Successfully",
           icon: "success",
         });
-        onSuccess(returnData?.data.id);
+        dispatchInvalidate();
+        onSuccess(returnData?.data.id, returnData?.data);
         return;
       }
       if (nextProcess === "new") {
@@ -173,7 +203,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
       }
     }
     if (id) {
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, { id, body: data }, "Updated", nextProcess);
     } else {
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
@@ -309,40 +339,46 @@ export default function Form({ onSuccess, defaultName = "" }) {
           <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
             <div className="space-y-4 ">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <fieldset className="my-1 space-y-2">
-                  <TextInputNew1
-                    name="Name"
-                    type="text"
-                    value={name}
-                    setValue={setName}
-                    required={true}
-                    readOnly={readOnly}
-                    disabled={childRecord.current > 0}
-                    ref={countryNameRef}
-                    onKeyDown={handlers.handleLastInputKeyDown}
-                  />
+                <TextInputNew1
+                  name="Name"
+                  type="text"
+                  value={name}
+                  setValue={setName}
+                  required={true}
+                  readOnly={readOnly}
+                  disabled={childRecord.current > 0}
+                  ref={countryNameRef}
+                  onKeyDown={handlers.handleLastInputKeyDown}
+                />
 
-                  <TextInputNew1
-                    name="Code"
-                    type="text"
-                    value={code}
-                    setValue={setCode}
-                    readOnly={readOnly}
-                    onKeyDown={handlers.handleLastInputKeyDown}
-                  />
-
-                  <ToggleButton
-                    name="Status"
-                    options={statusDropdown}
-                    value={active}
-                    setActive={setActive}
+                <TextInputNew1
+                  name="Code"
+                  type="text"
+                  value={code}
+                  setValue={setCode}
+                  readOnly={readOnly}
+                  onKeyDown={handlers.handleLastInputKeyDown}
+                />
+                <div className="mb-2 col-span-1">
+                  <MultiSelectDropdownNew
+                    name="Vendors"
+                    selected={yarnVendors}
+                    setSelected={setYarnVendors}
+                    options={multiSelectOption(partyData?.data || [], "name", "id")}
                     readOnly={readOnly}
                     disabled={readOnly}
-                    ref={toggleButtonRef}
-                    onKeyDown={handlers.handleToggleKeyDown}
                   />
-                </fieldset>
-                <div></div>
+                </div>
+                <ToggleButton
+                  name="Status"
+                  options={statusDropdown}
+                  value={active}
+                  setActive={setActive}
+                  readOnly={readOnly}
+                  disabled={readOnly}
+                  ref={toggleButtonRef}
+                  onKeyDown={handlers.handleToggleKeyDown}
+                />
               </div>
             </div>
           </div>
@@ -403,7 +439,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[350px]"}
+            widthClass={"w-[40%] h-[400px]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);

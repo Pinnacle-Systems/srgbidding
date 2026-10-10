@@ -26,7 +26,7 @@ import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterS
 import { PDFViewer } from "@react-pdf/renderer";
 import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService.js";
 import { useAddYarnIndentMutation, useGetYarnIndentByIdQuery, useUpdateYarnIndentMutation } from "../../../redux/uniformService/YarnIndent.js";
-import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices.js";
+import { useGetYarnMasterQuery, useGetYarnVendorsQuery } from "../../../redux/uniformService/YarnMasterServices.js";
 import { useGetYarnBlendMasterQuery } from "../../../redux/uniformService/YarnBlendMasterServices.js";
 import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMasterServices.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
@@ -100,6 +100,7 @@ const IndentForm = ({
 
   const { data: departmentData } = useGetDepartmentQuery({});
   const { data: yarnList } = useGetYarnMasterQuery({});
+  const { data: yarnVendorList } = useGetYarnVendorsQuery({});
   const { data: yarnBlendMasterList } = useGetYarnBlendMasterQuery({});
   const { data: countsMasterList } = useGetCountsMasterQuery({});
   const { data: partyList } = useGetPartyQuery({});
@@ -597,6 +598,7 @@ const IndentForm = ({
                 colorList={colorList}
                 readOnly={readOnly}
                 dynamicFields={dynamicFields}
+                yarnVendorList={yarnVendorList}
               />
 
 
