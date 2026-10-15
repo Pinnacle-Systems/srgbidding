@@ -294,6 +294,7 @@ async function getOne(id) {
           Size: true,
           Color: true,
           Uom: true,
+          IndentItemVendors: true
         }
       },
     }
@@ -435,14 +436,20 @@ async function createIssueItems(
     createdItem = await tx.IndentItems.create({
       data: {
         indentId: parseInt(indent.id),
-        fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
-        gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
+        itemId: item?.itemId ? parseInt(item.itemId) : null,
+        make: item?.make ? String(make) : null,
         sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
         colorId: item?.colorId ? parseInt(item.colorId) : null,
         uomId: item?.uomId ? parseInt(item.uomId) : null,
         customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
-
+        IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+          create: item.IndentItemVendors.map((vendor) => ({
+            label: vendor?.label ? String(vendor.label) : null,
+            value: vendor?.value ? parseInt(vendor.value) : null,
+            vendorId: vendor?.value ? parseInt(vendor.value) : null,
+          }))
+        } : undefined,
       },
     });
 
@@ -544,6 +551,16 @@ async function updateinwardItems(
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: {
+            deleteMany: {},
+            ...(item?.IndentItemVendors?.length > 0 ? {
+              create: item.IndentItemVendors.map((vendor) => ({
+                label: vendor?.label ? String(vendor.label) : null,
+                value: vendor?.value ? parseInt(vendor.value) : null,
+                vendorId: vendor?.value ? parseInt(vendor.value) : null,
+              }))
+            } : {})
+          }
         },
       });
     } else {
@@ -557,6 +574,13 @@ async function updateinwardItems(
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+            create: item.IndentItemVendors.map((vendor) => ({
+              label: vendor?.label ? String(vendor.label) : null,
+              value: vendor?.value ? parseInt(vendor.value) : null,
+              vendorId: vendor?.value ? parseInt(vendor.value) : null,
+            }))
+          } : undefined,
         },
       });
     }

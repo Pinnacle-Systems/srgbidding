@@ -438,12 +438,18 @@ async function createIssueItems(
       data: {
         indentId: parseInt(indent.id),
         itemId: item?.itemId ? parseInt(item.itemId) : null,
-        // make: item?.make ? String(item.make) : null,
+        make: item?.make ? String(item.make) : null,
         colorId: item?.colorId ? parseInt(item.colorId) : null,
         uomId: item?.uomId ? parseInt(item.uomId) : null,
         customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
-
+        IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+          create: item.IndentItemVendors.map((vendor) => ({
+            label: vendor?.label ? String(vendor.label) : null,
+            value: vendor?.value ? parseInt(vendor.value) : null,
+            vendorId: vendor?.value ? parseInt(vendor.value) : null,
+          }))
+        } : undefined,
       },
     });
 
@@ -539,11 +545,21 @@ async function updateinwardItems(
         where: { id: parseInt(item.id) },
         data: {
           itemId: item?.itemId ? parseInt(item.itemId) : null,
-          // make: item?.make ? String(item.make) : null,
+          make: item?.make ? String(item.make) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: {
+            deleteMany: {},
+            ...(item?.IndentItemVendors?.length > 0 ? {
+              create: item.IndentItemVendors.map((vendor) => ({
+                label: vendor?.label ? String(vendor.label) : null,
+                value: vendor?.value ? parseInt(vendor.value) : null,
+                vendorId: vendor?.value ? parseInt(vendor.value) : null,
+              }))
+            } : {})
+          }
         },
       });
     } else {
@@ -551,11 +567,18 @@ async function updateinwardItems(
         data: {
           indentId: parseInt(indent.id),
           itemId: item?.itemId ? parseInt(item.itemId) : null,
-          // make: item?.make ? String(item.make) : null,
+          make: item?.make ? String(item.make) : null,
           colorId: item?.colorId ? parseInt(item.colorId) : null,
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+            create: item.IndentItemVendors.map((vendor) => ({
+              label: vendor?.label ? String(vendor.label) : null,
+              value: vendor?.value ? parseInt(vendor.value) : null,
+              vendorId: vendor?.value ? parseInt(vendor.value) : null,
+            }))
+          } : undefined,
         },
       });
     }

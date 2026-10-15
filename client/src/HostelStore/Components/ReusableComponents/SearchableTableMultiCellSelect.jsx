@@ -155,20 +155,21 @@ const SearchableTableMultiCellSelect = forwardRef(({
                   const vValue = typeof v === 'object' && v !== null ? (v.value || v.vendorId || v.id) : v;
                   return String(vValue) === String(option.value);
                 });
-                console.log(`Checking option ${option._label} (id: ${option.value}): isSelected = ${isSelected}`, selectedValues);
                 return (
-                  <label
+                  <div
                     key={option.value}
-                    className="flex items-center w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] hover:bg-slate-50 cursor-pointer select-none"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => toggleSelection(option)}
                   >
                     <input
                       type="checkbox"
-                      className="mr-2"
+                      className="mr-2 pointer-events-none"
                       checked={isSelected}
-                      onChange={() => toggleSelection(option)}
+                      readOnly
                     />
                     <span className="text-slate-700">{option._label}</span>
-                  </label>
+                  </div>
                 );
               })
             ) : (
@@ -179,6 +180,7 @@ const SearchableTableMultiCellSelect = forwardRef(({
               <button
                 type="button"
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white text-[11px] py-1 rounded transition-colors"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.preventDefault();
                   setIsOpen(false);

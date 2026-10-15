@@ -38,6 +38,7 @@ import { useAddSparepartIndentMutation, useGetSparepartIndentByIdQuery, useUpdat
 import GeneralPartsTable from "./GeneralTableItems.jsx";
 import { useAddGeneralIndentMutation, useUpdateGeneralIndentMutation } from "../../../redux/uniformService/GeneralIndent.js";
 import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 
 const IndentForm = ({
   onClose,
@@ -91,7 +92,7 @@ const IndentForm = ({
   const dynamicFields = useMemo(() => {
     let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
     if (typeof schema === 'string') {
-      try { schema = JSON.parse(schema); } catch(e) { schema = []; }
+      try { schema = JSON.parse(schema); } catch (e) { schema = []; }
     }
     return schema;
   }, [dynamicSchemaResponse]);
@@ -116,6 +117,7 @@ const IndentForm = ({
 
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
+  const { data: partyList } = useGetPartyQuery({});
 
 
 
@@ -160,12 +162,12 @@ const IndentForm = ({
         // Map backend indentType back to activeTab if needed, though they might match exactly
         setActiveTab(data.indentType);
       }
-      
+
       // Load the dynamic custom data if it exists
       if (data?.customData) {
         let parsed = data.customData;
         if (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+          try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
         }
         setCustomData(parsed || {});
       } else {
@@ -650,15 +652,7 @@ const IndentForm = ({
                 className={`w-full`}
                 addNewModalWidth="w-[40%] h-[48%]"
               />
-              {/* <div className="col-span-2">
-                <TextAreaNew
-                  name="Remarks"
-                  value={remarks}
-                  setValue={setRemarks}
-                  readOnly={readOnly}
-                  rows={1}
-                />
-              </div> */}
+
             </TransactionHeaderSection>
           </div>
         )}
@@ -677,6 +671,7 @@ const IndentForm = ({
                 sizeList={sizeList}
                 colorList={colorList}
                 uomList={uomList}
+                partyList={partyList}
                 dynamicFields={dynamicFields}
               />
 

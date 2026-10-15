@@ -536,6 +536,7 @@ model Party {
   ItemVendors              ItemVendors[]
   IndentItemVendors        IndentItemVendors[]       @relation("Vendor")
   IndentItemVendorslabel   IndentItemVendors[]       @relation("VendorValue")
+  BiddingIndentvendors     BiddingIndentvendors[]    @relation("Vendor")
 }
 
 model PartyBranch {
@@ -671,6 +672,7 @@ model Uom {
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
   IndentItems            IndentItems[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model ProductUomPriceDetails {
@@ -1112,6 +1114,7 @@ model Color {
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
   IndentItems            IndentItems[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model DeliveryInvoice {
@@ -1268,6 +1271,7 @@ model Hsn {
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
   IndentItems            IndentItems[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model BranchType {
@@ -1718,6 +1722,7 @@ model Size {
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
   IndentItems            IndentItems[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model Gsm {
@@ -1739,6 +1744,7 @@ model Gsm {
   boardQualities         BoardQuality[]
   IndentItems            IndentItems[]
   jobCards               JobCard[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model Item {
@@ -1759,6 +1765,7 @@ model Item {
   MaterialReturnItems MaterialReturnItems[]
   IndentItems         IndentItems[]
   ItemVendors         ItemVendors[]
+  BiddingIndent       BiddingIndent[]
 }
 
 model ItemVendors {
@@ -1791,6 +1798,7 @@ model ItemGroup {
   MaterialIssueItems     MaterialIssueItems[]
   MaterialReturnItems    MaterialReturnItems[]
   IndentItems            IndentItems[]
+  BiddingIndent          BiddingIndent[]
 }
 
 model SizeTemplate {
@@ -3000,12 +3008,13 @@ model IndentItemVendors {
 }
 
 model Yarn {
-  id          Int           @id @default(autoincrement())
-  name        String?
-  active      Boolean?      @default(true)
-  code        String?
-  IndentItems IndentItems[]
-  YarnVendors YarnVendors[]
+  id            Int             @id @default(autoincrement())
+  name          String?
+  active        Boolean?        @default(true)
+  code          String?
+  IndentItems   IndentItems[]
+  YarnVendors   YarnVendors[]
+  BiddingIndent BiddingIndent[]
 }
 
 model Fabric {
@@ -3015,6 +3024,7 @@ model Fabric {
   code          String?
   IndentItems   IndentItems[]
   FabricVendors FabricVendors[]
+  BiddingIndent BiddingIndent[]
 }
 
 model YarnVendors {
@@ -3036,19 +3046,21 @@ model FabricVendors {
 }
 
 model YarnBlend {
-  id          Int           @id @default(autoincrement())
-  name        String?
-  active      Boolean?      @default(true)
-  code        String?
-  IndentItems IndentItems[]
+  id            Int             @id @default(autoincrement())
+  name          String?
+  active        Boolean?        @default(true)
+  code          String?
+  IndentItems   IndentItems[]
+  BiddingIndent BiddingIndent[]
 }
 
 model Counts {
-  id          Int           @id @default(autoincrement())
-  name        String?
-  active      Boolean?      @default(true)
-  code        String?
-  IndentItems IndentItems[]
+  id            Int             @id @default(autoincrement())
+  name          String?
+  active        Boolean?        @default(true)
+  code          String?
+  IndentItems   IndentItems[]
+  BiddingIndent BiddingIndent[]
 }
 
 model IndentTypeMaster {
@@ -3091,9 +3103,50 @@ model BiddingLots {
 }
 
 model BiddingIndent {
-  id           Int          @id @default(autoincrement())
-  BiddingLots  BiddingLots? @relation(fields: [biddingLotId], references: [id], onDelete: Cascade)
-  biddingLotId Int?
-  createdAt    DateTime?    @default(now())
-  updatedAt    DateTime?    @updatedAt
+  id                   Int                    @id @default(autoincrement())
+  BiddingLots          BiddingLots?           @relation(fields: [biddingLotId], references: [id], onDelete: Cascade)
+  biddingLotId         Int?
+  createdAt            DateTime?              @default(now())
+  updatedAt            DateTime?              @updatedAt
+  Itemgroup            ItemGroup?             @relation(fields: [itemGroupId], references: [id])
+  itemGroupId          Int?
+  Item                 Item?                  @relation(fields: [itemId], references: [id])
+  itemId               Int?
+  Size                 Size?                  @relation(fields: [sizeId], references: [id])
+  sizeId               Int?
+  Color                Color?                 @relation(fields: [colorId], references: [id])
+  colorId              Int?
+  Uom                  Uom?                   @relation(fields: [uomId], references: [id])
+  uomId                Int?
+  Hsn                  Hsn?                   @relation(fields: [hsnId], references: [id])
+  hsnId                Int?
+  Gsm                  Gsm?                   @relation(fields: [gsmId], references: [id])
+  gsmId                Int?
+  Yarn                 Yarn?                  @relation(fields: [yarnId], references: [id])
+  yarnId               Int?
+  Fabric               Fabric?                @relation(fields: [fabricId], references: [id])
+  fabricId             Int?
+  YarnBlend            YarnBlend?             @relation(fields: [yarnBlendId], references: [id])
+  yarnBlendId          Int?
+  Counts               Counts?                @relation(fields: [countsId], references: [id])
+  countsId             Int?
+  price                String?
+  qty                  String?
+  make                 String?
+  customData           Json?
+  BiddingIndentvendors BiddingIndentvendors[]
+}
+
+model BiddingIndentvendors {
+  id              Int            @id @default(autoincrement())
+  BiddingIndent   BiddingIndent? @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
+  biddingIndentId Int?
+  vendorId        Int?
+  Vendor          Party?         @relation("Vendor", fields: [vendorId], references: [id])
+}
+
+model BiddingIndentChat {
+  id              Int            @id @default(autoincrement())
+  BiddingIndent   BiddingIndent? @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
+  biddingIndentId Int?
 }

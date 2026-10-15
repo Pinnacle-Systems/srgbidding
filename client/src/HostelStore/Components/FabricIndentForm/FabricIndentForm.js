@@ -34,6 +34,7 @@ import { useGetColorMasterQuery } from "../../../redux/services/ColorMasterServi
 import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
 import FabricTable from "./FabricTableItems.jsx";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 
 const IndentForm = ({
   onClose,
@@ -87,7 +88,7 @@ const IndentForm = ({
   const dynamicFields = useMemo(() => {
     let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
     if (typeof schema === 'string') {
-      try { schema = JSON.parse(schema); } catch(e) { schema = []; }
+      try { schema = JSON.parse(schema); } catch (e) { schema = []; }
     }
     return schema;
   }, [dynamicSchemaResponse]);
@@ -107,6 +108,7 @@ const IndentForm = ({
   const { data: departmentData } = useGetDepartmentQuery({});
   const { data: fabricData } = useGetFabricMasterQuery({});
   const { data: gsmData } = useGetGsmMasterQuery({});
+  const { data: partyList } = useGetPartyQuery({});
 
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
 
@@ -156,12 +158,12 @@ const IndentForm = ({
         // Map backend indentType back to activeTab if needed, though they might match exactly
         setActiveTab(data.indentType);
       }
-      
+
       // Load the dynamic custom data if it exists
       if (data?.customData) {
         let parsed = data.customData;
         if (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+          try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
         }
         setCustomData(parsed || {});
       } else {
@@ -566,7 +568,7 @@ const IndentForm = ({
       if (actualPrev.length >= length) return actualPrev;
 
       const padding = Array.from({ length: length - actualPrev.length }, () => ({
-        itemId: "",
+        fabricId: "",
         qty: "0.00",
         tax: "0",
         colorId: "",
@@ -691,6 +693,7 @@ const IndentForm = ({
                 colorList={colorList}
                 uomList={uomList}
                 dynamicFields={dynamicFields}
+                partyList={partyList}
               />
 
 

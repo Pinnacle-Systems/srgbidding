@@ -462,7 +462,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
                   // required={true}
                   />
                 </div>
-                <div className="mb-2 col-span-1">
+                {/* <div className="mb-2 col-span-1">
                   <MultiSelectDropdownNew
                     name="Vendors"
                     selected={itemVendors}
@@ -471,7 +471,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
                     readOnly={readOnly}
                     disabled={readOnly}
                   />
-                </div>
+                </div> */}
 
 
                 <div className="mb-5">

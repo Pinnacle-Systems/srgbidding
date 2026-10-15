@@ -351,7 +351,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
                   readOnly={readOnly}
                   onKeyDown={handlers.handleLastInputKeyDown}
                 />
-                <div className="mb-2 col-span-1">
+                {/* <div className="mb-2 col-span-1">
                   <MultiSelectDropdownNew
                     name="Vendors"
                     selected={fabricVendors}
@@ -360,7 +360,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
                     readOnly={readOnly}
                     disabled={readOnly}
                   />
-                </div>
+                </div> */}
                 <ToggleButton
                   name="Status"
                   options={statusDropdown}

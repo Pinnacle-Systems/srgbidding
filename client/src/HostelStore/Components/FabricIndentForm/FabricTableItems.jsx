@@ -2,6 +2,7 @@ import { FiTrash2 } from "react-icons/fi";
 import TransactionLineItemsSection from "../ReusableComponents/TransactionLineItemsSection";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import { dropDownListObject } from "../../../Utils/contructObject";
+import SearchableTableMultiCellSelect from "../ReusableComponents/SearchableTableMultiCellSelect";
 
 
 export default function FabricTable({
@@ -13,6 +14,7 @@ export default function FabricTable({
     gsmData,
     colorList,
     uomList,
+    partyList,
     dynamicFields = [] // Dynamic fields from Control Panel
 }) {
     const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-white  tracking-wider border border-gray-300";
@@ -35,6 +37,8 @@ export default function FabricTable({
         setIndentItems(newBlend);
     };
 
+    console.log(indentItems?.filter((i) => i.fabricId !== ""), "indentItems")
+
     return (
         <fieldset className="h-full min-h-0 bg-white rounded-lg ">
             <TransactionLineItemsSection
@@ -50,6 +54,8 @@ export default function FabricTable({
                                 <th className={`${headerClasses} w-32`}>GSM</th>
                                 <th className={`${headerClasses} w-32`}>Width</th>
                                 <th className={`${headerClasses} w-24`}>Color</th>
+                                <th className={`${headerClasses} w-36`}>Vendors</th>
+
                                 <th className={`${headerClasses} w-24`}>Uom</th>
                                 {dynamicFields.map(field => (
                                     <th key={field.name} className={`${headerClasses} w-32`}>{field.label}</th>
@@ -101,6 +107,14 @@ export default function FabricTable({
                                             />
                                         </td>
                                         <td className={cellClasses}>
+                                            <SearchableTableMultiCellSelect
+                                                value={row?.IndentItemVendors || []}
+                                                options={dropDownListObject(id ? partyList?.data : partyList?.data?.filter(i => i.active) || [], "name", "id")} disabled={disabled}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "IndentItemVendors")}
+                                                className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
+                                            />
+                                        </td>
+                                        <td className={cellClasses}>
                                             <SearchableTableCellSelect
                                                 value={row?.uomId || ""}
                                                 options={dropDownListObject(id ? uomList?.data : uomList?.data?.filter(i => i.active) || [], "name", "id")} disabled={disabled}
@@ -108,11 +122,11 @@ export default function FabricTable({
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                             />
                                         </td>
-                                        
+
                                         {/* RENDER DYNAMIC CUSTOM FIELDS */}
                                         {dynamicFields.map(field => {
                                             const customVal = row?.customData?.[field.name] || "";
-                                            
+
                                             if (field.type === 'select') {
                                                 const options = field.options ? field.options.split(',').map(o => ({ id: o.trim(), name: o.trim() })) : [];
                                                 return (
@@ -127,7 +141,7 @@ export default function FabricTable({
                                                     </td>
                                                 );
                                             }
-                                            
+
                                             return (
                                                 <td key={field.name} className={cellClasses}>
                                                     <input
@@ -161,7 +175,7 @@ export default function FabricTable({
                             <tr>
                                 <td colSpan={1} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
                                 </td>
-                                <td colSpan={2} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
+                                <td colSpan={3} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
                                     Total  {indentItems?.filter(i => i?.fabricId)?.length || 0} Items
                                 </td>
                                 <td colSpan={3 + dynamicFields.length} className="px-2 py-1.5 text-[11px] border justify-end"></td>

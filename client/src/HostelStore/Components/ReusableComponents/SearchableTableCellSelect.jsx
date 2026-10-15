@@ -365,7 +365,7 @@ const SearchableTableCellSelect = forwardRef(({
                 >
                   {addNewLabel}
                 </button>
-                {selectedOption && (
+                {/* {selectedOption && (
                   <button
                     type="button"
                     className="block px-3 py-1.5 border-l border-slate-200 text-[11px] font-semibold text-orange-600 hover:bg-orange-50 whitespace-nowrap"
@@ -378,7 +378,7 @@ const SearchableTableCellSelect = forwardRef(({
                   >
                     Edit Selected
                   </button>
-                )}
+                )} */}
               </div>
             )}
 

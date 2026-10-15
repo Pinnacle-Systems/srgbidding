@@ -36,6 +36,8 @@ import { useAddDyesChemicalIndentMutation, useLazyGetDyesChemicalIndentByIdQuery
 import { useAddSparepartIndentMutation, useGetSparepartIndentByIdQuery, useUpdateSparepartIndentMutation } from "../../../redux/uniformService/SparepartIndent.js";
 import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
 import SparePartsTable from "./SpareTables.jsx";
+import { useGetItemMasterQuery } from "../../../redux/services/ItemMasterService.js";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService.js";
 
 const IndentForm = ({
   onClose,
@@ -89,7 +91,7 @@ const IndentForm = ({
   const dynamicFields = useMemo(() => {
     let schema = dynamicSchemaResponse?.data?.fieldSchema || [];
     if (typeof schema === 'string') {
-      try { schema = JSON.parse(schema); } catch(e) { schema = []; }
+      try { schema = JSON.parse(schema); } catch (e) { schema = []; }
     }
     return schema;
   }, [dynamicSchemaResponse]);
@@ -115,6 +117,7 @@ const IndentForm = ({
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
 
+  const { data: partyList } = useGetPartyQuery({});
 
 
 
@@ -158,12 +161,12 @@ const IndentForm = ({
         // Map backend indentType back to activeTab if needed, though they might match exactly
         setActiveTab(data.indentType);
       }
-      
+
       // Load the dynamic custom data if it exists
       if (data?.customData) {
         let parsed = data.customData;
         if (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+          try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
         }
         setCustomData(parsed || {});
       } else {
@@ -678,6 +681,7 @@ const IndentForm = ({
                 colorList={colorList}
                 uomList={uomList}
                 dynamicFields={dynamicFields}
+                partyList={partyList}
               />
 
 

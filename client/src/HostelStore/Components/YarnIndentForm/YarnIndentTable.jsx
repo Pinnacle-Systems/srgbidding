@@ -32,17 +32,8 @@ export default function YarnTable({
 
 
 
-    const handleInputChange = (value, index, field, VendorList) => {
+    const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(indentItems);
-
-        if (field === 'yarnId') {
-            const vendors = yarnList?.data?.find(i => i.id === value)?.YarnVendors || [];
-            console.log(vendors, "vendors")
-
-
-            newBlend[index]['IndentItemVendors'] = vendors?.length > 1 ? vendors.map(v => ({ label: v.name, value: v.vendorId })) : [];
-        }
-
         newBlend[index][field] = value;
         setIndentItems(newBlend);
     };
@@ -59,8 +50,6 @@ export default function YarnTable({
     };
 
 
-    console.log(indentItems?.filter((i) => i.yarnId)?.[0]?.yarnVendors, "indentItems")
-
 
     return (
         <fieldset className="h-full min-h-0 bg-white rounded-lg ">
@@ -76,7 +65,7 @@ export default function YarnTable({
                                 <th className={`${headerClasses} w-64`}>Yarn Name</th>
                                 <th className={`${headerClasses} w-48`}>Composition/Blend</th>
                                 <th className={`${headerClasses} w-16`}>Counts</th>
-                                <th className={`${headerClasses} w-64`}>Mill</th>
+                                <th className={`${headerClasses} w-64`}>Vendors</th>
                                 <th className={`${headerClasses} w-24`}>Color</th>
                                 <th className={`${headerClasses} w-16`}>UOM</th>
                                 {dynamicFields.map(field => (
@@ -100,11 +89,7 @@ export default function YarnTable({
                                                 value={row?.yarnId || ""}
                                                 options={dropDownListObject(id ? yarnList?.data : yarnList?.data?.filter(i => i.active) || [], "name", "id")}
                                                 disabled={disabled}
-                                                onChange={(nextValue, additionalData) => {
-                                                    handleInputChange(nextValue, index, "yarnId", additionalData == undefined ? yarnList?.data : additionalData)
-                                                    console.log(additionalData == undefined, "additionalData")
-                                                }
-                                                }
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "yarnId")}
                                                 className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
                                                 addNewModalWidth="w-[40%] h-[60%]"
                                                 childComponent={YarnMaster}

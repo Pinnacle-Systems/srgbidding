@@ -443,7 +443,13 @@ async function createIssueItems(
         uomId: item?.uomId ? parseInt(item.uomId) : null,
         customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
-
+        IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+          create: item.IndentItemVendors.map((vendor) => ({
+            label: vendor?.label ? String(vendor.label) : null,
+            value: vendor?.value ? parseInt(vendor.value) : null,
+            vendorId: vendor?.value ? parseInt(vendor.value) : null,
+          }))
+        } : [],
       },
     });
 
@@ -544,6 +550,16 @@ async function updateinwardItems(
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: {
+            deleteMany: {},
+            ...(item?.IndentItemVendors?.length > 0 ? {
+              create: item.IndentItemVendors.map((vendor) => ({
+                label: vendor?.label ? String(vendor.label) : null,
+                value: vendor?.value ? parseInt(vendor.value) : null,
+                vendorId: vendor?.value ? parseInt(vendor.value) : null,
+              }))
+            } : {})
+          }
         },
       });
     } else {
@@ -556,6 +572,13 @@ async function updateinwardItems(
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
+          IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
+            create: item.IndentItemVendors.map((vendor) => ({
+              label: vendor?.label ? String(vendor.label) : null,
+              value: vendor?.value ? parseInt(vendor.value) : null,
+              vendorId: vendor?.value ? parseInt(vendor.value) : null,
+            }))
+          } : undefined,
         },
       });
     }
