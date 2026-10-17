@@ -11,17 +11,22 @@ import {
   reject,
   returnIndent,
   cancel,
+  getIndentItems,
 } from "../controllers/internalIndent.controller.js";
 
 router.post("/", create);
 
 router.get("/", get);
 
+router.get("/internalIndentItems", getIndentItems);
+
+
 router.get("/:id", getOne);
 
 router.put("/:id", update);
 
 router.delete("/:id", remove);
+
 
 // Action routes
 router.post("/:id/submit", submit);

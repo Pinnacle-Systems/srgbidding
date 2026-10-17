@@ -93,6 +93,7 @@ import {
   generalIndent,
   sparepartIndent,
   indentTypeMaster,
+  bidding,
 } from "./src/routes/index.js";
 import { setIo } from "./src/utils/notificationHelper.js";
 import { socketMain } from "./src/sockets/socket.js";
@@ -147,7 +148,7 @@ app.use((req, res, next) => {
   res.json = function (data) {
     // Only encrypt if enabled in environment
     const isEncryptionEnabled = process.env.ENABLE_ENCRYPTION === 'true';
-    
+
     if (isEncryptionEnabled && data && typeof data === 'object') {
       const encryptedStr = encryptData(data);
       if (encryptedStr) {
@@ -258,6 +259,7 @@ app.use("/dyesChemicalIndent", dyesChemicalIndent);
 app.use("/generalIndent", generalIndent);
 app.use("/sparepartIndent", sparepartIndent);
 app.use("/indentTypeMaster", indentTypeMaster)
+app.use("/bidding", bidding)
 
 
 app.get("/retreiveFile/:fileName", (req, res) => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { useBiddingAuth } from "../context/BiddingAuthContext";
+import { useBiddingAuth } from "./context/BiddingAuthContext";
 
 export default function Dashboard() {
   const { role } = useBiddingAuth();

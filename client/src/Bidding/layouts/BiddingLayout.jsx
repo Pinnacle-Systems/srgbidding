@@ -3,12 +3,12 @@ import { useBiddingAuth } from "../context/BiddingAuthContext";
 
 export default function BiddingLayout({ currentView, setCurrentView, children }) {
   const { role, loginAs } = useBiddingAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const isActive = (view) => currentView === view;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-slate-50 text-slate-900 font-sans">
+    <div className="flex h-[calc(100vh-50px)] bg-slate-50 text-slate-900 font-sans">
       {/* Sidebar */}
       <aside className={`bg-slate-900 text-slate-300 flex flex-col shadow-xl z-10 transition-all duration-300 ${isSidebarOpen ? 'w-[220px]' : 'w-[72px]'}`}>
         <div className="p-4 h-16 flex items-center justify-center border-b border-slate-800">
@@ -59,14 +59,7 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
           </button>
 
 
-          <button
-            onClick={() => setCurrentView("messages")}
-            className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${isActive("messages") ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'} ${!isSidebarOpen && 'justify-center'}`}
-            title="Messages"
-          >
-            <svg className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? 'mr-3' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            {isSidebarOpen && <span className="truncate">Messages</span>}
-          </button>
+
         </nav>
 
         {/* Role Switcher (For Development) */}
@@ -79,7 +72,6 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
               onChange={(e) => loginAs(e.target.value)}
             >
               <option value="Admin">Admin</option>
-              <option value="Management">Management</option>
               <option value="Vendor">Vendor</option>
             </select>
           </div>
@@ -89,7 +81,7 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Topbar */}
-        <header className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
+        {/* <header className="h-8 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex-1 flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -104,12 +96,12 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
               <input
                 type="text"
                 placeholder="Search bid no., vendor, indent"
-                className="w-full bg-slate-100 text-sm text-slate-800 placeholder-slate-400 rounded-lg py-1 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all"
+                className="w-full bg-slate-100 text-sm text-slate-800 placeholder-slate-400 rounded-lg py-0.5 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all"
               />
             </div>
           </div>
 
-        </header>
+        </header> */}
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto p-2">

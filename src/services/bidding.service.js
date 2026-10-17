@@ -1,120 +1,438 @@
-const { prisma } = require("../configs/prisma");
+import { prisma } from "../lib/prisma.js";
+import { NoRecordFound } from "../configs/Responses.js";
+import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
+import { getYearShortCodeForFinYear } from "../utils/helper.js";
+import { getTableRecordWithId } from "../utils/helperQueries.js";
 
-exports.getAll = async (req) => {
-  const data = await prisma.Bidding.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      BiddingLots: true,
-      Branch: true,
-      createdBy: { select: { id: true, firstName: true, lastName: true } },
-    }
+
+async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
+  // if (saveType) return "Draft Save";
+
+  let lastObject = await prisma.Bidding.findFirst({
+    where: {
+      branchId: parseInt(branchId),
+      AND: [{ createdAt: { gte: startTime } }, { createdAt: { lte: endTime } }],
+    },
+    orderBy: { id: "desc" },
   });
-  
-  return {
-    statusCode: 0,
-    data: data,
-    totalCount: data.length,
-  };
-};
 
-exports.getById = async (id) => {
-  const data = await prisma.Bidding.findUnique({
-    where: { id: parseInt(id) },
+  const branchObj = await getTableRecordWithId(branchId, "branch");
+  let newDocId = `${branchObj.branchCode}/${shortCode}/BID/1`;
+
+  if (lastObject) {
+    if (lastObject.docId === "Draft Save") {
+      const records = await prisma.Bidding.findMany({
+        select: { docId: true },
+        where: {
+          branchId: parseInt(branchId),
+          AND: [
+            { createdAt: { gte: startTime } },
+            { createdAt: { lte: endTime } },
+          ],
+        },
+      });
+      const maxDocId = records.reduce((max, current) => {
+        const currentNo = Number(current.docId.split("/").pop());
+        const maxNo = max ? Number(max.split("/").pop()) : 0;
+        return currentNo > maxNo ? current.docId : max;
+      }, null);
+
+
+      newDocId = `${branchObj.branchCode}/${shortCode}/BID/${parseInt(maxDocId.split("/").at(-1)) + 1}`;
+
+    } else {
+      newDocId = `${branchObj.branchCode}/${shortCode}/BID/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+    }
+  }
+  return newDocId;
+}
+
+
+
+async function get(req) {
+  const { companyId } = req.query;
+
+  const data = await prisma.Bidding.findMany({
+    where: {
+
+    },
     include: {
       BiddingLots: {
         include: {
-          BiddingIndent: true
+          BiddingIndent: {
+            include: {
+
+              BiddingIndentvendors: true,
+              BiddingIndentChat: true
+
+            }
+          }
         }
-      },
-      Branch: true,
-      createdBy: { select: { id: true, firstName: true, lastName: true } },
+      }
     }
   });
-  
+
+
+  return { statusCode: 0, data };
+}
+
+async function getOne(id) {
+  const data = await prisma.Bidding.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+    include: {
+      createdBy: true,
+      Branch: true,
+      BiddingLots: {
+        include: {
+          BiddingIndent: {
+            include: {
+              BiddingIndentvendors: {
+                include: {
+                  Vendor: true,
+                },
+              },
+              BiddingIndentChat: true,
+              Item: true,
+              Uom: true,
+              Color: true,
+              Size: true,
+              Itemgroup: true,
+              Fabric: true,
+              Yarn: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!data) return NoRecordFound("Bidding");
+
   return {
     statusCode: 0,
-    data: data,
+    data,
   };
+}
+
+async function getSearch(req) {
+  const { searchKey } = req.params;
+
+  const data = await prisma.Bidding.findMany({
+    where: {
+      OR: [
+        {
+          name: {
+            contains: searchKey,
+            mode: "insensitive",
+          },
+        },
+        {
+          docId: {
+            contains: searchKey,
+            mode: "insensitive",
+          },
+        },
+        {
+          bidNo: {
+            contains: searchKey,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    include: {
+      BiddingLots: {
+        include: {
+          BiddingIndent: {
+            include: {
+              BiddingIndentvendors: true,
+              BiddingIndentChat: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return { statusCode: 0, data };
+}
+
+
+// Helper for safe integer parsing
+const parseId = (val) => {
+  if (val === null || val === undefined) return null;
+  const num = parseInt(val, 10);
+  return isNaN(num) ? null : num;
 };
 
-exports.create = async (body, req) => {
+// Safe date parser
+const parseDate = (val) => {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+};
+
+// Helper to structure nested Lot -> Indent -> Vendor creation
+const buildLotNestedCreate = (lotsList = []) => {
+  return lotsList.map((lot, index) => {
+    const indentsList = lot.indents || lot.BiddingIndent || [];
+    return {
+      name: lot.name || `Lot ${index + 1}`,
+      description: lot.description || null,
+      status: lot.status || "PENDING",
+      lotNumber: lot.lotNumber ? String(lot.lotNumber) : String(index + 1),
+      BiddingIndent: {
+        create: indentsList.map((ind) => {
+          const customData = ind.customData || {
+            docId: ind.docId || (typeof ind.id === 'string' ? ind.id : null),
+            department: typeof ind.department === 'object' ? ind.department?.name : ind.department,
+            requiredBy: ind.requiredBy,
+            item_name: ind.item_name,
+            commonDocuments: ind.commonDocuments || [],
+            vendorDocuments: (ind.vendors || []).map((v) => ({
+              vendorId: v.id || v.vendorId,
+              name: v.name || v.label,
+              documents: v.documents || []
+            })),
+            specs: {
+              count: ind.count,
+              blend: ind.blend,
+              shade: ind.shade,
+              ply: ind.ply,
+              construction: ind.construction,
+              gsm: ind.gsm,
+              width: ind.width,
+              ciCas: ind.ciCas,
+              strength: ind.strength,
+              hazard: ind.hazard,
+              machine: ind.machine,
+              partNo: ind.partNo,
+              make: ind.make,
+              spec: ind.spec,
+            }
+          };
+
+          const vendorsList = ind.vendors || ind.BiddingIndentvendors || [];
+
+          return {
+            indentId: parseId(ind.indentId || ind.Indent?.id),
+            indentItemId: parseId(ind.indentItemId || (typeof ind.id === 'number' ? ind.id : null)),
+            indentType: ind.indentType || ind.category || "General",
+            itemGroupId: parseId(ind.itemGroupId),
+            itemId: parseId(ind.itemId || ind.Item?.id),
+            sizeId: parseId(ind.sizeId || ind.Size?.id),
+            colorId: parseId(ind.colorId || ind.Color?.id),
+            uomId: parseId(ind.uomId || ind.Uom?.id),
+            hsnId: parseId(ind.hsnId || ind.Hsn?.id),
+            gsmId: parseId(ind.gsmId || ind.Gsm?.id),
+            yarnId: parseId(ind.yarnId || ind.Yarn?.id),
+            fabricId: parseId(ind.fabricId || ind.Fabric?.id),
+            yarnBlendId: parseId(ind.yarnBlendId || ind.YarnBlend?.id),
+            countsId: parseId(ind.countsId || ind.Counts?.id),
+            price: ind.price ? String(ind.price) : null,
+            qty: ind.qty ? String(ind.qty) : "0",
+            make: ind.make || null,
+            customData,
+            BiddingIndentvendors: {
+              create: vendorsList
+                .map((v) => {
+                  const rawId = v.vendorId !== undefined ? v.vendorId : v.id;
+                  const vId = parseId(rawId);
+                  return vId
+                    ? {
+                      vendorId: vId,
+                      status: v.status || "INVITED"
+                    }
+                    : null;
+                })
+                .filter(Boolean)
+            }
+          };
+        })
+      }
+    };
+  });
+};
+
+
+async function create(body) {
+
+
+  const { finYearId, branchId, draftSave } = body
+
+  const details = body.details || {};
+  const terms = body.terms || {};
+
+  const name = body.name || body.bidTitle || details.bidTitle || details.name;
+  const bidNo = body.bidNo || body.docId || details.bidNo || details.docId;
+  const bidDate = body.bidDate || details.bidDate;
+  const closingDate = body.closingDate || terms.closingDate || details.closingDate;
+  const submissionDeadline = body.submissionDeadline || terms.submissionDeadline || details.submissionDeadline;
+  const queryDeadline = body.queryDeadline || terms.queryDeadline || details.queryDeadline;
+  const termsTemplate = body.termsTemplate || terms.termsTemplate;
+  const description = body.description || (terms.paymentPolicy || body.policyTerms
+    ? (typeof terms.paymentPolicy === 'string' ? terms.paymentPolicy : JSON.stringify(terms))
+    : null);
+  const status = body.status || "DRAFT";
+  const lotsList = body.lots || body.BiddingLots || [];
+
+  const parsedStartDate = parseDate(body.startDate) || parseDate(bidDate) || new Date();
+  const parsedEndDate = parseDate(body.endDate)
+    || parseDate(submissionDeadline)
+    || parseDate(closingDate)
+    || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const parsedSubmissionDeadline = parseDate(submissionDeadline);
+  const parsedQueryDeadline = parseDate(queryDeadline);
+  const parsedClosingDate = parseDate(closingDate) || parsedEndDate;
+
+
+  let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+  const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
+  let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, status,);
+
+
+
   const data = await prisma.Bidding.create({
     data: {
-      ...body,
-      createdById: req.user?.id,
+      name: name || (bidNo ? `Bid ${bidNo}` : "New Bid"),
+      docId: newDocId,
+      bidNo: bidNo || null,
+      bidDate: bidDate ? String(bidDate) : null,
+      closingDate: parsedClosingDate,
+      submissionDeadline: parsedSubmissionDeadline,
+      queryDeadline: parsedQueryDeadline,
+      termsTemplate: termsTemplate || null,
+      description: description,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
+      status: status || "DRAFT",
+      branchId: parseId(branchId) || parseId(body.user?.branchId),
+      createdById: parseId(body.user?.id),
+      BiddingLots: {
+        create: buildLotNestedCreate(lotsList)
+      }
+    },
+    include: {
+      BiddingLots: {
+        include: {
+          BiddingIndent: {
+            include: {
+              BiddingIndentvendors: {
+                include: {
+                  Vendor: true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   });
-  
-  return {
-    statusCode: 0,
-    data: data,
-    message: "Bid created successfully"
-  };
-};
 
-exports.update = async (id, body, req) => {
+  return { statusCode: 0, data };
+}
+
+async function update(id, body) {
+  const bidId = parseInt(id);
+  const dataFound = await prisma.Bidding.findUnique({
+    where: { id: bidId },
+  });
+
+  if (!dataFound) return NoRecordFound("Bidding");
+
+  const details = body.details || {};
+  const terms = body.terms || {};
+
+  const name = body.name || body.bidTitle || details.bidTitle || details.name;
+  const docId = body.docId || body.bidNo || details.docId || details.bidNo;
+  const bidNo = body.bidNo || body.docId || details.bidNo || details.docId;
+  const bidDate = body.bidDate || details.bidDate;
+  const closingDate = body.closingDate || terms.closingDate || details.closingDate;
+  const submissionDeadline = body.submissionDeadline || terms.submissionDeadline || details.submissionDeadline;
+  const queryDeadline = body.queryDeadline || terms.queryDeadline || details.queryDeadline;
+  const termsTemplate = body.termsTemplate || terms.termsTemplate;
+  const description = body.description || (terms.paymentPolicy || body.policyTerms
+    ? (typeof terms.paymentPolicy === 'string' ? terms.paymentPolicy : JSON.stringify(terms))
+    : undefined);
+  const status = body.status;
+  const branchId = body.branchId || details.branchId;
+
+  const parsedStartDate = parseDate(body.startDate) || parseDate(bidDate);
+  const parsedEndDate = parseDate(body.endDate) || parseDate(submissionDeadline) || parseDate(closingDate);
+  const parsedSubmissionDeadline = parseDate(submissionDeadline);
+  const parsedQueryDeadline = parseDate(queryDeadline);
+  const parsedClosingDate = parseDate(closingDate);
+
+  const lotsList = body.lots || body.BiddingLots;
+
+  // If lots are passed in an update, delete existing child lots and recreate them
+  if (Array.isArray(lotsList)) {
+    await prisma.BiddingLots.deleteMany({
+      where: { biddingId: bidId }
+    });
+  }
+
   const data = await prisma.Bidding.update({
-    where: { id: parseInt(id) },
+    where: { id: bidId },
     data: {
-      ...body,
-      updatedById: req.user?.id,
-    }
+      name: name !== undefined ? name : dataFound.name,
+      docId: docId !== undefined ? docId : dataFound.docId,
+      bidNo: bidNo !== undefined ? bidNo : dataFound.bidNo,
+      bidDate: bidDate !== undefined ? (bidDate ? String(bidDate) : null) : dataFound.bidDate,
+      closingDate: parsedClosingDate !== null ? parsedClosingDate : dataFound.closingDate,
+      submissionDeadline: parsedSubmissionDeadline !== null ? parsedSubmissionDeadline : dataFound.submissionDeadline,
+      queryDeadline: parsedQueryDeadline !== null ? parsedQueryDeadline : dataFound.queryDeadline,
+      termsTemplate: termsTemplate !== undefined ? termsTemplate : dataFound.termsTemplate,
+      description: description !== undefined ? description : dataFound.description,
+      startDate: parsedStartDate || dataFound.startDate,
+      endDate: parsedEndDate || dataFound.endDate,
+      status: status !== undefined ? status : dataFound.status,
+      branchId: parseId(branchId) || dataFound.branchId,
+      updatedById: parseId(body.user?.id) || dataFound.updatedById,
+      ...(Array.isArray(lotsList) && lotsList.length > 0
+        ? {
+          BiddingLots: {
+            create: buildLotNestedCreate(lotsList),
+          },
+        }
+        : {}),
+    },
+    include: {
+      BiddingLots: {
+        include: {
+          BiddingIndent: {
+            include: {
+              BiddingIndentvendors: {
+                include: {
+                  Vendor: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
-  
-  return {
-    statusCode: 0,
-    data: data,
-    message: "Bid updated successfully"
-  };
-};
 
-exports.deleteRecord = async (id) => {
-  await prisma.Bidding.delete({
-    where: { id: parseInt(id) }
-  });
-  
-  return {
-    statusCode: 0,
-    message: "Bid deleted successfully"
-  };
-};
+  return { statusCode: 0, data, message: "Bid updated successfully" };
+}
 
-// Lot endpoints
-exports.createLot = async (biddingId, body, req) => {
-  const data = await prisma.BiddingLots.create({
-    data: {
-      ...body,
-      biddingId: parseInt(biddingId)
-    }
+async function remove(id) {
+  const bidId = parseInt(id);
+  const dataFound = await prisma.Bidding.findUnique({
+    where: { id: bidId },
   });
-  
-  return {
-    statusCode: 0,
-    data: data,
-    message: "Lot created successfully"
-  };
-};
 
-exports.updateLot = async (lotId, body, req) => {
-  const data = await prisma.BiddingLots.update({
-    where: { id: parseInt(lotId) },
-    data: body
-  });
-  
-  return {
-    statusCode: 0,
-    data: data,
-    message: "Lot updated successfully"
-  };
-};
+  if (!dataFound) return NoRecordFound("Bidding");
 
-exports.deleteLot = async (lotId) => {
-  await prisma.BiddingLots.delete({
-    where: { id: parseInt(lotId) }
+  const data = await prisma.Bidding.delete({
+    where: { id: bidId },
   });
-  
-  return {
-    statusCode: 0,
-    message: "Lot deleted successfully"
-  };
-};
+
+  return { statusCode: 0, data, message: "Bid deleted successfully" };
+}
+
+export { get, getOne, getSearch, create, update, remove };

@@ -187,8 +187,8 @@ const useInvalidateTags = () => {
       payload: ["Currencies"],
     },
     {
-      type: `bankMaster/invalidateTags`,
-      payload: ["bank"],
+      type: `InternalIndentIssue/invalidateTags`,
+      payload: ["InternalIndentIssue"],
     },
     {
       type: `MaterialIssue/invalidateTags`,

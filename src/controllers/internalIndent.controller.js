@@ -6,6 +6,8 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
+  getIndentItems as _getIndentItems,
+
   submit as _submit,
   approve as _approve,
   reject as _reject,
@@ -95,28 +97,37 @@ async function remove(req, res, next) {
   }
 }
 
+export async function getIndentItems(req, res, next) {
+  try {
+    res.json(await _getIndentItems(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
+  }
+}
+
 async function submit(req, res, next) {
-  try { res.json(await _submit(req.params.id, req.body)); } 
+  try { res.json(await _submit(req.params.id, req.body)); }
   catch (error) { res.json({ statusCode: 1, message: error.message }); }
 }
 
 async function approve(req, res, next) {
-  try { res.json(await _approve(req.params.id, req.body)); } 
+  try { res.json(await _approve(req.params.id, req.body)); }
   catch (error) { res.json({ statusCode: 1, message: error.message }); }
 }
 
 async function reject(req, res, next) {
-  try { res.json(await _reject(req.params.id, req.body)); } 
+  try { res.json(await _reject(req.params.id, req.body)); }
   catch (error) { res.json({ statusCode: 1, message: error.message }); }
 }
 
 async function returnIndent(req, res, next) {
-  try { res.json(await _returnIndent(req.params.id, req.body)); } 
+  try { res.json(await _returnIndent(req.params.id, req.body)); }
   catch (error) { res.json({ statusCode: 1, message: error.message }); }
 }
 
 async function cancel(req, res, next) {
-  try { res.json(await _cancel(req.params.id, req.body)); } 
+  try { res.json(await _cancel(req.params.id, req.body)); }
   catch (error) { res.json({ statusCode: 1, message: error.message }); }
 }
 

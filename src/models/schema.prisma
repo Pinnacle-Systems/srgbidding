@@ -2959,6 +2959,7 @@ model Indent {
   indentTypeMasterId Int?
   customData         Json?
   IndentItems        IndentItems[]
+  BiddingIndent      BiddingIndent[]
 }
 
 model IndentItems {
@@ -2994,6 +2995,7 @@ model IndentItems {
   make              String?
   customData        Json?
   IndentItemVendors IndentItemVendors[]
+  BiddingIndent     BiddingIndent[]
 }
 
 model IndentItemVendors {
@@ -3073,21 +3075,28 @@ model IndentTypeMaster {
 }
 
 model Bidding {
-  id          Int           @id @default(autoincrement())
-  name        String?
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  status      String        @default("DRAFT")
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  createdBy   User?         @relation("BiddingCreatedBy", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User?         @relation("BiddingUpdatedBy", fields: [updatedById], references: [id])
-  updatedById Int?
-  Branch      Branch?       @relation(fields: [branchId], references: [id])
-  branchId    Int?
-  BiddingLots BiddingLots[]
+  id                 Int           @id @default(autoincrement())
+  name               String?
+  docId              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  createdBy          User?         @relation("BiddingCreatedBy", fields: [createdById], references: [id])
+  createdById        Int?
+  updatedBy          User?         @relation("BiddingUpdatedBy", fields: [updatedById], references: [id])
+  updatedById        Int?
+  Branch             Branch?       @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  bidNo              String?
+  bidDate            String?
+  closingDate        DateTime?
+  submissionDeadline DateTime?
+  queryDeadline      DateTime?
+  termsTemplate      String?
+  description        String?
+  startDate          DateTime
+  endDate            DateTime
+  status             String        @default("DRAFT")
+  BiddingLots        BiddingLots[]
 }
 
 model BiddingLots {
@@ -3099,6 +3108,7 @@ model BiddingLots {
   biddingId     Int?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  lotNumber     String?
   BiddingIndent BiddingIndent[]
 }
 
@@ -3108,6 +3118,11 @@ model BiddingIndent {
   biddingLotId         Int?
   createdAt            DateTime?              @default(now())
   updatedAt            DateTime?              @updatedAt
+  Indent               Indent?                @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  indentId             Int?
+  IndentItems          IndentItems?           @relation(fields: [indentItemId], references: [id], onDelete: Cascade)
+  indentItemId         Int?
+  indentType           String?
   Itemgroup            ItemGroup?             @relation(fields: [itemGroupId], references: [id])
   itemGroupId          Int?
   Item                 Item?                  @relation(fields: [itemId], references: [id])
@@ -3135,6 +3150,7 @@ model BiddingIndent {
   make                 String?
   customData           Json?
   BiddingIndentvendors BiddingIndentvendors[]
+  BiddingIndentChat    BiddingIndentChat[]
 }
 
 model BiddingIndentvendors {
@@ -3143,6 +3159,7 @@ model BiddingIndentvendors {
   biddingIndentId Int?
   vendorId        Int?
   Vendor          Party?         @relation("Vendor", fields: [vendorId], references: [id])
+  status          String?
 }
 
 model BiddingIndentChat {

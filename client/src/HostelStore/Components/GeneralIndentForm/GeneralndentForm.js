@@ -208,6 +208,7 @@ const IndentForm = ({
     rowVersion,
     indentItems: indentItems.filter((i) => i.itemId),
     customData,
+    finYearId
   };
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {

@@ -3,40 +3,31 @@ import { useBiddingAuth, BiddingAuthProvider } from "./context/BiddingAuthContex
 import BiddingLayout from "./layouts/BiddingLayout";
 
 // Current existing components (Acting as Admin/Management views for now)
-import Dashboard from "./pages/Dashboard";
-import Bids from "./pages/Bids";
-import CreateBid from "./pages/CreateBid";
+import Dashboard from "./Dashboard";
+import Bids from "./BidsReports";
+import CreateBid from "./CreateBid";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
+  const [editingBidId, setEditingBidId] = useState(null);
   const { role } = useBiddingAuth();
 
-  // Default to admin for now if no user is found so your existing app keeps working
+
 
   const renderView = () => {
-    // 1. ADMIN VIEWS (Using your existing components)
+
+
     if (role === "Admin") {
       switch (currentView) {
         case "dashboard": return <Dashboard />;
-        case "bids": return <Bids setCurrentView={setCurrentView} />;
-        case "create": return <CreateBid />;
-        case "compare": return <div className="p-8"><h1 className="text-2xl font-bold">Quote Comparison Placeholder</h1></div>;
-        case "messages": return <div className="p-8"><h1 className="text-2xl font-bold">Messages Placeholder</h1></div>;
-        default: return <Dashboard />;
-      }
-    }
-
-    // 2. MANAGEMENT VIEWS
-    if (role === "Management") {
-      switch (currentView) {
-        case "dashboard": return <Dashboard />;
-        case "bids": return <Bids setCurrentView={setCurrentView} />;
+        case "bids": return (<Bids setCurrentView={setCurrentView} setEditingBidId={setEditingBidId} />);
+        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "compare": return <div className="p-8"><h1 className="text-2xl font-bold">Quote Comparison Placeholder</h1></div>;
         default: return <Dashboard />;
       }
     }
 
-    // 3. VENDOR VIEWS (Placeholders for now)
+
     if (role === "Vendor") {
       switch (currentView) {
         case "dashboard": return <div className="p-8"><h1 className="text-2xl font-bold">Vendor Dashboard Placeholder</h1></div>;

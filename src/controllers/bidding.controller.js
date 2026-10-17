@@ -1,73 +1,98 @@
-const biddingService = require("../services/bidding.service");
+import { Prisma } from "../lib/prisma.js";
 
-exports.getAll = async (req, res, next) => {
-  try {
-    const result = await biddingService.getAll(req);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+import {
+  get as _get,
+  getOne as _getOne,
+  getSearch as _getSearch,
+  create as _create,
+  update as _update,
+  remove as _remove,
+} from "../services/bidding.service.js";
 
-exports.getById = async (req, res, next) => {
+async function get(req, res, next) {
   try {
-    const result = await biddingService.getById(req.params.id);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
+    res.json(await _get(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error `, err.message);
   }
-};
+}
 
-exports.create = async (req, res, next) => {
+async function getOne(req, res, next) {
   try {
-    const result = await biddingService.create(req.body, req);
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
+    res.json(await _getOne(req.params.id));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error`, err.message);
   }
-};
+}
 
-exports.update = async (req, res, next) => {
+async function getSearch(req, res, next) {
   try {
-    const result = await biddingService.update(req.params.id, req.body, req);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
+    res.json(await _getSearch(req));
+    console.log(res.statusCode);
+  } catch (err) {
+    console.error(`Error`, err.message);
   }
-};
+}
 
-exports.deleteRecord = async (req, res, next) => {
+async function create(req, res, next) {
   try {
-    const result = await biddingService.deleteRecord(req.params.id);
-    res.status(200).json(result);
+    res.json(await _create(req.body));
+    console.log(res.statusCode);
   } catch (error) {
-    next(error);
+    console.error(`Error`, error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        res.statusCode = 200;
+        res.json({
+          statusCode: 1,
+          message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists`,
+        });
+        console.log(res.statusCode);
+      }
+    } else {
+      res.json({ statusCode: 1, message: error.message });
+    }
   }
-};
+}
 
-exports.createLot = async (req, res, next) => {
+async function update(req, res, next) {
   try {
-    const result = await biddingService.createLot(req.params.id, req.body, req);
-    res.status(201).json(result);
+    res.json(await _update(req.params.id, req.body));
+    console.log(res.statusCode);
   } catch (error) {
-    next(error);
+    console.error(`Error`, error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        res.statusCode = 200;
+        res.json({
+          statusCode: 1,
+          message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists`,
+        });
+        console.log(res.statusCode);
+      }
+    } else {
+      res.json({ statusCode: 1, message: error.message });
+    }
   }
-};
+}
 
-exports.updateLot = async (req, res, next) => {
+async function remove(req, res, next) {
   try {
-    const result = await biddingService.updateLot(req.params.lotId, req.body, req);
-    res.status(200).json(result);
+    res.json(await _remove(req.params.id));
+    console.log(res.statusCode);
   } catch (error) {
-    next(error);
+    if (error.code === "P2025") {
+      res.statusCode = 200;
+      res.json({ statusCode: 1, message: `Record Not Found` });
+      console.log(res.statusCode);
+    } else if (error.code === "P2003") {
+      res.statusCode = 200;
+      res.json({ statusCode: 1, message: "Child record Exists" });
+    }
+    console.log(`Error`, error.message);
   }
-};
+}
 
-exports.deleteLot = async (req, res, next) => {
-  try {
-    const result = await biddingService.deleteLot(req.params.lotId);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+export { get, getOne, getSearch, create, update, remove };

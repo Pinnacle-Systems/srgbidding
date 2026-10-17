@@ -160,8 +160,9 @@ async function get(req) {
         ]
         : undefined,
     },
+    include: {
 
-
+    },
     orderBy: { docId: "desc" },
   });
 
@@ -178,15 +179,6 @@ async function get(req) {
       pageNumber * dataPerPage,
     );
   }
-
-
-
-
-
-
-
-
-
 
   return {
     statusCode: 0,
@@ -240,15 +232,33 @@ async function getOne(id) {
   };
 }
 
-async function getOneBillEntry(req) {
-  const { supplierId } = req.query;
-  const data = await prisma.purchaseInward.findMany({
-    where: { supplierId: parseInt(supplierId) },
+async function getIndentItems(req) {
+  const data = await prisma.IndentItems.findMany({
     include: {
-      Store: { select: { locationId: true, storeName: true } },
-      Branch: { select: { branchName: true } },
-      supplier: { select: { name: true } },
-      inwardItems: { include: { Hsn: true, StyleItem: true, Uom: true } },
+      Indent: {
+        select: {
+          docId: true,
+          createdAt: true,
+          remarks: true,
+          Department: { select: { name: true } },
+          Employee: { select: { name: true } },
+          indentType: true
+
+        }
+      },
+      IndentItemVendors: true,
+      Itemgroup: { select: { name: true } },
+      Item: { select: { name: true } },
+      Size: { select: { name: true } },
+      Color: { select: { name: true } },
+      Uom: { select: { name: true } },
+      Hsn: { select: { name: true } },
+      Yarn: { select: { name: true } },
+      Fabric: { select: { name: true } },
+      YarnBlend: { select: { name: true } },
+      Counts: { select: { name: true } }
+
+
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");
@@ -929,7 +939,6 @@ export {
   getPurchaseDetail,
   getPurchaseDetailStock,
   getPurchaseInwardItems,
-  getOneBillEntry,
   getPurchaseInwardBillEntryItems,
 };
 
@@ -979,5 +988,5 @@ export {
   reject,
   returnIndent,
   cancel,
-
+  getIndentItems
 }

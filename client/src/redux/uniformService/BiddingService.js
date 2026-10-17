@@ -16,8 +16,16 @@ const BiddingApi = createApi({
       providesTags: ["Bidding"],
     }),
     getBidById: builder.query({
-      query: (id) => `${BIDDING_API}/${id}`,
-      providesTags: ["Bidding"],
+      query: (id) => {
+        return {
+          url: `${BIDDING_API}/${id}`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["City"],
     }),
     createBid: builder.mutation({
       query: (payload) => ({

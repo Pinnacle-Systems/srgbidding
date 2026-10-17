@@ -1,16 +1,24 @@
-const express = require("express");
-const router = express.Router();
-const biddingController = require("../controllers/bidding.controller");
+import { Router } from "express";
+const router = Router();
+import {
+    get,
+    getOne,
+    getSearch,
+    create,
+    update,
+    remove,
+} from "../controllers/bidding.controller.js";
 
-router.get("/", biddingController.getAll);
-router.get("/:id", biddingController.getById);
-router.post("/", biddingController.create);
-router.put("/:id", biddingController.update);
-router.delete("/:id", biddingController.deleteRecord);
+router.get("/", get);
 
-// Lots endpoints
-router.post("/:id/lots", biddingController.createLot);
-router.put("/lots/:lotId", biddingController.updateLot);
-router.delete("/lots/:lotId", biddingController.deleteLot);
+router.get("/:id", getOne);
 
-module.exports = router;
+router.get("/search/:searchKey", getSearch);
+
+router.post("/", create);
+
+router.put("/:id", update);
+
+router.delete("/:id", remove);
+
+export default router;

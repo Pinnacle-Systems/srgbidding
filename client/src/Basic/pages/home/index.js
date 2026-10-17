@@ -8,6 +8,7 @@ import SuperAdminHeader from "../../components/SuperAdminHeader";
 import Sidebar from "../../components/sidebar";
 import Header from "../../../HostelStore/Components/Header";
 import { useSelector } from "react-redux";
+import BiddingApp from "../../../Bidding";
 
 const Home = () => {
   const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -64,7 +65,7 @@ const Home = () => {
 
               {openTabs.tabs.length === 0 ? (
                 <div className=" flex-1 min-h-0 overflow-auto">
-                  <Dashboard setProfile={setProfile} />
+                  <BiddingApp setProfile={setProfile} />
                 </div>
               ) : (
                 <div className="flex-1 min-h-0 overflow-hidden">

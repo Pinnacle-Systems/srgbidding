@@ -56,10 +56,10 @@ const InternalIndentIssueApi = createApi({
       },
       providesTags: ["InternalIndentIssue"],
     }),
-    getInternalIndentIssueForBillById: builder.query({
+    getInternalIndentItems: builder.query({
       query: ({ params }) => {
         return {
-          url: `${INTERNAL_INDENT_API}/InternalIndentIssueForBill`,
+          url: `${INTERNAL_INDENT_API}/internalIndentItems`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -161,7 +161,7 @@ export const {
   useDeleteInternalIndentIssueMutation,
   useLazyGetPurchaseDetailQuery,
   useGetPurInwardItemsQuery,
-  useGetInternalIndentIssueForBillByIdQuery,
+  useGetInternalIndentItemsQuery,
   useSubmitIndentMutation,
   useApproveIndentMutation,
   useRejectIndentMutation,

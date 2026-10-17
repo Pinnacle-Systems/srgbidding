@@ -90,3 +90,4 @@ export { default as dyesChemicalIndent } from "./dyesChemicalIndent.route.js";
 export { default as generalIndent } from "./generalIndent.route.js";
 export { default as sparepartIndent } from "./sparepartIndent.route.js";
 export { default as indentTypeMaster } from "./indentTypeMaster.route.js";
+export { default as bidding } from "./bidding.route.js";

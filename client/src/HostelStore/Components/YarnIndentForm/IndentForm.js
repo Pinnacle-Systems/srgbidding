@@ -181,6 +181,7 @@ const IndentForm = ({
     estimatedValue,
     rowVersion,
     indentItems: indentItems?.filter((i) => i.yarnId),
+    finYearId
 
   };
 
