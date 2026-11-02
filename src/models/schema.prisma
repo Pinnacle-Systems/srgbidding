@@ -2998,6 +2998,8 @@ model IndentItems {
   status            String?             @default("")
   IndentItemVendors IndentItemVendors[]
   BiddingIndent     BiddingIndent[]
+
+  @@index([indentId])
 }
 
 model IndentItemVendors {
