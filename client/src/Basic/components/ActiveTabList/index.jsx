@@ -106,6 +106,7 @@ import {
   SparepartIndentForm,
 } from "../../../HostelStore/Components";
 import BiddingApp from "../../../Bidding";
+import ActiveTabsHeader from "./ActiveTabsHeader";
 
 const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
@@ -267,6 +268,12 @@ const ActiveTabList = () => {
     }
     return list;
   }, [openTabs?.tabs]);
+
+  const activeTab = openTabs.tabs.find((tab) => tab.active);
+  const hideTopTabs =
+    activeTab && PAGES_WITH_HEADER_TABS.includes(activeTab.name);
+
+  console.log(openTabs, 'openTabs')
 
   return (
     // <div className="relative ">
@@ -447,159 +454,234 @@ const ActiveTabList = () => {
     //     </div>
     //   ))}
     // </div>
-    <div className="relative w-full">
-      {/* Top Tab Bar Navigation */}
-      <div className="w-full bg-[#f8fafc] border-b border-gray-200 px-2.5 py-1 flex items-center justify-between gap-1.5 select-none text-xs">
-        {/* Scroll Left Button */}
-        <button
-          type="button"
-          onClick={scrollLeft}
-          className="text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 p-1 rounded transition hidden md:flex items-center justify-center shrink-0"
-          title="Scroll Left"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+    // <div className="relative w-full">
+    //   {/* Top Tab Bar Navigation */}
+    //   <div className="w-full bg-[#f8fafc] border-b border-gray-200 px-2.5 py-1 flex items-center justify-between gap-1.5 select-none text-xs">
+    //     {/* Scroll Left Button */}
+    //     <button
+    //       type="button"
+    //       onClick={scrollLeft}
+    //       className="text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 p-1 rounded transition hidden md:flex items-center justify-center shrink-0"
+    //       title="Scroll Left"
+    //     >
+    //       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+    //       </svg>
+    //     </button>
 
-        {/* Scrollable Tabs Wrapper */}
-        <div
-          ref={scrollRef}
-          onWheel={handleWheel}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5"
-        >
-          {allTabs.map((tab, index) => {
-            const isHome = tab.name?.toUpperCase() === "HOME";
-            const isActive = !!tab.active;
-            const displayName = formatTabTitle(tab.name);
+    //     {/* Scrollable Tabs Wrapper */}
+    //     <div
+    //       ref={scrollRef}
+    //       onWheel={handleWheel}
+    //       className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5"
+    //     >
+    //       {allTabs.map((tab, index) => {
+    //         const isHome = tab.name?.toUpperCase() === "HOME";
+    //         const isActive = !!tab.active;
+    //         const displayName = formatTabTitle(tab.name);
 
-            return (
-              <div
-                key={tab.name || index}
-                onClick={() => dispatch(push({ name: tab.name }))}
-                className={`group flex items-center shrink-0 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-150 ${isActive
-                  ? "bg-[#e0562c] text-white shadow-xs px-2.5 py-0.5"
-                  : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80 px-2.5 py-0.5"
-                  }`}
-              >
-                <span className="whitespace-nowrap select-none">{displayName}</span>
+    //         return (
+    //           <div
+    //             key={tab.name || index}
+    //             onClick={() => dispatch(push({ name: tab.name }))}
+    //             className={`group flex items-center shrink-0 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-150 ${isActive
+    //               ? "bg-[#e0562c] text-white shadow-xs px-2.5 py-0.5"
+    //               : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80 px-2.5 py-0.5"
+    //               }`}
+    //           >
+    //             <span className="whitespace-nowrap select-none">{displayName}</span>
 
-                {/* Close button for non-home tabs */}
-                {!isHome && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      dispatch(remove({ name: tab.name }));
-                    }}
-                    className={`ml-1.5 rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold leading-none transition-all ${isActive
-                      ? "text-white/80 hover:text-white hover:bg-black/20"
-                      : "text-slate-400 hover:text-red-600 hover:bg-red-50"
-                      }`}
-                    title={`Close ${displayName}`}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            );
-          })}
+    //             {/* Close button for non-home tabs */}
+    //             {!isHome && (
+    //               <button
+    //                 type="button"
+    //                 onClick={(e) => {
+    //                   e.stopPropagation();
+    //                   dispatch(remove({ name: tab.name }));
+    //                 }}
+    //                 className={`ml-1.5 rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold leading-none transition-all ${isActive
+    //                   ? "text-white/80 hover:text-white hover:bg-black/20"
+    //                   : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+    //                   }`}
+    //                 title={`Close ${displayName}`}
+    //               >
+    //                 ✕
+    //               </button>
+    //             )}
+    //           </div>
+    //         );
+    //       })}
 
-          {/* Clear All Pill Button */}
-          <button
-            type="button"
-            onClick={() => dispatch(clearAll())}
-            className="text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 bg-white font-medium text-[11px] px-2.5 py-0.5 rounded-md shadow-xs transition-all cursor-pointer select-none shrink-0"
-            title="Clear all tabs except Home"
-          >
-            Clear All
-          </button>
-        </div>
+    //       {/* Clear All Pill Button */}
+    //       <button
+    //         type="button"
+    //         onClick={() => dispatch(clearAll())}
+    //         className="text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 bg-white font-medium text-[11px] px-2.5 py-0.5 rounded-md shadow-xs transition-all cursor-pointer select-none shrink-0"
+    //         title="Clear all tabs except Home"
+    //       >
+    //         Clear All
+    //       </button>
+    //     </div>
 
-        {/* Scroll Right Button & Overflow Dropdown */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={scrollRight}
-            className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-full transition hidden md:flex items-center justify-center shrink-0"
-            title="Scroll Right"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+    //     {/* Scroll Right Button & Overflow Dropdown */}
+    //     <div className="flex items-center gap-1 shrink-0">
+    //       <button
+    //         type="button"
+    //         onClick={scrollRight}
+    //         className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-full transition hidden md:flex items-center justify-center shrink-0"
+    //         title="Scroll Right"
+    //       >
+    //         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+    //         </svg>
+    //       </button>
 
-          {/* Tab quick switcher dropdown */}
-          {allTabs.length > 3 && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1 rounded-full transition flex items-center justify-center"
-                title="View all open tabs"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+    //       {/* Tab quick switcher dropdown */}
+    //       {allTabs.length > 3 && (
+    //         <div className="relative" ref={dropdownRef}>
+    //           <button
+    //             type="button"
+    //             onClick={() => setShowDropdown(!showDropdown)}
+    //             className="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1 rounded-full transition flex items-center justify-center"
+    //             title="View all open tabs"
+    //           >
+    //             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+    //             </svg>
+    //           </button>
 
-              {showDropdown && (
-                <div className="absolute right-0 top-7 mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1 text-xs">
-                  <div className="px-3 py-1 font-semibold text-gray-500 border-b border-gray-100 uppercase tracking-wider text-[10px]">
-                    Open Tabs ({allTabs.length})
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {allTabs.map((tab) => {
-                      const isHome = tab.name?.toUpperCase() === "HOME";
-                      const displayName = isHome ? "Home" : formatTabTitle(tab.name);
-                      return (
-                        <div
-                          key={tab.name}
-                          onClick={() => {
-                            dispatch(push({ name: tab.name }));
-                            setShowDropdown(false);
-                          }}
-                          className={`flex items-center justify-between px-3 py-1.5 cursor-pointer hover:bg-gray-50 transition ${tab.active ? "bg-orange-50 text-[#e0562c] font-medium" : "text-gray-700"
-                            }`}
-                        >
-                          <span className="truncate">{displayName}</span>
-                          {!isHome && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                dispatch(remove({ name: tab.name }));
-                              }}
-                              className="text-red-400 hover:text-red-600 ml-2 p-0.5 rounded-full hover:bg-red-50 text-[10px]"
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+    //           {showDropdown && (
+    //             <div className="absolute right-0 top-7 mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1 text-xs">
+    //               <div className="px-3 py-1 font-semibold text-gray-500 border-b border-gray-100 uppercase tracking-wider text-[10px]">
+    //                 Open Tabs ({allTabs.length})
+    //               </div>
+    //               <div className="max-h-60 overflow-y-auto">
+    //                 {allTabs.map((tab) => {
+    //                   const isHome = tab.name?.toUpperCase() === "HOME";
+    //                   const displayName = isHome ? "Home" : formatTabTitle(tab.name);
+    //                   return (
+    //                     <div
+    //                       key={tab.name}
+    //                       onClick={() => {
+    //                         dispatch(push({ name: tab.name }));
+    //                         setShowDropdown(false);
+    //                       }}
+    //                       className={`flex items-center justify-between px-3 py-1.5 cursor-pointer hover:bg-gray-50 transition ${tab.active ? "bg-orange-50 text-[#e0562c] font-medium" : "text-gray-700"
+    //                         }`}
+    //                     >
+    //                       <span className="truncate">{displayName}</span>
+    //                       {!isHome && (
+    //                         <button
+    //                           type="button"
+    //                           onClick={(e) => {
+    //                             e.stopPropagation();
+    //                             dispatch(remove({ name: tab.name }));
+    //                           }}
+    //                           className="text-red-400 hover:text-red-600 ml-2 p-0.5 rounded-full hover:bg-red-50 text-[10px]"
+    //                         >
+    //                           ✕
+    //                         </button>
+    //                       )}
+    //                     </div>
+    //                   );
+    //                 })}
+    //               </div>
+    //             </div>
+    //           )}
+    //         </div>
+    //       )}
+    //     </div>
+    //   </div>
 
-      {/* Tab Panels */}
-      <div className="w-full">
-        {allTabs.map((tab, index) => (
-          <div key={tab.name || index} className={tab.active ? "block" : "hidden"}>
-            <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
-              {typeof tabs[tab.name] === "function"
-                ? tabs[tab.name](tab.data)
-                : (tabs[tab.name] || tabs[tab.name?.toUpperCase()] || null)}
-            </Suspense>
+    //   {/* Tab Panels */}
+    //   <div className="w-full">
+    //     {allTabs.map((tab, index) => (
+    //       <div key={tab.name || index} className={tab.active ? "block" : "hidden"}>
+    //         <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+    //           {typeof tabs[tab.name] === "function"
+    //             ? tabs[tab.name](tab.data)
+    //             : (tabs[tab.name] || tabs[tab.name?.toUpperCase()] || null)}
+    //         </Suspense>
+    //       </div>
+    //     ))}
+    //   </div>
+    // </div>
+    <div
+      className="w-full h-full min-h-0 flex flex-col overflow-hidden"
+      style={{ backgroundColor: "#F1F1F0" }}
+    >
+      {!hideTopTabs && (
+        <div className="flex justify-between items-center shrink-0 px-2 py-1 bg-white border-b border-slate-200 relative z-30">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <ActiveTabsHeader />
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+      {openTabs.tabs.map((tab, index) => (
+        <div
+          key={index}
+          className={`${tab.active ? "block" : "hidden"} flex-1 min-h-0 overflow-hidden`}
+        >
+          {tabs[tab.name]}
+        </div>
+      ))}
     </div>
   );
 };
 
+export const PAGES_WITH_HEADER_TABS = [
+  "PURCHASE ORDER",
+  "TAX TEMPLATE",
+  "HSN MASTER",
+  "COLOR MASTER",
+  "UOM MASTER",
+  "FIN YEAR MASTER",
+  "COUNTRY MASTER",
+  "STATE MASTER",
+  "CITY MASTER",
+  "LOCATION MASTER",
+  "BRANCH TYPE MASTER",
+  "DEPARTMENT MASTER",
+  "EMPLOYEE CATEGORY MASTER",
+  "EMPLOYEE MASTER",
+  "TAX TERM MASTER",
+  "PAY TERM MASTER",
+  "CURRENCY MASTER",
+  "TERMS & CONDTIONS MASTER",
+  "CUSTOMER / SUPPLIER MASTER",
+  "BANK MASTER",
+  "ITEM GROUP MASTER",
+  "ITEM SUB GROUP MASTER",
+  "ITEM MASTER",
+  "GSM MASTER",
+  "SIZE MASTER",
+  "SIZE TEMPLATE MASTER",
+  "COUNTS MASTER",
+  "CONTENT MASTER",
+  "FABRIC MASTER",
+  "GAUGE MASTER",
+  "LOOP LENGTH MASTER",
+  "DIA MASTER",
+  "YARN MASTER",
+  "YARN BLEND MASTER",
+  "DESIGN MASTER",
+  "USERS & ROLES",
+  "CONTROL PANEL",
+  "ORDER ENTRY",
+  "SALES ORDER",
+  "SALES DELIVERY",
+  "SALES RETURN",
+  "SALES BILL ENTRY",
+  "PURCHASE INWARD",
+  "PURCHASE CANCEL",
+  "PURCHASE RETURN",
+  "PURCHASE BILL ENTRY",
+  "YARN PROFROMA INVOICE",
+  "FABRIC  PROFORMA INVOICE",
+  "PROCESS GROUP MASTER",
+  "PROCESS MASTER",
+];
+
+export { default as ActiveTabsHeader } from "./ActiveTabsHeader";
+export { default as MasterHeader } from "./MasterHeader";
 export default ActiveTabList;

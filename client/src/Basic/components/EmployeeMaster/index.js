@@ -44,6 +44,7 @@ import { CityMaster, DepartmentMaster, EmployeeCategoryMaster } from "..";
 import { DropdownWithModal } from "../../../Inputs/Reuseable";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { MasterHeader } from "../ActiveTabList";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -601,40 +602,40 @@ export default function Form() {
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1 ">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h1 className="text-lg font-bold text-gray-800">Employee Master</h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleCreate}
-            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add New Employee
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setView("table")}
-              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table"
-                ? "bg-indigo-100 text-indigo-600"
-                : "text-gray-600 hover:bg-gray-100"
-                }`}
-            >
-              <Table size={16} />
-              Table
-            </button>
-            <button
-              onClick={() => setView("card")}
-              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card"
-                ? "bg-indigo-100 text-indigo-600"
-                : "text-gray-600 hover:bg-gray-100"
-                }`}
-            >
-              <LayoutGrid size={16} />
-              Cards
-            </button>
-          </div>
-        </div>
+
+      <MasterHeader>
+        <button
+          onClick={handleCreate}
+          className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+        >
+          + Add New Employee
+        </button>
+      </MasterHeader>
+
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setView("table")}
+          className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table"
+            ? "bg-indigo-100 text-indigo-600"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
+        >
+          <Table size={16} />
+          Table
+        </button>
+        <button
+          onClick={() => setView("card")}
+          className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card"
+            ? "bg-indigo-100 text-indigo-600"
+            : "text-gray-600 hover:bg-gray-100"
+            }`}
+        >
+          <LayoutGrid size={16} />
+          Cards
+        </button>
       </div>
+
 
       <div className="bg-gray-100  rounded-xl shadow overflow-hidden">
         <div className="pt-2">

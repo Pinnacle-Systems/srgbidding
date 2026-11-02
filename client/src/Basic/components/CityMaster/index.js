@@ -39,6 +39,7 @@ import { StateMaster } from "..";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { MasterHeader } from "../ActiveTabList";
 
 const MODEL = "City Master";
 
@@ -568,29 +569,14 @@ export default function Form({
           </button>
         </div>
       </div> */}
-      <header className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-1 shadow-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="h-8 w-1 shrink-0 rounded-full bg-[#E0562C]"
-          />
-          <div className="min-w-0">
-            <h2 className={`truncate  font-semibold leading-tight text-slate-900`}>City Master</h2>
-
-          </div>
-        </div>
-
-
+      <MasterHeader>
         <button
-          type="button"
           onClick={handleCreate}
-          className="inline-flex items-center gap-2 rounded-md bg-[#E0562C] hover:bg-[#e0562cf2] px-2 py-1 text-sm font-medium text-white shadow-sm transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0562C] focus-visible:ring-offset-2 active:bg-indigo-800"
+          className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
         >
-          <PlusIcon />
-          Add New City
+          + Add New City
         </button>
-
-      </header>
+      </MasterHeader>
 
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
