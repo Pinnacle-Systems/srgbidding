@@ -12,7 +12,7 @@ export default function BidDetails({ onNext, bidData, setBidData }) {
 
   const totalLots = bidData.lots?.length || 0;
   const totalIndents = bidData.lots?.reduce((sum, lot) => sum + (lot.indents?.length || 0), 0) || 0;
-  
+
   const uniqueVendorIds = new Set();
   (bidData.lots || []).forEach(lot => {
     (lot.indents || []).forEach(ind => {
@@ -72,15 +72,7 @@ export default function BidDetails({ onNext, bidData, setBidData }) {
           />
         </div>
 
-        <div className="col-span-12 sm:col-span-3">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Query deadline</label>
-          <input
-            type="date"
-            value={queryDeadline}
-            onChange={(e) => handleChange('queryDeadline', e.target.value)}
-            className="w-full bg-white border border-slate-300 text-slate-900 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          />
-        </div>
+
 
         <div className="col-span-12 sm:col-span-3">
           <label className="block text-sm font-medium text-slate-700 mb-1">Submission deadline</label>

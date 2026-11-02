@@ -59,9 +59,9 @@ const Home = () => {
           ) : (
             <>
               <div className="shrink-0">
-                <Header profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen} />
+                <AppHeader profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen} />
               </div>
-              <div className="shrink-0 h-[42px]" />
+              <div className="shrink-0 " />
 
               {openTabs.tabs.length === 0 ? (
                 <div className=" flex-1 min-h-0 overflow-auto">
@@ -73,12 +73,12 @@ const Home = () => {
                 </div>
               )}
 
-              <Sidebar
+              {/* <Sidebar
                 isOpen={isOpen}
                 setIsOpen={setIsOpen}
                 isMainDropdownOpen={isMainDropdownOpen}
                 setIsMainDropdownOpen={setIsMainDropdownOpen}
-              />
+              /> */}
             </>
           )}
         </div>

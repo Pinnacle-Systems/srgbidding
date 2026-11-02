@@ -6,10 +6,13 @@ import BiddingLayout from "./layouts/BiddingLayout";
 import Dashboard from "./Dashboard";
 import Bids from "./BidsReports";
 import CreateBid from "./CreateBid";
+import BiddingCommunicationsPage from "./pages/Communications";
+import VendorPortal from "./VendorPortal";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
   const [editingBidId, setEditingBidId] = useState(null);
+  const [selectedBidIdForComms, setSelectedBidIdForComms] = useState(null);
   const { role } = useBiddingAuth();
 
 
@@ -20,7 +23,22 @@ function BiddingAppContent() {
     if (role === "Admin") {
       switch (currentView) {
         case "dashboard": return <Dashboard />;
-        case "bids": return (<Bids setCurrentView={setCurrentView} setEditingBidId={setEditingBidId} />);
+        case "bids": return (
+          <Bids
+            setCurrentView={setCurrentView}
+            setEditingBidId={setEditingBidId}
+            onOpenCommunications={(bidId) => {
+              setSelectedBidIdForComms(bidId);
+              setCurrentView("communications");
+            }}
+          />
+        );
+        case "communications": return (
+          <BiddingCommunicationsPage
+            initialBidId={selectedBidIdForComms}
+            onBackToBids={() => setCurrentView("bids")}
+          />
+        );
         case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "compare": return <div className="p-8"><h1 className="text-2xl font-bold">Quote Comparison Placeholder</h1></div>;
         default: return <Dashboard />;
@@ -29,12 +47,7 @@ function BiddingAppContent() {
 
 
     if (role === "Vendor") {
-      switch (currentView) {
-        case "dashboard": return <div className="p-8"><h1 className="text-2xl font-bold">Vendor Dashboard Placeholder</h1></div>;
-        case "bids": return <div className="p-8"><h1 className="text-2xl font-bold">Vendor Bids Placeholder</h1></div>;
-        case "messages": return <div className="p-8"><h1 className="text-2xl font-bold">Vendor Messages Placeholder</h1></div>;
-        default: return <div className="p-8"><h1 className="text-2xl font-bold">Vendor Dashboard Placeholder</h1></div>;
-      }
+      return <VendorPortal initialView={currentView === "workspace" ? "workspace" : "bids"} />;
     }
 
     return <div className="p-8"><h1 className="text-2xl font-bold text-red-500">Unauthorized Role</h1></div>;

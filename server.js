@@ -94,6 +94,7 @@ import {
   sparepartIndent,
   indentTypeMaster,
   bidding,
+  indentTypeMasterNew,
 } from "./src/routes/index.js";
 import { setIo } from "./src/utils/notificationHelper.js";
 import { socketMain } from "./src/sockets/socket.js";
@@ -258,7 +259,7 @@ app.use("/fabricIndent", fabricIndent);
 app.use("/dyesChemicalIndent", dyesChemicalIndent);
 app.use("/generalIndent", generalIndent);
 app.use("/sparepartIndent", sparepartIndent);
-app.use("/indentTypeMaster", indentTypeMaster)
+app.use("/indentTypeMaster", indentTypeMasterNew);
 app.use("/bidding", bidding)
 
 

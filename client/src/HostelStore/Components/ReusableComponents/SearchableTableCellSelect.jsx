@@ -187,7 +187,7 @@ const SearchableTableCellSelect = forwardRef(({
       onBlur={handleBlur}
     >
       {name && (
-        <label className="block text-[11px]  text-[#697386] mb-1">
+        <label className="block text-[11px]  font-semibold text-[11px] text-slate-800 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}

@@ -13,17 +13,41 @@ import { GLOBE_ICON } from "../../../icons";
 import { useGetPageGroupQuery } from "../../../redux/services/PageGroupMasterServices";
 import MultiLevelDropDown from "../../../UiComponents/MultiSelectDropDown";
 import useLogout, { socket } from "../../../CustomHooks/useLogout";
+import logo from "../../../assets/SRG company logo.png";
+import dp from "../../../assets/default-dp.png";
 
 import Anugraha from "../../../assets/fish.png";
 import { Dropdown } from "react-multi-select-component";
 import PageSearch from "./PageSearch";
+import Modal from "../../../UiComponents/Modal";
+import Logout from "../LogoutConfirm";
+import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
+import { useGetUserByIdQuery } from "../../../redux/services/UsersMasterService";
+import { useDispatch } from "react-redux";
+import { push } from "../../../redux/features/opentabs";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
-  const [hideNavBar, sethideNavBar] = useState(true);
+const AppHeader = ({ setIsGlobalOpen, }) => {
 
-  // Real-time approval notifications
+  const [hideNavBar, sethideNavBar] = useState(true);
+  const dispatch = useDispatch()
+  const [logout, setLogout] = useState(false)
+
+
+  const handleOutsideClick = () => {
+    sethideNavBar(true);
+  };
+
+  const ref = useOutsideClick(handleOutsideClick);
+
+  const id = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userId")
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetUserByIdQuery(id, { skip: !id });
+
   useEffect(() => {
     const handleApprovalNotification = (data) => {
       const msg = data.message || "Approval notification received";
@@ -167,105 +191,118 @@ const AppHeader = ({ setIsGlobalOpen, setLogout }) => {
   });
 
   return (
-    <div className="relative">
-      <nav className="nav-bar-bg flex md:items-center flex-wrap p-">
-        <div className="logo-heading flex flex-shrink-0 mr-6 break-words">
-          <div className="flex bg-white rounded px-1 m-1 text-black items-end text-2xl">
-            <img src={Anugraha} className="h-12 w-20 rounded-xl" />
-            {/* <span className="flex font-semibold break-words">{APP_NAME} </span> */}
-          </div>
+
+    <div className="w-full relative z-40 bg-white">
+      <div className='flex h-11 w-full items-center justify-between bg-white px-2 sm:px-4 border-b border-gray-100'>
+        <Modal
+          isOpen={logout}
+          onClose={() => {
+            setLogout(false);
+          }}
+          widthClass={""}
+        >
+          <Logout setLogout={setLogout} />
+        </Modal>
+        <div className="flex shrink-0 items-center">
+          <img className="h-5"
+            src={logo}
+            alt="" />
         </div>
-        <div className="block lg:hidden justify-items-start">
-          <button
-            onClick={toggleNavMenu}
-            className="flex items-center px-3 py-2 button-border"
+        <div className="nav-item flex-grow ">
+          <div
+            className={`flex items-center mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
           >
-            <svg
-              className="fill-current h-3 w-3"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <title className="text-white">Menu</title>
-              <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
-            </svg>
-          </button>
+            <MultiLevelDropDown heading={"Masters"} groups={mastersGroup} pages={masters} />
+          </div>
+          <div
+            className={`flex items-center mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
+          >
+            <MultiLevelDropDown heading={"Transactions"} groups={transactionsGroup} pages={transactions} />
+          </div>
+          <div
+            className={`block mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
+          >
+            <MultiLevelDropDown heading={"Reports"} groups={reportGroups} pages={reports} />
+          </div>
+
+
         </div>
-        <div className="flex-grow flex items-center lg:w-auto">
-          <div className="nav-item flex-grow">
-            <div
-              className={`block mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
-            >
-              <MultiLevelDropDown
-                heading={"Masters"}
-                groups={mastersGroup}
-                pages={masters}
-              />
-            </div>
-            <div
-              className={`block mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
-            >
-              <MultiLevelDropDown
-                heading={"Transactions"}
-                groups={transactionsGroup}
-                pages={transactions}
-              />
-            </div>
-            <div
-              className={`block mt-4 lg:inline-block lg:mt-0  mr-4 ${navBatItemsStyle}`}
-            >
-              <MultiLevelDropDown
-                heading={"Reports"}
-                groups={reportGroups}
-                pages={reports}
-              />
+        <div className="mr-1 md:mr-9 flex items-center gap-1.5 sm:gap-3">
+
+
+          <PageSearch pageList={allowedPages} />
+          <div
+            className="text-lg cursor-pointer"
+            onClick={() => { setIsGlobalOpen(true) }}>
+            {GLOBE_ICON}
+          </div>
+          {/* <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-beige">
+                    <NotificationBell />
+                </div> */}
+
+          <div className="relative text-left">
+
+            <div className="relative text-left">
+              <button
+                ref={ref}
+                onClick={toggleNavMenu}
+                type="button"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-2xl"
+                id="menu-button"
+                aria-expanded="true"
+                aria-haspopup="true"
+              >
+                <img className="rounded-full cursor-pointer" width={'25px'}
+                  src={dp}
+                  alt="image" />
+
+              </button>
+              <div
+                className={`right-0 absolute mt-2 w-52 origin-top-right rounded-md bg-white z-50 shadow-lg border border-gray-100 ${navBatItemsStyle}`}
+              >
+                <div className="bg-gray-100 flex p-2 items-center rounded-lg relative z-50">
+                  <div className="mr-2 w-12">
+                    <img className="rounded-full" width={'30px'} height={'30px'} src={dp} alt="image" />
+                  </div>
+                  <div className="relative z-50">
+                    <div className="text-sm text-black my-0 py-0 font-medium">
+                      {secureLocalStorage.getItem(
+                        sessionStorage.getItem("sessionId") + "username"
+                      )}
+                    </div>
+                    <div className="text-[11px] p-0 text-gray-400 -mt-1">{singleData?.data?.email}</div>
+                  </div>
+                </div>
+                <button className="nav-dropdown-bg z-99 p-2 w-full" onClick={() => { dispatch(push({ id: 1000000, name: "ACCOUNT SETTINGS" })) }}>
+                  <pre>ACCOUNT SETTINGS</pre>
+                </button>
+                {allowedPages.filter((page) => page.type === "AdminAccess")?.map((item, index) => (
+                  <button
+                    key={index}
+                    type="link"
+                    className="nav-dropdown-bg z-99 p-2 text-start block w-full"
+                    onClick={(e) => {
+                      dispatch(push({ id: item.id, name: item.name }))
+                      secureLocalStorage.setItem(
+                        sessionStorage.getItem("sessionId") + "currentPage",
+                        item.id
+                      );
+                    }}
+                  >
+                    <pre>{item.name}</pre>
+                  </button>
+                ))}
+
+                <button className="nav-dropdown-bg z-50 p-2 w-full" onClick={() => setLogout(true)}>
+                  <pre>LOG OUT</pre>
+
+                </button>
+
+              </div>
             </div>
           </div>
-          <div className="nav-item flex justify-between gap-3 items-center">
-            <PageSearch pageList={allowedPages} />
-            <div
-              className="text-lg"
-              onClick={() => {
-                setIsGlobalOpen(true);
-              }}
-            >
-              {GLOBE_ICON}
-            </div>
-            <div className="flex">
-              {" "}
-              <p>WELCOME</p> &nbsp;{" "}
-              <pre>
-                {" "}
-                {secureLocalStorage.getItem(
-                  sessionStorage.getItem("sessionId") + "username",
-                )}
-              </pre>
-            </div>
-            <AccountDetailsDropDown
-              setLogout={setLogout}
-              items={allowedPages.filter((page) => page.type === "AdminAccess")}
-            />
-          </div>
         </div>
-      </nav>
-      <div
-        id="expireWarning"
-        className={
-          latestExpireDateWithinNDays()
-            ? "bg-yellow-600 justify-center  text-black gap-1 items-center block"
-            : "bg-yellow-600 justify-center  text-black gap-1 items-center hidden"
-        }
-      >
-        <p>
-          {" "}
-          Your Subscription Plan will Expire on{" "}
-          {secureLocalStorage.getItem(
-            sessionStorage.getItem("sessionId") + "latestActivePlanExpireDate",
-          )}
-          .{" "}
-        </p>
-        <span className="">
-          <CloseButtonOnly onClick={hideExpireWarning} />
-        </span>
+
       </div>
     </div>
   );

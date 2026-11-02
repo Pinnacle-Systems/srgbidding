@@ -2951,7 +2951,7 @@ model Indent {
   remarks            String?
   requiredDate       DateTime?
   indentType         String
-  status             String?           @default("DRAFT")
+  status             String?           @default("")
   approvedBy         User?             @relation("approvedBy", fields: [approvedById], references: [id])
   approvedById       Int?
   isDeleted          Boolean?          @default(false)
@@ -2994,6 +2994,7 @@ model IndentItems {
   qty               String?
   make              String?
   customData        Json?
+  status            String?             @default("")
   IndentItemVendors IndentItemVendors[]
   BiddingIndent     BiddingIndent[]
 }

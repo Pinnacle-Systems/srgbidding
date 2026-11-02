@@ -1,6 +1,6 @@
-import React from "react";
+import React, { Suspense, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { push, remove } from "../../../redux/features/opentabs";
+import { push, remove, clearAll } from "../../../redux/features/opentabs";
 import {
   CountryMaster,
   PageMaster,
@@ -111,10 +111,24 @@ const ActiveTabList = () => {
   const openTabs = useSelector((state) => state.openTabs);
   const dispatch = useDispatch();
   const [showHidden, setShowHidden] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const ref = useOutsideClick(() => {
     setShowHidden(false);
   });
+
+  const formatTabTitle = (name) => {
+    if (!name) return "";
+    if (name.toUpperCase() === "HOME") return "Home";
+    // If mixed case, return as-is
+    if (name !== name.toUpperCase() && name !== name.toLowerCase()) return name;
+    // Convert UPPERCASE to Title Case (e.g. "PAGE MASTER" -> "Page Master")
+    return name
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const tabs = {
     "PAGE MASTER": <PageMaster />,
@@ -221,185 +235,369 @@ const ActiveTabList = () => {
 
   const currentShowingTabs = openTabs.tabs.slice(0, parseInt(itemsToShow));
   const hiddenTabs = openTabs.tabs.slice(parseInt(itemsToShow));
+  const scrollRef = useRef(null);
+
+  const dropdownRef = useOutsideClick(() => setShowDropdown(false));
+
+
+  const handleWheel = (e) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
+    }
+  };
+
+  // Ensure tabs array is available and Home is present
+  const allTabs = useMemo(() => {
+    const list = openTabs?.tabs || [];
+    const hasHome = list.some((t) => t.name?.toUpperCase() === "BIDDING");
+    if (!hasHome) {
+      return [{ name: "BIDDING", active: list.length === 0 || list.every((t) => !t.active) }, ...list];
+    }
+    return list;
+  }, [openTabs?.tabs]);
 
   return (
     // <div className="relative ">
-    <div
-      className="w-full h-full min-h-0 flex flex-col overflow-hidden"
-      style={{ backgroundColor: "#F8F9FA" }}
-    >
-      <div className="flex justify-between shrink-0 border-b border-gray-300"
-        style={{ backgroundColor: "#F8F9FA" }}
-      >
-        {/* <div className="flex gap-1 pt-2 px-2 items-end">
-          {currentShowingTabs.map((tab, index) => (
-            <div
-              key={index}
-              className={`px-4 py-2 text-xs flex content-center items-center gap-3 transition-colors duration-150 cursor-pointer ${tab.active
-                ? "bg-white text-indigo-700 font-semibold border-t-[3px] border-indigo-700 rounded-t-md relative -mb-[1px] border-b border-b-white shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
-                : "bg-[#e5e7eb] text-gray-700 hover:bg-gray-300 rounded-t-md border border-transparent"
-                }`}
-            >
-              <button
-                onClick={() => {
-                  dispatch(push({ name: tab.name }));
-                }}
-                className="whitespace-nowrap"
-              >
-                {tab.name}
-              </button>
-              <button
-                className={`p-0.5 rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active ? "hover:bg-indigo-100 text-indigo-700" : "hover:bg-gray-400 text-gray-600"
-                  }`}
-                onClick={() => {
-                  dispatch(remove({ name: tab.name }));
-                }}
-              >
-                {CLOSE_ICON}
-              </button>
-            </div>
-          ))}
-        </div>
-        <div>
-          {hiddenTabs.length !== 0 && (
-            <button onClick={() => setShowHidden(true)}>
-              {DOUBLE_NEXT_ICON}
-            </button>
-          )}
-        </div>
-        {showHidden && (
-          <ul
-            ref={ref}
-            className="absolute right-0 top-5 bg-gray-200 z-50 text-xs p-1"
-          >
-            {hiddenTabs.map((tab) => (
-              <li
-                key={tab.name}
-                className={`flex justify-between  ${tab.active ? "bg-[#009688]" : "bg-gray-300"
-                  } `}
-              >
-                <button
-                  onClick={() => {
-                    dispatch(push({ name: tab.name }));
-                  }}
-                >
-                  {tab.name}
-                </button>
-                <button
-                  className="hover:bg-red-400 px-1 rounded-xs transition"
-                  onClick={() => {
-                    dispatch(remove({ name: tab.name }));
-                  }}
-                >
-                  {CLOSE_ICON}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )} */}
-        <div
-          className="relative flex justify-between shrink-0 "
-          style={{ backgroundColor: "#F8F9FA" }}
+    // <div
+    //   className="w-full h-full min-h-0 flex flex-col overflow-hidden"
+    //   style={{ backgroundColor: "#F8F9FA" }}
+    // >
+    //   <div className="flex justify-between shrink-0 border-b border-gray-300"
+    //     style={{ backgroundColor: "#F8F9FA" }}
+    //   >
+    //     {/* <div className="flex gap-1 pt-2 px-2 items-end">
+    //       {currentShowingTabs.map((tab, index) => (
+    //         <div
+    //           key={index}
+    //           className={`px-4 py-2 text-xs flex content-center items-center gap-3 transition-colors duration-150 cursor-pointer ${tab.active
+    //             ? "bg-white text-indigo-700 font-semibold border-t-[3px] border-indigo-700 rounded-t-md relative -mb-[1px] border-b border-b-white shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
+    //             : "bg-[#e5e7eb] text-gray-700 hover:bg-gray-300 rounded-t-md border border-transparent"
+    //             }`}
+    //         >
+    //           <button
+    //             onClick={() => {
+    //               dispatch(push({ name: tab.name }));
+    //             }}
+    //             className="whitespace-nowrap"
+    //           >
+    //             {tab.name}
+    //           </button>
+    //           <button
+    //             className={`p-0.5 rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active ? "hover:bg-indigo-100 text-indigo-700" : "hover:bg-gray-400 text-gray-600"
+    //               }`}
+    //             onClick={() => {
+    //               dispatch(remove({ name: tab.name }));
+    //             }}
+    //           >
+    //             {CLOSE_ICON}
+    //           </button>
+    //         </div>
+    //       ))}
+    //     </div>
+    //     <div>
+    //       {hiddenTabs.length !== 0 && (
+    //         <button onClick={() => setShowHidden(true)}>
+    //           {DOUBLE_NEXT_ICON}
+    //         </button>
+    //       )}
+    //     </div>
+    //     {showHidden && (
+    //       <ul
+    //         ref={ref}
+    //         className="absolute right-0 top-5 bg-gray-200 z-50 text-xs p-1"
+    //       >
+    //         {hiddenTabs.map((tab) => (
+    //           <li
+    //             key={tab.name}
+    //             className={`flex justify-between  ${tab.active ? "bg-[#009688]" : "bg-gray-300"
+    //               } `}
+    //           >
+    //             <button
+    //               onClick={() => {
+    //                 dispatch(push({ name: tab.name }));
+    //               }}
+    //             >
+    //               {tab.name}
+    //             </button>
+    //             <button
+    //               className="hover:bg-red-400 px-1 rounded-xs transition"
+    //               onClick={() => {
+    //                 dispatch(remove({ name: tab.name }));
+    //               }}
+    //             >
+    //               {CLOSE_ICON}
+    //             </button>
+    //           </li>
+    //         ))}
+    //       </ul>
+    //     )} */}
+    //     <div
+    //       className="relative flex justify-between shrink-0 "
+    //       style={{ backgroundColor: "#F8F9FA" }}
+    //     >
+    //       {/* Tab strip */}
+    //       <div
+    //         role="tablist"
+    //         className="flex  items-end overflow-hidden"
+    //       >
+    //         {currentShowingTabs.map((tab) => (
+    //           <div
+    //             key={tab.name}
+    //             role="tab"
+    //             aria-selected={tab.active}
+    //             tabIndex={0}
+    //             onClick={() => dispatch(push({ name: tab.name }))}
+    //             onKeyDown={(e) => {
+    //               if (e.key === "Enter") dispatch(push({ name: tab.name }));
+    //               if (e.key === "Delete") dispatch(remove({ name: tab.name }));
+    //             }}
+    //             className={` shrink-0 px-2 py-1 text-[11px] uppercase flex items-center gap-3 bg-[#F5F6F8]  cursor-pointer transition-colors duration-150 ${tab.active
+    //               ? "bg-white text-indigo-700 font-semibold border-r-[1px] border-b-[2px] border-indigo-700 relative -mb-px shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
+    //               : " text-gray-700  border-transparent"
+    //               }`}
+    //           >
+    //             <span className="whitespace-nowrap">{tab.name}</span>
+
+    //             <button
+    //               type="button"
+    //               aria-label={`Close ${tab.name}`}
+    //               onClick={(e) => {
+    //                 e.stopPropagation(); // don't also select the tab
+    //                 dispatch(remove({ name: tab.name }));
+    //               }}
+    //               className={`rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active
+    //                 ? "text-indigo-700 hover:bg-indigo-100"
+    //                 : "text-gray-600 hover:bg-gray-400"
+    //                 }`}
+    //             >
+    //               {CLOSE_ICON}
+    //             </button>
+    //           </div>
+    //         ))}
+    //       </div>
+
+    //       {/* Overflow button */}
+    //       {hiddenTabs.length !== 0 && (
+    //         <div className="flex items-center px-2">
+    //           <button
+    //             type="button"
+    //             aria-label="Show hidden tabs"
+    //             onClick={() => setShowHidden(true)}
+    //             className="p-1 rounded hover:bg-gray-200"
+    //           >
+    //             {DOUBLE_NEXT_ICON}
+    //           </button>
+    //         </div>
+    //       )}
+
+    //       {/* Hidden tabs dropdown */}
+    //       {showHidden && (
+    //         <ul
+    //           ref={ref}
+    //           className="absolute right-2 top-full mt-1 min-w-[200px] bg-white border border-gray-200 rounded-md shadow-lg z-50 text-xs p-1"
+    //         >
+    //           {hiddenTabs.map((tab) => (
+    //             <li
+    //               key={tab.name}
+    //               onClick={() => {
+    //                 dispatch(push({ name: tab.name }));
+    //                 setShowHidden(false);
+    //               }}
+    //               className={`flex justify-between items-center gap-3 px-3 py-2 rounded cursor-pointer uppercase ${tab.active
+    //                 ? "bg-indigo-50 text-indigo-700 font-semibold"
+    //                 : "hover:bg-gray-100 text-gray-700"
+    //                 }`}
+    //             >
+    //               <span className="whitespace-nowrap">{tab.name}</span>
+    //               <button
+    //                 type="button"
+    //                 aria-label={`Close ${tab.name}`}
+    //                 className="hover:bg-red-100 text-gray-600 hover:text-red-600 px-1 rounded transition"
+    //                 onClick={(e) => {
+    //                   e.stopPropagation();
+    //                   dispatch(remove({ name: tab.name }));
+    //                 }}
+    //               >
+    //                 {CLOSE_ICON}
+    //               </button>
+    //             </li>
+    //           ))}
+    //         </ul>
+    //       )}
+    //     </div>
+    //   </div>
+    //   {openTabs.tabs.map((tab, index) => (
+    //     <div
+    //       key={index}
+    //       className={`${tab.active ? "block" : "hidden"} flex-1 min-h-0 overflow-hidden`}
+    //     >
+    //       {tabs[tab.name]}
+    //     </div>
+    //   ))}
+    // </div>
+    <div className="relative w-full">
+      {/* Top Tab Bar Navigation */}
+      <div className="w-full bg-[#f8fafc] border-b border-gray-200 px-2.5 py-1 flex items-center justify-between gap-1.5 select-none text-xs">
+        {/* Scroll Left Button */}
+        <button
+          type="button"
+          onClick={scrollLeft}
+          className="text-gray-400 hover:text-gray-700 hover:bg-gray-200/60 p-1 rounded transition hidden md:flex items-center justify-center shrink-0"
+          title="Scroll Left"
         >
-          {/* Tab strip */}
-          <div
-            role="tablist"
-            className="flex  items-end overflow-hidden"
-          >
-            {currentShowingTabs.map((tab) => (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Scrollable Tabs Wrapper */}
+        <div
+          ref={scrollRef}
+          onWheel={handleWheel}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth flex-1 py-0.5"
+        >
+          {allTabs.map((tab, index) => {
+            const isHome = tab.name?.toUpperCase() === "HOME";
+            const isActive = !!tab.active;
+            const displayName = formatTabTitle(tab.name);
+
+            return (
               <div
-                key={tab.name}
-                role="tab"
-                aria-selected={tab.active}
-                tabIndex={0}
+                key={tab.name || index}
                 onClick={() => dispatch(push({ name: tab.name }))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") dispatch(push({ name: tab.name }));
-                  if (e.key === "Delete") dispatch(remove({ name: tab.name }));
-                }}
-                className={` shrink-0 px-2 py-1 text-[11px] uppercase flex items-center gap-3 bg-[#F5F6F8]  cursor-pointer transition-colors duration-150 ${tab.active
-                  ? "bg-white text-indigo-700 font-semibold border-r-[1px] border-b-[2px] border-indigo-700 relative -mb-px shadow-[0_-2px_4px_rgba(0,0,0,0.05)]"
-                  : " text-gray-700  border-transparent"
+                className={`group flex items-center shrink-0 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-150 ${isActive
+                  ? "bg-[#e0562c] text-white shadow-xs px-2.5 py-0.5"
+                  : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80 px-2.5 py-0.5"
                   }`}
               >
-                <span className="whitespace-nowrap">{tab.name}</span>
+                <span className="whitespace-nowrap select-none">{displayName}</span>
 
-                <button
-                  type="button"
-                  aria-label={`Close ${tab.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation(); // don't also select the tab
-                    dispatch(remove({ name: tab.name }));
-                  }}
-                  className={`rounded-full transition-colors flex items-center justify-center w-4 h-4 ${tab.active
-                    ? "text-indigo-700 hover:bg-indigo-100"
-                    : "text-gray-600 hover:bg-gray-400"
-                    }`}
-                >
-                  {CLOSE_ICON}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Overflow button */}
-          {hiddenTabs.length !== 0 && (
-            <div className="flex items-center px-2">
-              <button
-                type="button"
-                aria-label="Show hidden tabs"
-                onClick={() => setShowHidden(true)}
-                className="p-1 rounded hover:bg-gray-200"
-              >
-                {DOUBLE_NEXT_ICON}
-              </button>
-            </div>
-          )}
-
-          {/* Hidden tabs dropdown */}
-          {showHidden && (
-            <ul
-              ref={ref}
-              className="absolute right-2 top-full mt-1 min-w-[200px] bg-white border border-gray-200 rounded-md shadow-lg z-50 text-xs p-1"
-            >
-              {hiddenTabs.map((tab) => (
-                <li
-                  key={tab.name}
-                  onClick={() => {
-                    dispatch(push({ name: tab.name }));
-                    setShowHidden(false);
-                  }}
-                  className={`flex justify-between items-center gap-3 px-3 py-2 rounded cursor-pointer uppercase ${tab.active
-                    ? "bg-indigo-50 text-indigo-700 font-semibold"
-                    : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                >
-                  <span className="whitespace-nowrap">{tab.name}</span>
+                {/* Close button for non-home tabs */}
+                {!isHome && (
                   <button
                     type="button"
-                    aria-label={`Close ${tab.name}`}
-                    className="hover:bg-red-100 text-gray-600 hover:text-red-600 px-1 rounded transition"
                     onClick={(e) => {
                       e.stopPropagation();
                       dispatch(remove({ name: tab.name }));
                     }}
+                    className={`ml-1.5 rounded-full w-3.5 h-3.5 flex items-center justify-center text-[9px] font-bold leading-none transition-all ${isActive
+                      ? "text-white/80 hover:text-white hover:bg-black/20"
+                      : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+                      }`}
+                    title={`Close ${displayName}`}
                   >
-                    {CLOSE_ICON}
+                    ✕
                   </button>
-                </li>
-              ))}
-            </ul>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Clear All Pill Button */}
+          <button
+            type="button"
+            onClick={() => dispatch(clearAll())}
+            className="text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 bg-white font-medium text-[11px] px-2.5 py-0.5 rounded-md shadow-xs transition-all cursor-pointer select-none shrink-0"
+            title="Clear all tabs except Home"
+          >
+            Clear All
+          </button>
+        </div>
+
+        {/* Scroll Right Button & Overflow Dropdown */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={scrollRight}
+            className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-full transition hidden md:flex items-center justify-center shrink-0"
+            title="Scroll Right"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Tab quick switcher dropdown */}
+          {allTabs.length > 3 && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1 rounded-full transition flex items-center justify-center"
+                title="View all open tabs"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showDropdown && (
+                <div className="absolute right-0 top-7 mt-1 w-52 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1 text-xs">
+                  <div className="px-3 py-1 font-semibold text-gray-500 border-b border-gray-100 uppercase tracking-wider text-[10px]">
+                    Open Tabs ({allTabs.length})
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {allTabs.map((tab) => {
+                      const isHome = tab.name?.toUpperCase() === "HOME";
+                      const displayName = isHome ? "Home" : formatTabTitle(tab.name);
+                      return (
+                        <div
+                          key={tab.name}
+                          onClick={() => {
+                            dispatch(push({ name: tab.name }));
+                            setShowDropdown(false);
+                          }}
+                          className={`flex items-center justify-between px-3 py-1.5 cursor-pointer hover:bg-gray-50 transition ${tab.active ? "bg-orange-50 text-[#e0562c] font-medium" : "text-gray-700"
+                            }`}
+                        >
+                          <span className="truncate">{displayName}</span>
+                          {!isHome && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dispatch(remove({ name: tab.name }));
+                              }}
+                              className="text-red-400 hover:text-red-600 ml-2 p-0.5 rounded-full hover:bg-red-50 text-[10px]"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
-      {openTabs.tabs.map((tab, index) => (
-        <div
-          key={index}
-          className={`${tab.active ? "block" : "hidden"} flex-1 min-h-0 overflow-hidden`}
-        >
-          {tabs[tab.name]}
-        </div>
-      ))}
+
+      {/* Tab Panels */}
+      <div className="w-full">
+        {allTabs.map((tab, index) => (
+          <div key={tab.name || index} className={tab.active ? "block" : "hidden"}>
+            <Suspense fallback={<div className="p-4 text-gray-400 text-sm">Loading...</div>}>
+              {typeof tabs[tab.name] === "function"
+                ? tabs[tab.name](tab.data)
+                : (tabs[tab.name] || tabs[tab.name?.toUpperCase()] || null)}
+            </Suspense>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

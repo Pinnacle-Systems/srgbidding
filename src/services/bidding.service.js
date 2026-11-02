@@ -256,11 +256,49 @@ const buildLotNestedCreate = (lotsList = []) => {
   });
 };
 
+// Helper to extract unique Indent IDs and update their status (DRAFT / PUBLISHED / etc.)
+const updateIndentsStatus = async (lotsList, newStatus, fallbackBidId = null, client = prisma) => {
+  const indentIds = [];
+
+  if (Array.isArray(lotsList)) {
+    lotsList.forEach((lot) => {
+      const indents = lot.indents || lot.BiddingIndent || [];
+      indents.forEach((ind) => {
+        const id = parseId(ind.id);
+        if (id) indentIds.push(id);
+      });
+    });
+  }
+
+  // If lotsList wasn't passed or indentIds not found directly, check existing records in database
+  if (indentIds.length === 0 && fallbackBidId) {
+    const existing = await client.BiddingIndent.findMany({
+      where: { BiddingLots: { biddingId: fallbackBidId } },
+      select: { indentId: true },
+    });
+    existing.forEach((item) => {
+      if (item.indentId) indentIds.push(item.indentId);
+    });
+  }
+
+  const uniqueIndentIds = [...new Set(indentIds)];
+
+  if (uniqueIndentIds.length > 0) {
+    await client.IndentItems.updateMany({
+      where: {
+        id: { in: uniqueIndentIds },
+      },
+      data: {
+        status: newStatus,
+      },
+    });
+  }
+
+  return uniqueIndentIds;
+};
 
 async function create(body) {
-
-
-  const { finYearId, branchId, draftSave } = body
+  const { finYearId, branchId, draftSave } = body;
 
   const details = body.details || {};
   const terms = body.terms || {};
@@ -288,48 +326,54 @@ async function create(body) {
   const parsedQueryDeadline = parseDate(queryDeadline);
   const parsedClosingDate = parseDate(closingDate) || parsedEndDate;
 
-
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
   let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, status,);
 
-
-
-  const data = await prisma.Bidding.create({
-    data: {
-      name: name || (bidNo ? `Bid ${bidNo}` : "New Bid"),
-      docId: newDocId,
-      bidNo: bidNo || null,
-      bidDate: bidDate ? String(bidDate) : null,
-      closingDate: parsedClosingDate,
-      submissionDeadline: parsedSubmissionDeadline,
-      queryDeadline: parsedQueryDeadline,
-      termsTemplate: termsTemplate || null,
-      description: description,
-      startDate: parsedStartDate,
-      endDate: parsedEndDate,
-      status: status || "DRAFT",
-      branchId: parseId(branchId) || parseId(body.user?.branchId),
-      createdById: parseId(body.user?.id),
-      BiddingLots: {
-        create: buildLotNestedCreate(lotsList)
-      }
-    },
-    include: {
-      BiddingLots: {
-        include: {
-          BiddingIndent: {
-            include: {
-              BiddingIndentvendors: {
-                include: {
-                  Vendor: true
+  // Wrap all database operations in an atomic transaction
+  const data = await prisma.$transaction(async (tx) => {
+    const createdBid = await tx.Bidding.create({
+      data: {
+        name: name || (bidNo ? `Bid ${bidNo}` : "New Bid"),
+        docId: newDocId,
+        bidNo: bidNo || null,
+        bidDate: bidDate ? String(bidDate) : null,
+        closingDate: parsedClosingDate,
+        submissionDeadline: parsedSubmissionDeadline,
+        queryDeadline: parsedQueryDeadline,
+        termsTemplate: termsTemplate || null,
+        description: description,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        status: status || "DRAFT",
+        branchId: parseId(branchId) || parseId(body.user?.branchId),
+        createdById: parseId(body.user?.id),
+        BiddingLots: {
+          create: buildLotNestedCreate(lotsList)
+        }
+      },
+      include: {
+        BiddingLots: {
+          include: {
+            BiddingIndent: {
+              include: {
+                BiddingIndentvendors: {
+                  include: {
+                    Vendor: true
+                  }
                 }
               }
             }
           }
         }
       }
-    }
+    });
+
+    // Update associated indents status atomically within the same transaction
+    const indentStatus = status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
+    await updateIndentsStatus(lotsList, indentStatus, null, tx);
+
+    return createdBid;
   });
 
   return { statusCode: 0, data };
@@ -368,53 +412,62 @@ async function update(id, body) {
 
   const lotsList = body.lots || body.BiddingLots;
 
-  // If lots are passed in an update, delete existing child lots and recreate them
-  if (Array.isArray(lotsList)) {
-    await prisma.BiddingLots.deleteMany({
-      where: { biddingId: bidId }
-    });
-  }
+  // Wrap all updates and indent status syncing in an atomic transaction
+  const data = await prisma.$transaction(async (tx) => {
+    // If lots are passed in an update, delete existing child lots and recreate them
+    if (Array.isArray(lotsList)) {
+      await tx.BiddingLots.deleteMany({
+        where: { biddingId: bidId }
+      });
+    }
 
-  const data = await prisma.Bidding.update({
-    where: { id: bidId },
-    data: {
-      name: name !== undefined ? name : dataFound.name,
-      docId: docId !== undefined ? docId : dataFound.docId,
-      bidNo: bidNo !== undefined ? bidNo : dataFound.bidNo,
-      bidDate: bidDate !== undefined ? (bidDate ? String(bidDate) : null) : dataFound.bidDate,
-      closingDate: parsedClosingDate !== null ? parsedClosingDate : dataFound.closingDate,
-      submissionDeadline: parsedSubmissionDeadline !== null ? parsedSubmissionDeadline : dataFound.submissionDeadline,
-      queryDeadline: parsedQueryDeadline !== null ? parsedQueryDeadline : dataFound.queryDeadline,
-      termsTemplate: termsTemplate !== undefined ? termsTemplate : dataFound.termsTemplate,
-      description: description !== undefined ? description : dataFound.description,
-      startDate: parsedStartDate || dataFound.startDate,
-      endDate: parsedEndDate || dataFound.endDate,
-      status: status !== undefined ? status : dataFound.status,
-      branchId: parseId(branchId) || dataFound.branchId,
-      updatedById: parseId(body.user?.id) || dataFound.updatedById,
-      ...(Array.isArray(lotsList) && lotsList.length > 0
-        ? {
-          BiddingLots: {
-            create: buildLotNestedCreate(lotsList),
-          },
-        }
-        : {}),
-    },
-    include: {
-      BiddingLots: {
-        include: {
-          BiddingIndent: {
-            include: {
-              BiddingIndentvendors: {
-                include: {
-                  Vendor: true,
+    const updatedBid = await tx.Bidding.update({
+      where: { id: bidId },
+      data: {
+        name: name !== undefined ? name : dataFound.name,
+        docId: docId !== undefined ? docId : dataFound.docId,
+        bidNo: bidNo !== undefined ? bidNo : dataFound.bidNo,
+        bidDate: bidDate !== undefined ? (bidDate ? String(bidDate) : null) : dataFound.bidDate,
+        closingDate: parsedClosingDate !== null ? parsedClosingDate : dataFound.closingDate,
+        submissionDeadline: parsedSubmissionDeadline !== null ? parsedSubmissionDeadline : dataFound.submissionDeadline,
+        queryDeadline: parsedQueryDeadline !== null ? parsedQueryDeadline : dataFound.queryDeadline,
+        termsTemplate: termsTemplate !== undefined ? termsTemplate : dataFound.termsTemplate,
+        description: description !== undefined ? description : dataFound.description,
+        startDate: parsedStartDate || dataFound.startDate,
+        endDate: parsedEndDate || dataFound.endDate,
+        status: status !== undefined ? status : dataFound.status,
+        branchId: parseId(branchId) || dataFound.branchId,
+        updatedById: parseId(body.user?.id) || dataFound.updatedById,
+        ...(Array.isArray(lotsList) && lotsList.length > 0
+          ? {
+            BiddingLots: {
+              create: buildLotNestedCreate(lotsList),
+            },
+          }
+          : {}),
+      },
+      include: {
+        BiddingLots: {
+          include: {
+            BiddingIndent: {
+              include: {
+                BiddingIndentvendors: {
+                  include: {
+                    Vendor: true,
+                  },
                 },
               },
             },
           },
         },
       },
-    },
+    });
+
+    // Update associated indents status atomically within the same transaction
+    const targetStatus = (status !== undefined ? status : dataFound.status) === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
+    await updateIndentsStatus(lotsList, targetStatus, bidId, tx);
+
+    return updatedBid;
   });
 
   return { statusCode: 0, data, message: "Bid updated successfully" };
@@ -428,8 +481,13 @@ async function remove(id) {
 
   if (!dataFound) return NoRecordFound("Bidding");
 
-  const data = await prisma.Bidding.delete({
-    where: { id: bidId },
+  const data = await prisma.$transaction(async (tx) => {
+    // Revert indent status back to APPROVED so the indent is free to be bid again
+    await updateIndentsStatus([], "APPROVED", bidId, tx);
+
+    return await tx.Bidding.delete({
+      where: { id: bidId },
+    });
   });
 
   return { statusCode: 0, data, message: "Bid deleted successfully" };

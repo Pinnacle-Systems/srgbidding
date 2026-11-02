@@ -3,8 +3,8 @@ import { useDispatch } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
 import { push } from "../../redux/features/opentabs";
 
-export default function  
- MultiLevelDropDown({ heading, pages, groups }) {
+export default function
+    MultiLevelDropDown({ heading, pages, groups }) {
     const style = `/* since nested groupes are not supported we have to use 
     regular css for the nested dropdowns 
  */
@@ -32,7 +32,7 @@ export default function
                 <button
                     className="outline-none focus:outline-none px-3 py-1 rounded-sm flex items-center min-w-32"
                 >
-                    <span className="pr-1 text-sm font-semibold flex-1">{heading}</span>
+                    <span className="pr-1 text-[13px]  text-gray-600  flex-1">{heading}</span>
                     <span>
                         <svg
                             className="fill-current h-4 w-4 transform group-hover:-rotate-180 transition duration-150 ease-in-out"
@@ -52,7 +52,7 @@ export default function
                             <button
                                 className="w-full text-left flex items-center p-3 hover:bg-blue-200 rounded outline-none focus:outline-none"
                             >
-                                <span className="pr-1 text-xs font-semibold flex-1">{group?.name}</span>
+                                <span className="pr-1 text-[12px]  font-semibold flex-1">{group?.name}</span>
                                 <span className="mr-auto">
                                     <svg
                                         className="fill-current h-4 w-4 transition duration-150 ease-in-out"
@@ -73,7 +73,7 @@ export default function
                                             sessionStorage.getItem("sessionId") + "currentPage",
                                             page?.id
                                         );
-                                    }} className="rounded-md text-xs relative font-semibold px-3 py-1.5 hover:bg-blue-200 p-3 cursor-pointer">
+                                    }} className="rounded-md text-[12px]  relative font-semibold px-3 py-1.5 hover:bg-blue-200 p-3 cursor-pointer">
                                         {page?.name}
                                     </li>
                                 )}

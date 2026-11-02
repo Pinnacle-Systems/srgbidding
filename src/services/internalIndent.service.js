@@ -233,17 +233,33 @@ async function getOne(id) {
 }
 
 async function getIndentItems(req) {
+  const { status, excludeStatus } = req?.query || {};
+
+  const indentWhere = {};
+  if (status) {
+    indentWhere.status = status;
+  } else if (excludeStatus) {
+    indentWhere.status = { notIn: Array.isArray(excludeStatus) ? excludeStatus : [excludeStatus] };
+  } else {
+    // By default, exclude indents that are already in active bidding (PUBLISHED)
+    indentWhere.status = { notIn: ["PUBLISHED"] };
+  }
+
   const data = await prisma.IndentItems.findMany({
+    where: {
+      Indent: indentWhere,
+    },
     include: {
       Indent: {
         select: {
+          id: true,
           docId: true,
           createdAt: true,
           remarks: true,
           Department: { select: { name: true } },
           Employee: { select: { name: true } },
-          indentType: true
-
+          indentType: true,
+          status: true,
         }
       },
       IndentItemVendors: true,
@@ -257,8 +273,6 @@ async function getIndentItems(req) {
       Fabric: { select: { name: true } },
       YarnBlend: { select: { name: true } },
       Counts: { select: { name: true } }
-
-
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");

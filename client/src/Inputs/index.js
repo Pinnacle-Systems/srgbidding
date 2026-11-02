@@ -37,11 +37,11 @@ import { UserPermissions } from "../Utils/UserPermissions";
 import Swal from "sweetalert2";
 import { usePermissionForUsers } from "../Basic/components/HasPermission";
 
-const FORM_LABEL_CLASS = "block text-inter-regular-11  font-bold text-[#697386] mb-1";
+const FORM_LABEL_CLASS = "block   font-semibold text-[11px] text-slate-800  mb-1";
 const FORM_LABEL_MUTED_CLASS = "block text-inter-regular-11  font-bold text-[#697386] mb-1";
 const INLINE_LABEL_CLASS =
-  "md:text-start flex text-inter-regular-11  text-[#697386]";
-const FORM_INPUT_TEXT_CLASS = "text-inter-regular-11 text-[12px] text-[#263145]";
+  "md:text-start flex   text-[#697386]";
+const FORM_INPUT_TEXT_CLASS = " text-[12px] text-[#263145]";
 
 export const handleOnChange = (event, setValue, type) => {
   const inputValue = event.target.value;

@@ -15,8 +15,20 @@ const IndentTypeMasterApi = createApi({
       }),
       providesTags: ["IndentTypeMaster"],
     }),
+
     getIndentTypeMasterByName: builder.query({
-      query: (name) => `${INDENT_TYPE_MASTER_API}/${name}`,
+      query: (arg) => {
+        const name = typeof arg === "object" ? arg?.name : arg;
+        const params = typeof arg === "object" ? arg?.params : undefined;
+        return {
+          url: `${INDENT_TYPE_MASTER_API}/${name}`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          ...(params ? { params } : {}),
+        };
+      },
       providesTags: ["IndentTypeMaster"],
     }),
     saveIndentTypeMaster: builder.mutation({

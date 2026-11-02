@@ -25,7 +25,7 @@ export default function YarnTable({
 }) {
 
 
-    const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-white  tracking-wider border border-gray-300";
+    const headerClasses = "px-2 py-1.5 text-left text-[11px] font-bold text-slate-700  tracking-wider border border-gray-300";
     const cellClasses = "px-0.5 py-0 border border-gray-300 relative";
     const inputClasses = "w-full h-5 border border-transparent bg-transparent px-2 text-[10px] text-gray-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded transition-all disabled:bg-slate-50 disabled:text-gray-500 disabled:cursor-not-allowed placeholder:text-gray-400";
     const numInputClasses = `${inputClasses} text-right`;
@@ -57,9 +57,9 @@ export default function YarnTable({
                 panelClassName="h-full min-h-0"
                 contentClassName="min-h-0 overflow-hidden rounded-b-lg !py-0 bg-white"
             >
-                <div className="h-full overflow-x-auto overflow-y-auto custom-scrollbar">
+                <div className="h-full overflow-x-auto overflow-y-auto custom-scrollbar border-4 border-l-cyan-600">
                     <table className="w-full border-collapse bg-white">
-                        <thead className="bg-[#5147B8] sticky top-0 z-10 ">
+                        <thead className="bg-gray-200 sticky top-0 z-10 text-slate-700">
                             <tr>
                                 <th className={`${headerClasses} w-12 text-center`}>S.no</th>
                                 <th className={`${headerClasses} w-64`}>Yarn Name</th>
@@ -189,15 +189,15 @@ export default function YarnTable({
                                 );
                             })}
                         </tbody>
-                        <tfoot className="sticky bottom-0  z-10 bg-[#E1E7FC] h-[4px] ">
+                        <tfoot className="sticky bottom-0  z-10 bg-gray-200 h-[4px] ">
                             <tr>
-                                <td colSpan={1} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
+                                <td colSpan={4} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
                                 </td>
-                                <td colSpan={2} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
+                                <td colSpan={1} className="px-2 py-1 text-[11px] font-bold text-gray-700 border border-gray-300">
                                     Total  {indentItems?.filter(i => i?.yarnId)?.length || 0} Items
                                 </td>
-                                <td colSpan={4 + dynamicFields.length} className="px-2 py-1.5 text-[11px] border justify-end"></td>
-                                <td colSpan={1} className="px-2 py-1.5 text-[11px] border text-end">
+                                <td colSpan={dynamicFields.length + 2} className="px-2 py-1.5 text-[11px] border justify-end"></td>
+                                <td colSpan={1} className="px-2 py-1.5 font-bold text-gray-700 text-[11px] border text-end">
                                     {indentItems?.filter(i => i?.yarnId)?.reduce((acc, item) => acc + Number(item?.qty || 0), 0).toFixed(2)}
                                 </td>
                             </tr>

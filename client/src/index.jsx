@@ -10,16 +10,16 @@ import { Font } from '@react-pdf/renderer'
 import timesRomanFontUrl from "../fonts/times new roman.ttf";
 import timesBoldFontUrl from "../fonts/times new roman bold.ttf";
 
-Font.register({
-  family: 'Times-Roman',
-  src: timesRomanFontUrl,
+// Font.register({
+//   family: 'Times-Roman',
+//   src: timesRomanFontUrl,
  
   
-})
-Font.register({
-  family: 'Times-Bold',
-  src: timesBoldFontUrl,
-})
+// })
+// Font.register({
+//   family: 'Times-Bold',
+//   src: timesBoldFontUrl,
+// })
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

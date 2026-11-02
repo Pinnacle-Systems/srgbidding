@@ -2,15 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+* {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.form-font {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px;
+}
+
 label {
-  font-family: "Inter", sans-serif;
+  font-family: "Poppins", sans-serif;
   z-index: 0;
 }
 
 .table-data {
-  font-family: "Inter", sans-serif;
+  font-family: 'Poppins', sans-serif !important;
 }
 
 .Select {
@@ -265,7 +274,8 @@ label {
   border-radius: 14px !important;
   padding: 28px 24px 20px !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  font-family: inherit !important;
+  font-family: 'Poppins', sans-serif !important;
+
 }
 
 .swal2-title {

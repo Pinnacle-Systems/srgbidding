@@ -71,9 +71,19 @@ export const openTabs = createSlice({
       state.tabs = state.tabs.filter((tab) => tab.name !== action.payload.name);
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
+    clearAll: (state) => {
+      const homeTab = state.tabs.find(
+        (tab) => tab.name?.toUpperCase() === "BIDDING"
+      );
+      if (homeTab) {
+        state.tabs = [{ ...homeTab, active: true }];
+      } else {
+        state.tabs = [{ name: "BIDDING", active: true }];
+      }
+    },
   },
 });
 
-export const { push, remove, clearTabParams } = openTabs.actions;
+export const { push, remove, clearTabParams, clearAll } = openTabs.actions;
 
 export default openTabs.reducer;

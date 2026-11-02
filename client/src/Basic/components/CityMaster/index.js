@@ -30,7 +30,7 @@ import {
 } from "../../../Utils/contructObject";
 import Loader from "../Loader";
 import { useDispatch } from "react-redux";
-import { Check, Power } from "lucide-react";
+import { Check, PlusIcon, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
@@ -557,7 +557,7 @@ export default function Form({
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1 ">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
+      {/* <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-lg font-bold text-gray-800">City Master</h5>
         <div className="flex items-center">
           <button
@@ -567,7 +567,31 @@ export default function Form({
             + Add New City
           </button>
         </div>
-      </div>
+      </div> */}
+      <header className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-1 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="h-8 w-1 shrink-0 rounded-full bg-[#E0562C]"
+          />
+          <div className="min-w-0">
+            <h2 className={`truncate  font-semibold leading-tight text-slate-900`}>City Master</h2>
+
+          </div>
+        </div>
+
+
+        <button
+          type="button"
+          onClick={handleCreate}
+          className="inline-flex items-center gap-2 rounded-md bg-[#E0562C] hover:bg-[#e0562cf2] px-2 py-1 text-sm font-medium text-white shadow-sm transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0562C] focus-visible:ring-offset-2 active:bg-indigo-800"
+        >
+          <PlusIcon />
+          Add New City
+        </button>
+
+      </header>
+
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
         <ReusableTable
