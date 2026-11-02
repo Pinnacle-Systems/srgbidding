@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useGetInternalIndentItemsQuery } from '../../../../redux/uniformService/InternalIndent';
 import Modal from '../../../../UiComponents/Modal';
 import { DEFAULT_DEMO_LOTS } from './demoLots';
-import LotRow from './LotRow';
+import LotRail from './LotRail';
+import LotWorkspace from './LotWorkspace';
+import { countUpdateNeeded, getLotVendors } from './indentHelpers';
 import IndentSelection from './IndentSelection';
 import IndentChatDrawer from './IndentChatDrawer';
 
@@ -29,7 +31,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
   console.log(bidData, "bidData")
 
   const [activeLotId, setActiveLotId] = useState(null);
-  const [expandedLotId, setExpandedLotId] = useState(101); // Default expand Lot 1 as in Image 2
+  const [selectedLotId, setSelectedLotId] = useState(null); // null → first lot
 
   // Chat & Document drawer state
   const [chatDrawerState, setChatDrawerState] = useState({
@@ -93,10 +95,6 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
         lot.id === lotId ? { ...lot, indents: lot.indents.filter(i => i.id !== indentId) } : lot
       )
     }));
-  };
-
-  const toggleExpandLot = (lotId) => {
-    setExpandedLotId(prev => (prev === lotId ? null : lotId));
   };
 
   const handleOpenDrawer = (indent, tab = 'docs') => {
@@ -191,6 +189,16 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
   const activeLot = (bidData.lots || []).find(l => l.id === activeLotId);
   const dataSource = internalIndentData?.data || [];
 
+  // Lot shown in the workspace (falls back to the first lot, e.g. after a lot is removed)
+  const lots = bidData.lots || [];
+  const selectedLot = lots.find(l => l.id === selectedLotId) || lots[0];
+  const selectedLotIndex = selectedLot ? lots.indexOf(selectedLot) : -1;
+
+  // Summary line across all lots
+  const allIndents = lots.flatMap(l => l.indents || []);
+  const totalVendors = getLotVendors(allIndents).length;
+  const totalUpdateNeeded = countUpdateNeeded(allIndents);
+
   return (
     <>
       {/* Indent Selection Modal */}
@@ -224,17 +232,8 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
         onUpdateDocuments={handleUpdateDocuments}
       />
 
-      <div className="space-y-4">
-        {/* Step Top Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          {/* <div>
-            <h3 className="text-base font-bold text-slate-800">Assign Indents to Lots</h3>
-            <p className="text-xs text-slate-500">Each lot keeps its own headers, assigned indents and vendor chats.</p>
-          </div> */}
-        </div>
-
-        {/* Lots List */}
-        {(!bidData.lots || bidData.lots.length === 0) ? (
+      <div className="h-full min-h-[420px] flex flex-col gap-2">
+        {(!selectedLot) ? (
           <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
             <p className="text-sm font-medium text-slate-600">No lots available.</p>
             <button
@@ -245,21 +244,40 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {bidData.lots.map((lot, index) => (
-              <LotRow
-                key={lot.id}
-                lot={lot}
-                index={index}
-                isExpanded={expandedLotId === lot.id}
-                onToggleExpand={toggleExpandLot}
+          <>
+            {/* Summary line */}
+            {/* <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+              <p className="text-xs text-slate-600">
+                <b className="font-semibold text-slate-900">{lots.length}</b> lots ·{' '}
+                <b className="font-semibold text-slate-900">{allIndents.length}</b> indents ·{' '}
+                <b className="font-semibold text-slate-900">{totalVendors}</b> vendors
+              </p>
+              {totalUpdateNeeded > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-[11px] font-medium">
+                  <span aria-hidden="true">▲</span>
+                  {totalUpdateNeeded} {totalUpdateNeeded === 1 ? 'document needs' : 'documents need'} update
+                </span>
+              )}
+            </div> */}
+
+            {/* Lot list (left) + selected lot workspace (right) */}
+            <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-3">
+              <LotRail
+                lots={lots}
+                selectedLotId={selectedLot.id}
+                onSelect={setSelectedLotId}
+              />
+              <LotWorkspace
+                key={selectedLot.id}
+                lot={selectedLot}
+                lotIndex={selectedLotIndex}
                 onOpenAssignModal={openModal}
                 onOpenChat={handleOpenChat}
                 onOpenDrawer={handleOpenDrawer}
                 onRemoveIndent={removeIndent}
               />
-            ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </>

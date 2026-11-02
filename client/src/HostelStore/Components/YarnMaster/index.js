@@ -25,6 +25,7 @@ import { UserPermissions } from "../../../Utils/UserPermissions";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 import { multiSelectOption } from "../../../Utils/contructObject";
+import { MasterHeader } from "../../../Basic/components/ActiveTabList";
 
 export default function Form({ onSuccess, editId, defaultName = "" }) {
   const [form, setForm] = useState(false);
@@ -339,17 +340,20 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
           <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
             <div className="space-y-4 ">
               <div className="grid grid-cols-2 gap-3 h-full">
-                <TextInputNew1
-                  name="Name"
-                  type="text"
-                  value={name}
-                  setValue={setName}
-                  required={true}
-                  readOnly={readOnly}
-                  disabled={childRecord.current > 0}
-                  ref={countryNameRef}
-                  onKeyDown={handlers.handleLastInputKeyDown}
-                />
+                <div className="col-span-2">
+                  <TextInputNew1
+                    name="Name"
+                    type="text"
+                    value={name}
+                    setValue={setName}
+                    required={true}
+                    readOnly={readOnly}
+                    disabled={childRecord.current > 0}
+                    ref={countryNameRef}
+                    onKeyDown={handlers.handleLastInputKeyDown}
+                  />
+                </div>
+
 
                 <TextInputNew1
                   name="Code"
@@ -359,16 +363,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
                   readOnly={readOnly}
                   onKeyDown={handlers.handleLastInputKeyDown}
                 />
-                {/* <div className="mb-2 col-span-1">
-                  <MultiSelectDropdownNew
-                    name="Vendors"
-                    selected={yarnVendors}
-                    setSelected={setYarnVendors}
-                    options={multiSelectOption(partyData?.data || [], "name", "id")}
-                    readOnly={readOnly}
-                    disabled={readOnly}
-                  />
-                </div> */}
+
                 <ToggleButton
                   name="Status"
                   options={statusDropdown}
@@ -411,7 +406,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between items-center">
+      {/* <div className="w-full flex bg-white p-1 justify-between items-center">
         <h5 className="text-lg font-bold text-gray-800">Yarn Master</h5>
         <div className="flex items-center">
           <button
@@ -421,7 +416,15 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
             + Add New Yarn Master
           </button>
         </div>
-      </div>
+      </div> */}
+      <MasterHeader>
+        <button
+          onClick={handleCreate}
+          className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+        >
+          + Add New Yarn Master
+        </button>
+      </MasterHeader>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
         <ReusableTable
@@ -439,7 +442,7 @@ export default function Form({ onSuccess, editId, defaultName = "" }) {
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[300px]"}
+            widthClass={"w-[40%] h-[350px]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);

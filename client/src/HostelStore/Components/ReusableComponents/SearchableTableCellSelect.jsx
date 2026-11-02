@@ -23,7 +23,7 @@ const SearchableTableCellSelect = forwardRef(({
   readOnly = false,
   required = false,
   align = "left",
-  placeholder = "",
+  placeholder = "Select",
   childComponent = null,
   addNewLabel = "+ Add New",
   addNewModalWidth = "w-[40%] h-[45%]",
@@ -48,7 +48,6 @@ const SearchableTableCellSelect = forwardRef(({
   const [search, setSearch] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-2);
   const [showAddNew, setShowAddNew] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
   const [openUp, setOpenUp] = useState(false);
 
   const normalizedOptions = useMemo(() => {
@@ -136,19 +135,10 @@ const SearchableTableCellSelect = forwardRef(({
     }, 0);
   };
 
-  const handleAddNewSuccess = (newValue, additionalData) => {
-
+  const handleAddNewSuccess = (newValue) => {
     if (setValue) setValue(newValue);
-    if (onChange) onChange(newValue, additionalData);
+    if (onChange) onChange(newValue);
     setShowAddNew(false);
-    closeDropdown();
-  };
-
-  const handleEditSuccess = (newValue, additionalData) => {
-    // console.log(additionalData, "additionalData")
-    if (setValue && newValue) setValue(newValue);
-    if (onChange && newValue) onChange(newValue, additionalData);
-    setShowEdit(false);
     closeDropdown();
   };
 
@@ -187,7 +177,7 @@ const SearchableTableCellSelect = forwardRef(({
       onBlur={handleBlur}
     >
       {name && (
-        <label className="block text-[11px]  font-semibold text-[11px] text-slate-800 mb-1">
+        <label className="block text-[11px] font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -195,7 +185,7 @@ const SearchableTableCellSelect = forwardRef(({
       <div
         className={
           isFormLayout
-            ? `relative flex h-7 w-full items-center justify-between border border-gray-300 rounded-[5px] px-3 py-0 text-left
+            ? `relative flex h-7 w-full items-center justify-between border border-gray-300 rounded-md px-3 py-0 text-left
               ${isDisabled ? "bg-slate-100 cursor-not-allowed" : "bg-white cursor-pointer"}
               focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500
               transition-all duration-150 shadow-sm ${className}`
@@ -210,9 +200,9 @@ const SearchableTableCellSelect = forwardRef(({
           disabled={isDisabled}
           className={
             isFormLayout
-              ? `h-full w-full border-0 bg-transparent py-0 text-[10.5px] text-gray-800 shadow-none outline-none placeholder:text-gray-400 ${align === "right" ? "text-right" : "text-left"
+              ? `h-full w-full border-0 bg-transparent py-0 text-[11px] text-gray-800 shadow-none outline-none placeholder:text-gray-400 ${align === "right" ? "text-right" : "text-left"
               }`
-              : `h-full w-full border-0 bg-transparent py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input h-2 ${align === "right" ? "text-right" : "text-left"
+              : `h-full w-full border-0 bg-transparent py-0 text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input ${align === "right" ? "text-right" : "text-left"
               }`
           }
           onFocus={(event) => {
@@ -350,36 +340,20 @@ const SearchableTableCellSelect = forwardRef(({
               }`}
           >
             {childComponent && (
-              <div className="flex border-b border-slate-100">
-                <button
-                  type="button"
-                  className={`block w-full px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
-                    }`}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    setIsOpen(false);
-                    setSearch("");
-                    setShowAddNew(true);
-                  }}
-                  onMouseEnter={() => setHighlightedIndex(-1)}
-                >
-                  {addNewLabel}
-                </button>
-                {/* {selectedOption && (
-                  <button
-                    type="button"
-                    className="block px-3 py-1.5 border-l border-slate-200 text-[11px] font-semibold text-orange-600 hover:bg-orange-50 whitespace-nowrap"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      setIsOpen(false);
-                      setSearch("");
-                      setShowEdit(true);
-                    }}
-                  >
-                    Edit Selected
-                  </button>
-                )} */}
-              </div>
+              <button
+                type="button"
+                className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
+                  }`}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  setIsOpen(false);
+                  setSearch("");
+                  setShowAddNew(true);
+                }}
+                onMouseEnter={() => setHighlightedIndex(-1)}
+              >
+                {addNewLabel}
+              </button>
             )}
 
             {filteredOptions.length > 0 ? (
@@ -389,10 +363,10 @@ const SearchableTableCellSelect = forwardRef(({
                   key={option.value}
                   type="button"
                   className={`block w-full border-b border-slate-100 px-3 py-1.5 text-left text-[11px] transition-colors ${index === highlightedIndex
-                    ? "bg-blue-600 text-white"
-                    : String(option.value) === String(value)
-                      ? "bg-blue-50 font-medium text-blue-600"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "bg-blue-600 text-white"
+                      : String(option.value) === String(value)
+                        ? "bg-blue-50 font-medium text-blue-600"
+                        : "text-slate-700 hover:bg-slate-50"
                     }`}
                   onMouseDown={(event) => {
                     event.preventDefault();
@@ -415,15 +389,6 @@ const SearchableTableCellSelect = forwardRef(({
         return (
           <Modal isOpen={showAddNew} onClose={() => setShowAddNew(false)} widthClass={addNewModalWidth}>
             <AddNew onSuccess={handleAddNewSuccess} onClose={() => setShowAddNew(false)} />
-          </Modal>
-        );
-      })()}
-
-      {showEdit && childComponent && (() => {
-        const EditComponent = childComponent;
-        return (
-          <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} widthClass={addNewModalWidth}>
-            <EditComponent editId={value} onSuccess={handleEditSuccess} onClose={() => setShowEdit(false)} />
           </Modal>
         );
       })()}

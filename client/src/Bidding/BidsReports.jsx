@@ -178,7 +178,7 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
   };
 
   return (
-    <div className="animate-in fade-in duration-500 max-w-full space-y-2">
+    <div className="animate-in fade-in duration-500 max-w-full space-y-2 pl-5">
 
       {/* Top Header */}
       <div className="flex flex-wrap justify-between items-center gap-3 mt-1">
@@ -236,7 +236,7 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
 
 
       {/* Filter Tabs & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pl-3">
         {/* Tabs */}
         <div className="flex flex-wrap items-center gap-1.5">
           {filterTabs.map((tab) => {
@@ -267,9 +267,9 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
       </div>
 
       {/* Bids Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden  ">
+        <div className="overflow-x-auto ">
+          <table className="w-full text-left text-sm whitespace-nowrap ">
             <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3 font-semibold">Bid Code</th>
@@ -290,12 +290,10 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
 
                 return (
                   <tr key={bid.id} className="hover:bg-slate-50/70 transition-colors">
-                    {/* Bid Code */}
                     <td className="px-5 py-1 font-mono font-bold text-slate-900 text-xs">
                       {bidCode}
                     </td>
 
-                    {/* Title */}
                     <td className="px-5 py-1">
                       <div className="font-semibold text-slate-800 max-w-xs truncate" title={bid.name}>
                         {bid.name || "Untitled Bid"}
@@ -303,21 +301,18 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
 
                     </td>
 
-                    {/* Status Badge */}
                     <td className="px-5 py-1">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(bid.status)}`}>
                         {bid.status || "DRAFT"}
                       </span>
                     </td>
 
-                    {/* Lots & Indents */}
                     <td className="px-5 py-1 text-xs">
                       <span className="font-semibold text-slate-800">{stats.totalLots} Lots</span>
                       <span className="text-slate-400 mx-1">•</span>
                       <span className="text-slate-500">{stats.totalIndents} Items</span>
                     </td>
 
-                    {/* Vendors */}
                     <td className="px-5 py-1 text-xs font-medium text-slate-700">
                       {stats.totalVendors} Invited
                     </td>
@@ -327,7 +322,6 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
                       <span className="font-semibold text-slate-800">{stats.quotesIn}</span>
                     </td>
 
-                    {/* Deadline */}
                     <td className="px-5 py-1 text-xs flex flex-row gap-3">
                       <div className="font-medium text-slate-800">{deadline.text}</div>
                       {deadline.badge && (
@@ -337,11 +331,9 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
                       )}
                     </td>
 
-                    {/* Actions: View, Edit, Delete */}
                     <td className="px-5 py-1 text-center">
                       <div className="inline-flex items-center gap-1.5">
 
-                        {/* View Action */}
                         <button
                           onClick={() => setSelectedBidForView(bid)}
                           title="View Bid Details"
@@ -353,7 +345,6 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
                           </svg>
                         </button>
 
-                        {/* Communications & Document Compliance Action */}
                         <button
                           onClick={() => {
                             if (onOpenCommunications) {
@@ -371,7 +362,6 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
                           </svg>
                         </button>
 
-                        {/* Edit Action */}
                         <button
                           onClick={() => handleEditBid(bid)}
                           title="Edit Bid"
@@ -382,7 +372,6 @@ export default function Bids({ setCurrentView, setEditingBidId, onOpenCommunicat
                           </svg>
                         </button>
 
-                        {/* Delete Action */}
                         <button
                           onClick={() => handleDeleteBid(bid)}
                           title="Delete Bid"

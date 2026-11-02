@@ -917,7 +917,7 @@ const IndentForm = ({
 
 
 
-      {/* <TransactionEntryShell
+      <TransactionEntryShell
         id={id}
         readOnly={readOnly}
         title="Yarn Indent Form"
@@ -984,7 +984,7 @@ const IndentForm = ({
                 className={`w-full`}
                 addNewModalWidth="w-[40%] h-[48%]"
               />
-           
+
             </TransactionHeaderSection>
           </div>
         )}
@@ -1017,42 +1017,10 @@ const IndentForm = ({
             </div>
           </div>
         </div>
-      </TransactionEntryShell > */}
+      </TransactionEntryShell >
 
 
-      <TransactionLayout
-        className="po-form-geist"
-        showTabs={true}
-        title="Yarn Indent Form"
-        closeIcon={<IoArrowBackCircleSharp className="w-6 h-6" />}
-        onClose={onClose}
-        // onKeyDown={handleKeyDown}
-        leftSidebar={basicDetailsSidebar}
-        sidebarWidthClass="w-[260px] xl:w-[280px]"
-        // headerActions={headerActionsContent}
-        header={headerContent}
-        detailsContent={headerContent}
-        detailsTitle="Transaction Details"
-        gridItems={
-          <YarnTable
-            indentItems={indentItems}
-            setIndentItems={setIndentItems}
-            yarnList={yarnList}
-            yarnBlendMasterList={yarnBlendMasterList}
-            countsMasterList={countsMasterList}
-            partyList={partyList}
-            uomList={uomList}
-            sizeList={sizeList}
-            colorList={colorList}
-            readOnly={readOnly}
-            dynamicFields={dynamicFields}
-            yarnVendorList={yarnVendorList}
-          />
 
-        }
-
-        footer={footerContent}
-      />
 
     </>
   );

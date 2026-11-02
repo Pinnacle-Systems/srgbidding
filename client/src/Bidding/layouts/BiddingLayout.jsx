@@ -128,7 +128,7 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
         </header> */}
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-1">
+        <div className="flex-1 overflow-auto p-1 bg-[#F9FAFB]">
           <div className="w-full h-full">
             {children}
           </div>

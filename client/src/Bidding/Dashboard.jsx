@@ -5,7 +5,7 @@ export default function Dashboard() {
   const { role } = useBiddingAuth();
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-500 min-h-[calc(100vh-70px)] bg-gray-100">
+    <div className="space-y-4 animate-in fade-in duration-500 min-h-[calc(100vh-70px)] px-5 mt-4">
       <header>
         {/* <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard</h1> */}
         <p className="text-slate-500 mt-1">Welcome back, <span className="font-semibold text-slate-700">{role}</span>. Here's what's happening.</p>

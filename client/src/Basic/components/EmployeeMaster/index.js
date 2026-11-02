@@ -610,31 +610,32 @@ export default function Form() {
         >
           + Add New Employee
         </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView("table")}
+            className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table"
+              ? "bg-indigo-100 text-indigo-600"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <Table size={16} />
+            Table
+          </button>
+          <button
+            onClick={() => setView("card")}
+            className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card"
+              ? "bg-indigo-100 text-indigo-600"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <LayoutGrid size={16} />
+            Cards
+          </button>
+        </div>
       </MasterHeader>
 
 
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setView("table")}
-          className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table"
-            ? "bg-indigo-100 text-indigo-600"
-            : "text-gray-600 hover:bg-gray-100"
-            }`}
-        >
-          <Table size={16} />
-          Table
-        </button>
-        <button
-          onClick={() => setView("card")}
-          className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card"
-            ? "bg-indigo-100 text-indigo-600"
-            : "text-gray-600 hover:bg-gray-100"
-            }`}
-        >
-          <LayoutGrid size={16} />
-          Cards
-        </button>
-      </div>
+
 
 
       <div className="bg-gray-100  rounded-xl shadow overflow-hidden">

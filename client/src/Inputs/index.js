@@ -37,7 +37,7 @@ import { UserPermissions } from "../Utils/UserPermissions";
 import Swal from "sweetalert2";
 import { usePermissionForUsers } from "../Basic/components/HasPermission";
 
-const FORM_LABEL_CLASS = "block   font-semibold text-[11px] text-slate-800  mb-1";
+const FORM_LABEL_CLASS = "block   block text-[11px] font-bold text-slate-700 mb-1";
 const FORM_LABEL_MUTED_CLASS = "block text-inter-regular-11  font-bold text-[#697386] mb-1";
 const INLINE_LABEL_CLASS =
   "md:text-start flex   text-[#697386]";
@@ -1033,6 +1033,7 @@ export function ReusableInputNew({
   placeholder,
   readOnly,
   disabled,
+  name
 }) {
   return (
     <div className="mb-1">
@@ -1040,11 +1041,8 @@ export function ReusableInputNew({
       <input
         type={type}
         value={value}
-        onChange={(e) =>
-          type === "number"
-            ? setValue(e.target.value)
-            : handleOnChange(e, setValue)
-        }
+        name={name}
+        onChange={setValue}
         placeholder={placeholder}
         readOnly={readOnly}
         disabled={disabled}

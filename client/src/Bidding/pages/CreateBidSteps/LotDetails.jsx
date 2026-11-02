@@ -23,12 +23,12 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="">
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2  ">
         <div>
-          <h3 className="text-md font-semibold text-slate-800">Define Lots for this Bid</h3>
-          <p className="text-sm text-slate-500">A bid can have multiple lots.</p>
+          <h3 className="text-[14px] font-bold text-slate-800">Define Lots for this Bid</h3>
+          {/* <p className="text-sm text-slate-500">A bid can have multiple lots.</p> */}
         </div>
 
         <div className="flex items-center gap-3">
@@ -37,14 +37,14 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
 
             <button
               onClick={() => setViewMode("card")}
-              className={`p-1.5 rounded transition-colors ${viewMode === 'card' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1 rounded transition-colors ${viewMode === 'card' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
               title="Card View"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
               title="List View"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -53,7 +53,7 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
 
           <button
             onClick={() => setIsAdding(!isAdding)}
-            className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 font-medium text-sm flex items-center gap-1 transition-colors"
+            className="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 font-medium text-sm flex items-center gap-1 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             Add Lot
@@ -62,7 +62,7 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
       </div>
 
       {isAdding && (
-        <div className="flex flex-col sm:flex-row gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 p-3 mt-3 bg-blue-50/50 border border-blue-100 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300 items-center">
           <input
             type="text"
             value={newLotName}
@@ -80,7 +80,7 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
       )}
 
       {bidData.lots.length === 0 && !isAdding && (
-        <div className="text-sm text-slate-400 py-12 text-center border border-dashed border-slate-300 rounded-xl bg-slate-50/50">
+        <div className="text-sm text-slate-400 py-12 mt-3 text-center border border-dashed border-slate-300 rounded-xl bg-slate-50/50">
           <div className="flex justify-center mb-3">
             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
@@ -91,7 +91,7 @@ export default function Lots({ onBack, onNext, bidData, setBidData }) {
       )}
 
       {bidData.lots.length > 0 && (
-        <div className={viewMode === "card" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" : "space-y-3"}>
+        <div className={viewMode === "card" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-2" : "space-y-3 mt-4"}>
           {bidData.lots.map((lot, index) => (
             <div
               key={lot.id}

@@ -396,11 +396,11 @@ export default function BiddingCommunicationsHub({
 
     if (isBroadcastChecked && activeThread) {
       // Broadcast to all vendor threads in this specific indent
-      const siblingThreads = allThreads.filter((t) => t.indentId === activeThread.indentId);
+      const siblingThreads = allThreads.filter((t) => t.indentId === activeThread?.indentId);
       setConversations((prev) => {
         const next = { ...prev };
         siblingThreads.forEach((st) => {
-          next[st.threadKey] = [...(next[st.threadKey] || []), { ...newMsg, broadcastTag: `Broadcast to all ${siblingThreads.length} vendors in ${activeThread.indentDocId}` }];
+          next[st.threadKey] = [...(next[st.threadKey] || []), { ...newMsg, broadcastTag: `Broadcast to all ${siblingThreads.length} vendors in ${activeThread?.indentDocId}` }];
         });
         return next;
       });
@@ -408,7 +408,7 @@ export default function BiddingCommunicationsHub({
       Swal.fire({
         icon: 'success',
         title: 'Broadcast Sent',
-        text: `Clarification dispatched to all ${siblingThreads.length} vendors participating in ${activeThread.indentDocId}.`,
+        text: `Clarification dispatched to all ${siblingThreads.length} vendors participating in ${activeThread?.indentDocId}.`,
         timer: 1800,
         showConfirmButton: false,
         toast: true,
@@ -429,7 +429,7 @@ export default function BiddingCommunicationsHub({
   // Quick Action: Request Document Revision via Chat
   const handleRequestRevisionPrompt = (docTitle) => {
     setWorkspaceTab('chat');
-    const prompt = `Hi ${activeThread.vendorName}, please provide an updated revision for "${docTitle}". The current submission does not meet technical compliance guidelines.`;
+    const prompt = `Hi ${activeThread?.vendorName}, please provide an updated revision for "${docTitle}". The current submission does not meet technical compliance guidelines.`;
     setInputText(prompt);
   };
 
@@ -452,7 +452,7 @@ export default function BiddingCommunicationsHub({
 
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-xl shadow-sm flex flex-col h-[calc(100vh-140px)] min-h-[640px] overflow-hidden font-sans animate-in fade-in duration-300">
-      
+
       {/* ─────────────────────────────────────────────────────────────────
           TOP COMMAND BAR: Bid Info, Deadlines, Sealed Toggle, Metrics
          ───────────────────────────────────────────────────────────────── */}
@@ -506,11 +506,10 @@ export default function BiddingCommunicationsHub({
             <button
               type="button"
               onClick={() => setSimulatePostDeadline(false)}
-              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                !simulatePostDeadline
-                  ? 'bg-white text-slate-800 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${!simulatePostDeadline
+                ? 'bg-white text-slate-800 shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+                }`}
               title="Pre-deadline: Vendor documents are sealed until deadline"
             >
               🔒 Sealed Mode (Pre-Deadline)
@@ -518,11 +517,10 @@ export default function BiddingCommunicationsHub({
             <button
               type="button"
               onClick={() => setSimulatePostDeadline(true)}
-              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                simulatePostDeadline
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${simulatePostDeadline
+                ? 'bg-blue-600 text-white shadow-xs font-bold'
+                : 'text-slate-500 hover:text-slate-800'
+                }`}
               title="Post-deadline: Documents unseal for evaluation"
             >
               🔓 Unsealed (Evaluation)
@@ -535,18 +533,18 @@ export default function BiddingCommunicationsHub({
           TRI-PANE WORKSPACE BODY
          ───────────────────────────────────────────────────────────────── */}
       <div className="flex-1 flex overflow-hidden">
-        
+
         {/* ===============================================================
             PANE 1: SCOPE & HIERARCHY NAVIGATOR (Width: ~280px)
            =============================================================== */}
         <aside className="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
-          
+
           {/* Quick Smart Filters */}
           <div className="p-3 border-b border-slate-100 space-y-1.5">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
               Activity Queues
             </div>
-            
+
             <button
               type="button"
               onClick={() => {
@@ -554,11 +552,10 @@ export default function BiddingCommunicationsHub({
                 setSelectedLotId('ALL');
                 setSelectedIndentId('ALL');
               }}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeFilterTab === 'ALL' && selectedLotId === 'ALL' && selectedIndentId === 'ALL'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeFilterTab === 'ALL' && selectedLotId === 'ALL' && selectedIndentId === 'ALL'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                : 'text-slate-600 hover:bg-slate-100'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -574,11 +571,10 @@ export default function BiddingCommunicationsHub({
             <button
               type="button"
               onClick={() => setActiveFilterTab('UNREAD')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeFilterTab === 'UNREAD'
-                  ? 'bg-red-50 text-red-700 border border-red-200'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeFilterTab === 'UNREAD'
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'text-slate-600 hover:bg-slate-100'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -592,11 +588,10 @@ export default function BiddingCommunicationsHub({
             <button
               type="button"
               onClick={() => setActiveFilterTab('PENDING_DOCS')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeFilterTab === 'PENDING_DOCS'
-                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeFilterTab === 'PENDING_DOCS'
+                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                : 'text-slate-600 hover:bg-slate-100'
+                }`}
             >
               <div className="flex items-center gap-2">
                 <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -629,9 +624,8 @@ export default function BiddingCommunicationsHub({
                   <div key={lot.id} className="rounded-lg border border-slate-100 overflow-hidden">
                     {/* Lot Header */}
                     <div
-                      className={`flex items-center justify-between p-2 cursor-pointer transition-colors ${
-                        isLotSelected ? 'bg-blue-50 text-blue-800 font-bold' : 'bg-slate-50/70 hover:bg-slate-100 text-slate-800 font-semibold'
-                      }`}
+                      className={`flex items-center justify-between p-2 cursor-pointer transition-colors ${isLotSelected ? 'bg-blue-50 text-blue-800 font-bold' : 'bg-slate-50/70 hover:bg-slate-100 text-slate-800 font-semibold'
+                        }`}
                       onClick={() => {
                         setSelectedLotId(lot.id);
                         setSelectedIndentId('ALL');
@@ -679,11 +673,10 @@ export default function BiddingCommunicationsHub({
                                 setSelectedIndentId(indent.id);
                                 setActiveFilterTab('ALL');
                               }}
-                              className={`w-full text-left py-1.5 px-2 rounded flex items-center justify-between text-xs transition-colors ${
-                                isIndentSelected
-                                  ? 'bg-blue-600 text-white font-semibold'
-                                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                              }`}
+                              className={`w-full text-left py-1.5 px-2 rounded flex items-center justify-between text-xs transition-colors ${isIndentSelected
+                                ? 'bg-blue-600 text-white font-semibold'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                }`}
                             >
                               <div className="truncate pr-1">
                                 <span className={`font-mono text-[10px] block ${isIndentSelected ? 'text-blue-200' : 'text-slate-400'}`}>
@@ -694,9 +687,8 @@ export default function BiddingCommunicationsHub({
                                 </span>
                               </div>
                               <span
-                                className={`text-[10px] font-mono px-1.5 py-0.2 rounded shrink-0 ${
-                                  isIndentSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'
-                                }`}
+                                className={`text-[10px] font-mono px-1.5 py-0.2 rounded shrink-0 ${isIndentSelected ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'
+                                  }`}
                               >
                                 {vendorCount}
                               </span>
@@ -771,11 +763,10 @@ export default function BiddingCommunicationsHub({
                   <div
                     key={thread.threadKey}
                     onClick={() => handleSelectThread(thread.threadKey)}
-                    className={`p-3 cursor-pointer transition-all border-l-4 ${
-                      isSelected
-                        ? 'bg-blue-50/60 border-l-blue-600'
-                        : 'hover:bg-slate-50 border-l-transparent'
-                    }`}
+                    className={`p-3 cursor-pointer transition-all border-l-4 ${isSelected
+                      ? 'bg-blue-50/60 border-l-blue-600'
+                      : 'hover:bg-slate-50 border-l-transparent'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-1 mb-1">
                       <div className="flex items-center gap-1.5 truncate">
@@ -823,7 +814,7 @@ export default function BiddingCommunicationsHub({
             PANE 3: CONTEXTUAL WORKSPACE (Flex-1)
            =============================================================== */}
         <main className="flex-1 bg-white flex flex-col overflow-hidden">
-          
+
           {/* Header Context Bar: Item Specifications & Direct Context */}
           {activeThread && (
             <div className="bg-slate-50/90 border-b border-slate-200 px-5 py-3 shrink-0">
@@ -831,22 +822,22 @@ export default function BiddingCommunicationsHub({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold bg-slate-200 text-slate-800 px-2 py-0.5 rounded">
-                      {activeThread.lotName} &gt; {activeThread.indentDocId}
+                      {activeThread?.lotName} &gt; {activeThread?.indentDocId}
                     </span>
                     <h3 className="text-sm font-bold text-slate-900">
-                      {activeThread.itemName}
+                      {activeThread?.itemName}
                     </h3>
                   </div>
 
                   {/* Summary Spec Line */}
                   <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-600 flex-wrap">
                     <span className="font-semibold text-slate-800">
-                      Qty: {Number(activeThread.qty || 0).toLocaleString()} {activeThread.uom}
+                      Qty: {Number(activeThread?.qty || 0).toLocaleString()} {activeThread?.uom}
                     </span>
                     <span>•</span>
-                    <span className="text-slate-500">Dept: {activeThread.department}</span>
+                    <span className="text-slate-500">Dept: {activeThread?.department}</span>
                     <span>•</span>
-                    <span className="text-slate-500">Vendor: <strong>{activeThread.vendorName}</strong> ({activeThread.vendorCity})</span>
+                    <span className="text-slate-500">Vendor: <strong>{activeThread?.vendorName}</strong> ({activeThread?.vendorCity})</span>
                   </div>
                 </div>
 
@@ -869,36 +860,34 @@ export default function BiddingCommunicationsHub({
                 <button
                   type="button"
                   onClick={() => setWorkspaceTab('chat')}
-                  className={`pb-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${
-                    workspaceTab === 'chat'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`pb-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${workspaceTab === 'chat'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <span>Pre-Bid Chat & Clarifications</span>
                   <span className="bg-slate-200/80 text-slate-700 font-mono text-[10px] px-1.5 py-0.2 rounded-full">
-                    {(conversations[activeThread.threadKey] || []).length}
+                    {(conversations[activeThread?.threadKey] || []).length}
                   </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setWorkspaceTab('docs')}
-                  className={`pb-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${
-                    workspaceTab === 'docs'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`pb-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${workspaceTab === 'docs'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <span>Vendor Documents & Compliance</span>
                   <span className="bg-blue-100 text-blue-800 font-mono text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                    {activeThread.documents.length}
+                    {activeThread?.documents?.length}
                   </span>
                 </button>
               </div>
@@ -908,25 +897,25 @@ export default function BiddingCommunicationsHub({
           {/* MAIN WORKSPACE BODY */}
           <div className="flex-1 overflow-y-auto p-4 bg-slate-50/50">
             {workspaceTab === 'chat' ? (
-              
+
               /* -------------------------------------------------------------
                  SUB-TAB 1: CHAT FEED & MESSAGE STREAM
                  ------------------------------------------------------------- */
               <div className="flex flex-col h-full space-y-4">
-                
+
                 {/* Notice banner for Sealed Bidding */}
                 {!isDeadlineExpired && sealDocumentsPolicy && (
                   <div className="p-3 rounded-lg bg-blue-50/80 border border-blue-200 text-xs text-blue-800 flex items-start gap-2.5">
                     <span className="text-base shrink-0">🔒</span>
                     <div>
-                      <strong className="font-bold">Sealed Bidding In Effect:</strong> Technical submissions from {activeThread.vendorName} are encrypted & sealed. Document contents will unlock automatically for Procurement evaluation on <strong>12 Nov 2026, 17:00 hrs</strong>. You can answer queries and provide pre-bid guidance below.
+                      <strong className="font-bold">Sealed Bidding In Effect:</strong> Technical submissions from {activeThread?.vendorName} are encrypted & sealed. Document contents will unlock automatically for Procurement evaluation on <strong>12 Nov 2026, 17:00 hrs</strong>. You can answer queries and provide pre-bid guidance below.
                     </div>
                   </div>
                 )}
 
                 {/* Message Bubbles List */}
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                  {(conversations[activeThread.threadKey] || []).map((msg) => {
+                  {(conversations[activeThread?.threadKey] || []).map((msg) => {
                     const isMe = msg.sender === 'buyer';
                     const isSystem = msg.sender === 'system';
 
@@ -961,11 +950,10 @@ export default function BiddingCommunicationsHub({
 
                         {/* Bubble */}
                         <div
-                          className={`max-w-xl p-3 rounded-2xl text-xs leading-relaxed shadow-2xs ${
-                            isMe
-                              ? 'bg-blue-600 text-white rounded-tr-none'
-                              : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
-                          }`}
+                          className={`max-w-xl p-3 rounded-2xl text-xs leading-relaxed shadow-2xs ${isMe
+                            ? 'bg-blue-600 text-white rounded-tr-none'
+                            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+                            }`}
                         >
                           <p>{msg.text}</p>
 
@@ -1026,7 +1014,7 @@ export default function BiddingCommunicationsHub({
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
                       />
                       <span className="font-semibold text-slate-700">
-                        Broadcast to all vendors in this Indent ({activeThread.indentDocId})
+                        Broadcast to all vendors in this Indent ({activeThread?.indentDocId})
                       </span>
                     </label>
                     <span className="text-[11px] text-slate-400">
@@ -1037,7 +1025,7 @@ export default function BiddingCommunicationsHub({
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
-                      placeholder={`Reply to ${activeThread.vendorName} or clarify specifications...`}
+                      placeholder={`Reply to ${activeThread?.vendorName} or clarify specifications...`}
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -1058,12 +1046,12 @@ export default function BiddingCommunicationsHub({
 
               </div>
             ) : (
-              
+
               /* -------------------------------------------------------------
                  SUB-TAB 2: VENDOR DOCUMENTS & COMPLIANCE TABLE
                  ------------------------------------------------------------- */
               <div className="space-y-6">
-                
+
                 {/* 1. Common Specifications Provided by Buyer */}
                 <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                   <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -1074,10 +1062,10 @@ export default function BiddingCommunicationsHub({
                   </h4>
 
                   <div className="space-y-2">
-                    {activeThread.commonDocuments.length === 0 ? (
+                    {activeThread?.commonDocuments?.length === 0 ? (
                       <p className="text-xs text-slate-400 italic">No common guidelines uploaded for this indent.</p>
                     ) : (
-                      activeThread.commonDocuments.map((cd) => (
+                      activeThread?.commonDocuments?.map((cd) => (
                         <div key={cd.id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/70 hover:bg-slate-100 transition-colors">
                           <div className="flex items-center gap-2.5 truncate">
                             <span className="text-lg">📄</span>
@@ -1106,7 +1094,7 @@ export default function BiddingCommunicationsHub({
                       <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>2. Vendor Compliance Submissions ({activeThread.vendorName})</span>
+                      <span>2. Vendor Compliance Submissions ({activeThread?.vendorName})</span>
                     </h4>
 
                     {/* Sealed Status Indicator */}
@@ -1121,7 +1109,7 @@ export default function BiddingCommunicationsHub({
                     )}
                   </div>
 
-                  {activeThread.documents.length === 0 ? (
+                  {activeThread?.documents?.length === 0 ? (
                     <div className="p-8 text-center text-slate-400 border border-dashed border-slate-200 rounded-lg">
                       <p className="text-xs font-medium text-slate-600">No documents submitted yet</p>
                       <p className="text-[11px] text-slate-400 mt-1">Vendor has not uploaded technical certificates for this indent.</p>
@@ -1135,19 +1123,18 @@ export default function BiddingCommunicationsHub({
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {activeThread.documents.map((doc) => {
+                      {activeThread?.documents?.map((doc) => {
                         const isSealed = !isDeadlineExpired && sealDocumentsPolicy;
 
                         return (
                           <div
                             key={doc.id}
-                            className={`p-3.5 rounded-xl border transition-all ${
-                              doc.status === 'Update Needed'
-                                ? 'border-red-200 bg-red-50/30'
-                                : doc.status === 'Approved'
+                            className={`p-3.5 rounded-xl border transition-all ${doc.status === 'Update Needed'
+                              ? 'border-red-200 bg-red-50/30'
+                              : doc.status === 'Approved'
                                 ? 'border-emerald-200 bg-emerald-50/20'
                                 : 'border-slate-200 bg-white'
-                            }`}
+                              }`}
                           >
                             <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                               <div>
@@ -1174,13 +1161,12 @@ export default function BiddingCommunicationsHub({
                                   </span>
                                 ) : (
                                   <span
-                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                      doc.status === 'Approved'
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : doc.status === 'Update Needed'
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${doc.status === 'Approved'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : doc.status === 'Update Needed'
                                         ? 'bg-red-100 text-red-700'
                                         : 'bg-amber-100 text-amber-800'
-                                    }`}
+                                      }`}
                                   >
                                     {doc.status}
                                   </span>

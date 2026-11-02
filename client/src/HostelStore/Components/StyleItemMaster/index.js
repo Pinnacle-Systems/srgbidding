@@ -36,6 +36,7 @@ import { ItemSubGroupMaster } from "../../../Basic/components";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../../redux/services/ItemMasterService";
 import { useGetMaterialMasterQuery } from "../../../redux/services/MaterialMasterServices";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { MasterHeader } from "../../../Basic/components/ActiveTabList";
 
 const MODEL = "Item Master";
 export default function Form({ onSuccess, defaultName = "" }) {
@@ -524,7 +525,7 @@ export default function Form({ onSuccess, defaultName = "" }) {
 
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
+      {/* <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-xl font-bold font-segoe text-gray-800 ">
           Item Master
         </h5>
@@ -536,7 +537,15 @@ export default function Form({ onSuccess, defaultName = "" }) {
             + Add New Item
           </button>
         </div>
-      </div>
+      </div> */}
+      <MasterHeader>
+        <button
+          onClick={handleCreate}
+          className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+        >
+          + Add New Item
+        </button>
+      </MasterHeader>
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
         <ReusableTable
           columns={columns}

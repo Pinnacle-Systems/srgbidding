@@ -9,6 +9,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 import { useAddItemGroupMasterMutation, useDeleteItemGroupMasterMutation, useGetItemGroupMasterByIdQuery, useGetItemGroupMasterQuery, useLazyGetItemGroupMasterByIdQuery, useUpdateItemGroupMasterMutation } from "../../../redux/services/ItemGroupMasterService";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { UserPermissions } from "../../../Utils/UserPermissions";
+import { MasterHeader } from "../../../Basic/components/ActiveTabList";
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
   const [form, setForm] = useState(false);
@@ -406,7 +407,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }
   return (
     <div onKeyDown={handleKeyDown} className="p-1 h-[87%]">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
+      {/* <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-lg font-bold text-gray-800">Item Group Master</h5>
         <div className="flex items-center">
           <button
@@ -416,7 +417,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             + Add New Item Group
           </button>
         </div>
-      </div>
+      </div> */}
+      <MasterHeader>
+        <button
+          onClick={handleCreate}
+          className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+        >
+          + Add New Item Group
+        </button>
+      </MasterHeader>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 ">
         <ReusableTable

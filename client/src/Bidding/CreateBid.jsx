@@ -139,6 +139,17 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
     }
   };
 
+  const ChevronSeparator = () => (
+    <svg
+      className="w-4 h-4 text-slate-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+  );
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -156,48 +167,39 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
     }
   };
 
+
+
   return (
-    <div className="animate-in fade-in duration-500 w-full">
+    <div className="animate-in fade-in duration-500 w-full h-full">
       {/* Stepper Bar & Draft Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 mt-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {onBackToBids && (
-            <button
-              onClick={onBackToBids}
-              type="button"
-              className="mr-1 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 transition-colors shadow-sm"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Bids
-            </button>
-          )}
-          {steps.map((step) => {
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-4 mt-2">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
+
+
+          {steps.map((step, index) => {
             const isCompleted = step.id < currentStep;
             const isActive = step.id === currentStep;
+            const isLast = index === steps.length - 1;
 
-            let stepClasses = "px-4 py-2 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ";
+            let stepClasses = "font-medium transition-colors ";
             if (isCompleted) {
-              stepClasses += "border-slate-200 bg-white text-green-600";
+              stepClasses += "text-slate-500";
             } else if (isActive) {
-              stepClasses += "border-blue-500 bg-white text-blue-600";
+              stepClasses += "text-orange-500 font-semibold";
             } else {
-              stepClasses += "border-slate-200 bg-white text-slate-400";
+              stepClasses += "text-slate-400";
             }
 
             return (
-              <div key={step.id} className={stepClasses}>
-                {isCompleted && (
-                  <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-                {step.id}. {step.name}
-              </div>
+              <React.Fragment key={step.id}>
+                <span className={stepClasses} aria-current={isActive ? "step" : undefined}>
+                  {step.name}
+                </span>
+                {!isLast && <ChevronSeparator />}
+              </React.Fragment>
             );
           })}
-        </div>
+        </nav>
 
         {bidData.id && (
           <span className="text-xs font-mono font-medium px-2.5 py-1 rounded bg-slate-100 text-slate-700 border border-slate-200">
@@ -206,15 +208,15 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
         )}
       </div>
 
-      <div className="w-full h-[calc(100vh-130px)]">
+      <div className="w-full h-[calc(100vh-100px)] pl-6 pr-2 mt-2">
         {/* Main Form Area */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-md shadow-sm flex flex-col h-full overflow-hidden">
           <div className="flex-1 overflow-y-auto p-3">
             {renderStep()}
           </div>
 
           {/* Stepper Footer Action Bar */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-slate-100 bg-slate-50/70 flex-shrink-0">
+          <div className="flex items-center justify-between p-2 sm:p-3 border-t border-slate-100 bg-slate-50/70 flex-shrink-0">
             <div>
               {currentStep > 1 && (
                 <button

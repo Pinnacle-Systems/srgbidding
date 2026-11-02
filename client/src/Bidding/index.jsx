@@ -33,13 +33,13 @@ function BiddingAppContent() {
             }}
           />
         );
+        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "communications": return (
           <BiddingCommunicationsPage
             initialBidId={selectedBidIdForComms}
             onBackToBids={() => setCurrentView("bids")}
           />
         );
-        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "compare": return <div className="p-8"><h1 className="text-2xl font-bold">Quote Comparison Placeholder</h1></div>;
         default: return <Dashboard />;
       }

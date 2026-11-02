@@ -1,12 +1,51 @@
 import React from 'react';
+import Swal from 'sweetalert2';
+import {
+  TYPE_COLUMNS,
+  buildGridTemplate,
+  DOC_STATE_META,
+  docState,
+  getIndentDocsCount,
+  getIndentVendorDocs,
+  indentNeedsUpdate,
+  plural,
+  sumQtyByUom,
+  vendorName,
+} from './indentHelpers';
 
-export default function IndentTableByType({ indents = [], lotId, onOpenChat, onRemoveIndent, onOpenDrawer }) {
-  const grouped = indents.reduce((acc, indent) => {
-    const type = indent.category || indent.indentType || 'Other';
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(indent);
-    return acc;
-  }, {});
+const DocIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z M14 3v5h5" />
+  </svg>
+);
+
+const ChatIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a8 8 0 01-11.6 7.1L4 20l1.1-4.2A8 8 0 1121 12z" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
+/**
+ * Compact table for one indent type ("all" shows shared columns only).
+ * Renders the scrolling grid (sticky header) and a totals footer, so it must
+ * sit inside a flex-column parent with a bounded height.
+ */
+export default function IndentTableByType({
+  indents = [],
+  typeKey = 'all',
+  lotId,
+  onOpenChat,
+  onOpenDrawer,
+  onRemoveIndent,
+}) {
+  const columns = TYPE_COLUMNS[typeKey] || TYPE_COLUMNS.all;
+  const template = buildGridTemplate(typeKey);
 
   const handleOpenAction = (indent, tab) => {
     if (onOpenDrawer) {
@@ -16,211 +55,159 @@ export default function IndentTableByType({ indents = [], lotId, onOpenChat, onR
     }
   };
 
-  if (indents.length === 0) {
-    return (
-      <div className="p-8 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-        No indents found for this filter.
-      </div>
-    );
-  }
+  const handleRemove = async (indent) => {
+    if (!onRemoveIndent) return;
+    const label = indent.docId || indent.id;
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Remove indent?',
+      text: `${label} will be removed from this lot.`,
+      showCancelButton: true,
+      confirmButtonText: 'Remove',
+      confirmButtonColor: '#dc2626',
+    });
+    if (result.isConfirmed) onRemoveIndent(lotId, indent.id);
+  };
+
+  const qtyTotal = sumQtyByUom(indents);
 
   return (
-    <div className="space-y-4">
-      {Object.entries(grouped).map(([type, group]) => (
-        <div key={type} className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-          <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-teal-600"></div>
-              <span className="font-bold text-xs text-slate-800">{type} Indents ({group.length})</span>
-            </div>
+    <>
+      <div className="flex-1 min-h-0 overflow-auto border-t border-slate-200">
+        <div style={{ minWidth: 1120 }}>
+          {/* Sticky header */}
+          <div
+            className="sticky top-0 z-10 grid items-center h-8 bg-slate-200 text-xs font-semibold text-slate-800 border-b border-slate-300"
+            style={{ gridTemplateColumns: template }}
+          >
+            <div className="px-2 text-center">#</div>
+            <div className="px-2">Indent</div>
+            {columns.map((c) => (
+              <div key={c.label} className={`px-2 truncate ${c.align === 'right' ? 'text-right' : ''}`}>
+                {c.label}
+              </div>
+            ))}
+            <div className="px-2">Vendors</div>
+            <div className="px-2">Docs</div>
+            <div className="px-2 text-right">Actions</div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50/60 text-slate-500 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-2 font-semibold">Indent</th>
-                  <th className="px-4 py-2 font-semibold">Department</th>
-                  <th className="px-4 py-2 font-semibold">Item</th>
+          {indents.length === 0 && (
+            <div className="py-10 text-center text-xs text-slate-500">No indents match this filter.</div>
+          )}
 
-                  {type.includes("Yarn") && (
-                    <>
-                      <th className="px-4 py-2 font-semibold">Count</th>
-                      <th className="px-4 py-2 font-semibold">Blend</th>
-                      <th className="px-4 py-2 font-semibold">Ply</th>
-                      <th className="px-4 py-2 font-semibold">Shade</th>
-                      <th className="px-4 py-2 font-semibold text-right">Qty (kg)</th>
-                    </>
-                  )}
+          {indents.map((indent, idx) => {
+            const vendors = indent.vendors || [];
+            const names = vendors.map(vendorName);
+            const state = DOC_STATE_META[docState(getIndentVendorDocs(indent))];
+            const docsCount = getIndentDocsCount(indent);
+            const needsUpdate = indentNeedsUpdate(indent);
+            const indentLabel = indent.docId || indent.id;
+            const docsLabel = `Documents for ${indentLabel}: ${docsCount}${needsUpdate ? ', update needed' : ''}`;
 
-                  {type.includes("Fabric") && (
-                    <>
-                      <th className="px-4 py-2 font-semibold">Construction</th>
-                      <th className="px-4 py-2 font-semibold">GSM</th>
-                      <th className="px-4 py-2 font-semibold">Width</th>
-                      <th className="px-4 py-2 font-semibold text-right">Qty</th>
-                    </>
-                  )}
+            return (
+              <div
+                key={indent.id}
+                className={`grid items-center h-[30px] text-xs text-slate-700 border-b border-slate-100 hover:bg-teal-50/70 transition-colors ${
+                  idx % 2 ? 'bg-slate-50/80' : 'bg-white'
+                }`}
+                style={{ gridTemplateColumns: template }}
+              >
+                <div className="px-2 text-center text-slate-500">{idx + 1}</div>
+                <div className="px-2 font-mono text-[11.5px] font-semibold text-slate-900 truncate" title={String(indentLabel)}>
+                  {indentLabel}
+                </div>
 
-                  {type.includes("Spares") && (
-                    <>
-                      <th className="px-4 py-2 font-semibold">Machine</th>
-                      <th className="px-4 py-2 font-semibold">Part No</th>
-                      <th className="px-4 py-2 font-semibold">Make</th>
-                      <th className="px-4 py-2 font-semibold text-right">Qty</th>
-                    </>
-                  )}
-
-                  {type.includes("Dyes") && (
-                    <>
-                      <th className="px-4 py-2 font-semibold">CI / CAS</th>
-                      <th className="px-4 py-2 font-semibold">Strength</th>
-                      <th className="px-4 py-2 font-semibold">Hazard</th>
-                      <th className="px-4 py-2 font-semibold text-right">Qty (kg)</th>
-                    </>
-                  )}
-
-                  {!type.includes("Yarn") && !type.includes("Fabric") && !type.includes("Spares") && !type.includes("Dyes") && (
-                    <>
-                      <th className="px-4 py-2 font-semibold">Specification</th>
-                      <th className="px-4 py-2 font-semibold">UOM</th>
-                      <th className="px-4 py-2 font-semibold text-right">Qty</th>
-                    </>
-                  )}
-
-                  <th className="px-4 py-2 font-semibold">Vendors & Docs</th>
-                  <th className="px-4 py-2 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
-                {group.map(indent => {
-                  const deptName = typeof indent.department === 'object' ? indent.department?.name : (indent.department || '-');
-                  const uomName = typeof indent.uom === 'object' ? indent.uom?.name : (indent.uom || '');
-                  const vendorsList = indent.vendors || [];
-                  const commonDocs = indent.commonDocuments || [];
-
-                  const totalDocsCount = vendorsList.reduce(
-                    (sum, v) => sum + (v.documents ? v.documents.length : 0),
-                    0
-                  ) + commonDocs.length;
-
-                  const hasPendingDoc = vendorsList.some(v =>
-                    (v.documents || []).some(d => d.status === 'Update Needed')
-                  );
-
+                {columns.map((c) => {
+                  const value = c.value(indent);
                   return (
-                    <tr key={indent.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-4 py-2.5 font-bold font-mono text-slate-900">{indent.docId || indent.id}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{deptName}</td>
-                      <td className="px-4 py-2.5 font-medium text-slate-800">{indent.item_name || indent.id}</td>
-
-                      {type.includes("Yarn") && (
-                        <>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.count || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.blend || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.ply || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.shade || '-'}</td>
-                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">{Number(indent.qty || 0).toLocaleString()}</td>
-                        </>
-                      )}
-
-                      {type.includes("Fabric") && (
-                        <>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.construction || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.gsm || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.width || '-'}</td>
-                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">{Number(indent.qty || 0).toLocaleString()} {uomName}</td>
-                        </>
-                      )}
-
-                      {type.includes("Spares") && (
-                        <>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.machine || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.partNo || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.make || '-'}</td>
-                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">{Number(indent.qty || 0).toLocaleString()}</td>
-                        </>
-                      )}
-
-                      {type.includes("Dyes") && (
-                        <>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.ciCas || indent.code || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.strength || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.hazard || '-'}</td>
-                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">{Number(indent.qty || 0).toLocaleString()}</td>
-                        </>
-                      )}
-
-                      {!type.includes("Yarn") && !type.includes("Fabric") && !type.includes("Spares") && !type.includes("Dyes") && (
-                        <>
-                          <td className="px-4 py-2.5 text-slate-600">{indent.spec || '-'}</td>
-                          <td className="px-4 py-2.5 text-slate-600">{uomName || '-'}</td>
-                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">{Number(indent.qty || 0).toLocaleString()}</td>
-                        </>
-                      )}
-
-                      <td className="px-4 py-2.5 text-slate-600">
-                        <div className="flex flex-wrap items-center gap-1">
-                          {vendorsList.map(v => {
-                            const vDocs = v.documents || [];
-                            const needsUpdate = vDocs.some(d => d.status === 'Update Needed');
-
-                            return (
-                              <span
-                                key={v.id}
-                                onClick={() => handleOpenAction(indent, 'docs')}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-900 cursor-pointer border border-slate-200 transition-colors"
-                                title={`${v.label || v.name}: ${vDocs.length} docs`}
-                              >
-                                <span>{v.label || v.name}</span>
-                                {vDocs.length > 0 && (
-                                  <span className={`w-1.5 h-1.5 rounded-full ${needsUpdate ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                )}
-                              </span>
-                            );
-                          })}
-                          {vendorsList.length === 0 && <span className="text-slate-400">-</span>}
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenAction(indent, 'docs')}
-                          className={`px-2 py-1 text-xs font-semibold rounded-md border transition-colors mr-1.5 ${
-                            hasPendingDoc
-                              ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
-                              : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-                          }`}
-                          title="View vendor documents"
-                        >
-                          Docs ({totalDocsCount})
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenAction(indent, 'chat')}
-                          className="px-2.5 py-1 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-md hover:bg-teal-100 transition-colors mr-2"
-                        >
-                          Chat
-                        </button>
-                        {onRemoveIndent && (
-                          <button
-                            type="button"
-                            onClick={() => onRemoveIndent(lotId, indent.id)}
-                            className="text-slate-400 hover:text-red-500 text-xs transition-colors"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                    <div
+                      key={c.label}
+                      title={value}
+                      className={`px-2 truncate ${c.align === 'right' ? 'text-right tabular-nums font-medium' : ''} ${
+                        c.strong ? 'font-medium text-slate-900' : ''
+                      }`}
+                    >
+                      {value}
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+
+                {/* Vendors: first vendor + "+N"; click opens the documents drawer */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenAction(indent, 'docs')}
+                  title={names.length ? names.join(', ') : 'No vendors'}
+                  className="flex items-center gap-1.5 h-full px-2 min-w-0 text-left hover:text-teal-800"
+                >
+                  <span className={`text-[10px] leading-none ${state.cls}`} aria-hidden="true">{state.glyph}</span>
+                  <span className="truncate">{names[0] || '-'}</span>
+                  {names.length > 1 && (
+                    <span className="shrink-0 px-1.5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-medium">
+                      +{names.length - 1}
+                    </span>
+                  )}
+                  <span className="sr-only">{`Document status: ${state.label}`}</span>
+                </button>
+
+                {/* Docs */}
+                <div className="px-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAction(indent, 'docs')}
+                    aria-label={docsLabel}
+                    title={docsLabel}
+                    className={`inline-flex items-center gap-1 h-6 px-2 rounded-md border text-[11px] font-medium transition-colors ${
+                      needsUpdate
+                        ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                        : 'bg-white border-slate-300 text-slate-700 hover:bg-teal-50 hover:border-teal-600 hover:text-teal-800'
+                    }`}
+                  >
+                    <DocIcon />
+                    {docsCount}
+                  </button>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-1 px-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAction(indent, 'chat')}
+                    aria-label={`Chat with vendors for ${indentLabel}`}
+                    className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-teal-300 text-teal-800 bg-white hover:bg-teal-50 text-[11px] font-medium transition-colors"
+                  >
+                    <ChatIcon />
+                    Chat
+                  </button>
+                  {onRemoveIndent && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(indent)}
+                      aria-label={`Remove ${indentLabel} from lot`}
+                      title="Remove from lot"
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-md text-slate-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    >
+                      <CloseIcon />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      ))}
-    </div>
+      </div>
+
+      {/* Footer: totals + document-status legend */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3.5 py-2 bg-slate-200 border-t border-slate-300 text-xs font-semibold text-slate-800">
+        <span>Total {plural(indents.length, 'indent')}</span>
+        <span className="font-normal text-[11px] text-slate-700">
+          Docs: <span className="text-emerald-700">●</span> ready &nbsp;
+          <span className="text-amber-700">▲</span> update needed &nbsp;
+          <span className="text-blue-700">◐</span> in review &nbsp;
+          <span className="text-slate-500">○</span> none
+        </span>
+        <span>{qtyTotal ? `Qty ${qtyTotal}` : ''}</span>
+      </div>
+    </>
   );
 }
