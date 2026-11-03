@@ -23,7 +23,7 @@ function BiddingAppContent() {
     if (role === "Admin") {
       switch (currentView) {
         case "dashboard": return <Dashboard />;
-        case "bids": return (
+        case "  ": return (
           <Bids
             setCurrentView={setCurrentView}
             setEditingBidId={setEditingBidId}
