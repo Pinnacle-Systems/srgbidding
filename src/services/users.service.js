@@ -144,6 +144,8 @@ async function get(req) {
     },
     include: {
       role: true,
+      Party: true,
+      Employee: true,
     },
   });
   return { statusCode: 0, data };
@@ -156,6 +158,7 @@ async function getOne(id) {
     },
     include: {
       role: true,
+      Party: true,
       UserOnBranch: {
         include: {
           Branch: true,
@@ -200,41 +203,63 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-  const { username, password, active, roleId, branches, employeeId } =
-    await body;
+  const {
+    username,
+    password,
+    active,
+    roleId,
+    branches,
+    employeeId,
+    partyType,
+    partyId,
+  } = await body;
   const hashedPassword = await bcrypt.hash(password, 10);
   const data = await prisma.user.create({
     data: {
       username,
       password: hashedPassword,
+      partyType: partyType || null,
       UserOnBranch: branches
         ? {
-          createMany: {
-            data: branches.map((branch) => {
-              return { branchId: parseInt(branch.id) };
-            }),
-          },
-        }
+            createMany: {
+              data: branches.map((branch) => {
+                return { branchId: parseInt(branch.id) };
+              }),
+            },
+          }
         : undefined,
       role: roleId
         ? {
-          connect: { id: parseInt(roleId) },
-        }
+            connect: { id: parseInt(roleId) },
+          }
         : undefined,
       Employee: employeeId
         ? {
-          connect: { id: parseInt(employeeId) },
-        }
+            connect: { id: parseInt(employeeId) },
+          }
+        : undefined,
+      Party: partyId
+        ? {
+            connect: { id: parseInt(partyId) },
+          }
         : undefined,
       active,
     },
   });
-  console.log("data", data);
   return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-  const { username, password, active, roleId, branches } = await body;
+  const {
+    username,
+    password,
+    active,
+    roleId,
+    branches,
+    employeeId,
+    partyType,
+    partyId,
+  } = await body;
   const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
   const dataFound = await prisma.user.findUnique({
     where: {
@@ -249,14 +274,17 @@ async function update(id, body) {
     data: {
       username,
       password: hashedPassword,
+      partyType: partyType || null,
+      partyId: partyId ? parseInt(partyId) : null,
+      employeeId: employeeId ? parseInt(employeeId) : null,
       UserOnBranch: {
         deleteMany: branches ? {} : undefined,
         createMany: branches
           ? {
-            data: branches.map((branch) => {
-              return { branchId: parseInt(branch.id) };
-            }),
-          }
+              data: branches.map((branch) => {
+                return { branchId: parseInt(branch.id) };
+              }),
+            }
           : undefined,
       },
       roleId: roleId ? parseInt(roleId) : undefined,
