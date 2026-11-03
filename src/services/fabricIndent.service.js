@@ -5,6 +5,8 @@ import {
   getYearShortCode,
   getDateFromDateTime,
 } from "../utils/helper.js";
+import { generateNextItemsDocIds } from "../utils/indentItemHelper.js";
+
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getTableRecordWithId } from "../utils/helperQueries.js";
 import fs from "fs";
@@ -23,7 +25,6 @@ const REFERENCE_PAGE = "FABRIC INDENT FORM";
 const INDENT_TYPE = "FABRIC";
 const DOC_PREFIX = "FBI";
 
-
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
   if (saveType) return "Draft Save";
 
@@ -37,7 +38,6 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
   });
 
   console.log(lastObject, "lastObject");
-
 
   const branchObj = await getTableRecordWithId(branchId, "branch");
   let newDocId = `${branchObj.branchCode}/${shortCode}/${DOC_PREFIX}/1`;
@@ -72,19 +72,19 @@ function getPOApprovalStatus(log, isApprovalConfigured = false) {
   if (!log) {
     return isApprovalConfigured
       ? {
-        status: "NOTAPPROVED",
-        label: "Not Approved",
-        color: "orange",
-        currentLevel: 1,
-        levelLogs: [],
-      }
+          status: "NOTAPPROVED",
+          label: "Not Approved",
+          color: "orange",
+          currentLevel: 1,
+          levelLogs: [],
+        }
       : {
-        status: "NOT_CONFIGURED",
-        label: "No Approval",
-        color: "gray",
-        currentLevel: null,
-        levelLogs: [],
-      };
+          status: "NOT_CONFIGURED",
+          label: "No Approval",
+          color: "gray",
+          currentLevel: null,
+          levelLogs: [],
+        };
   }
   const base = {
     currentLevel: log.currentLevel,
@@ -137,7 +137,6 @@ function evaluateConfigs(activeConfigs, record) {
   return valid.some((config) => evaluateConfigTrigger(config, record));
 }
 
-
 async function get(req) {
   const {
     branchId,
@@ -156,7 +155,6 @@ async function get(req) {
     ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
     : "";
 
-
   let data = await prisma.Indent.findMany({
     where: {
       branchId: branchId ? parseInt(branchId) : undefined,
@@ -165,12 +163,11 @@ async function get(req) {
       docId: searchDocId ? { contains: searchDocId } : undefined,
       AND: finYearDate
         ? [
-          { createdAt: { gte: finYearDate.startDateStartTime } },
-          { createdAt: { lte: finYearDate.endDateEndTime } },
-        ]
+            { createdAt: { gte: finYearDate.startDateStartTime } },
+            { createdAt: { lte: finYearDate.endDateEndTime } },
+          ]
         : undefined,
     },
-
 
     orderBy: { docId: "desc" },
   });
@@ -224,22 +221,22 @@ async function get(req) {
   const activeConfigs =
     hasApproval && module
       ? await prisma.approvalConfig.findMany({
-        where: {
-          moduleId: module.id,
-          branchId: parseInt(branchId),
-          active: true,
-        },
-        include: {
-          ConfigConditions: {
-            include: { Field: true, Operator: true, CompareField: true },
+          where: {
+            moduleId: module.id,
+            branchId: parseInt(branchId),
+            active: true,
           },
-          approvalLevels: {
-            include: { LevelUsers: true },
-            orderBy: { levelNo: "asc" },
+          include: {
+            ConfigConditions: {
+              include: { Field: true, Operator: true, CompareField: true },
+            },
+            approvalLevels: {
+              include: { LevelUsers: true },
+              orderBy: { levelNo: "asc" },
+            },
           },
-        },
-        // orderBy: { priority: "asc" },
-      })
+          // orderBy: { priority: "asc" },
+        })
       : [];
 
   const resolvedData = data.map((po) => {
@@ -283,7 +280,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-
   const data = await prisma.Indent.findUnique({
     where: { id: parseInt(id) },
     include: {
@@ -294,10 +290,10 @@ async function getOne(id) {
           Size: true,
           Color: true,
           Uom: true,
-          IndentItemVendors: true
-        }
+          IndentItemVendors: true,
+        },
       },
-    }
+    },
   });
 
   if (!data) return NoRecordFound("Indent");
@@ -359,22 +355,35 @@ async function create(body) {
     employeeId,
     requiredDate,
     priority,
-    remarks
-
+    remarks,
   } = await body;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
-  let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave,);
+  const shortCode = finYearDate
+    ? getYearShortCodeForFinYear(
+        finYearDate?.startDateStartTime,
+        finYearDate?.endDateEndTime,
+      )
+    : "";
+  let newDocId = await getNextDocId(
+    branchId,
+    shortCode,
+    finYearDate?.startDateStartTime,
+    finYearDate?.endDateEndTime,
+    draftSave,
+  );
 
-  const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
+  const IndentItems =
+    typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
 
-  const { module, hasApproval } = await getModuleApprovalSetup(REFERENCE_PAGE, branchId);
+  const { module, hasApproval } = await getModuleApprovalSetup(
+    REFERENCE_PAGE,
+    branchId,
+  );
 
   let data;
   await prisma.$transaction(async (tx) => {
     data = await tx.Indent.create({
-
       data: {
         docId: newDocId,
         indentType: String(INDENT_TYPE),
@@ -386,12 +395,10 @@ async function create(body) {
         branchId: parseInt(branchId),
         departmentId: departmentId ? parseInt(departmentId) : null,
         employeeId: employeeId ? parseInt(employeeId) : null,
-
       },
     });
 
     if (hasApproval && module) {
-
       const includeClause = await buildIncludeForModule(module.id);
 
       const fullRecord = await tx.Indent.findUnique({
@@ -411,31 +418,36 @@ async function create(body) {
       );
     }
 
-
-    await createIssueItems(tx, IndentItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
-
-
-
-
-
+    await createIssueItems(
+      tx,
+      IndentItems,
+      data,
+      userId,
+      storeId,
+      branchId,
+      orderId,
+      departmentId,
+      employeeId,
+    );
   });
 
   return { statusCode: 0, data };
 }
 
-
 // ── CREATE INWARD ITEMS ───────────────────────────────────────────────────────
-async function createIssueItems(
-  tx,
-  inwardItems,
-  indent
-) {
+async function createIssueItems(tx, inwardItems, indent) {
+  let createdItem;
+  if (!inwardItems || inwardItems.length === 0) return createdItem;
 
-  let createdItem
+  const docIds = await generateNextItemsDocIds(tx, indent, inwardItems.length);
 
-  for (const item of inwardItems) {
+  for (let i = 0; i < inwardItems.length; i++) {
+    const item = inwardItems[i];
+    const itemsDocId = Array.isArray(docIds) ? docIds[i] : docIds;
+
     createdItem = await tx.IndentItems.create({
       data: {
+        itemsDocId,
         indentId: parseInt(indent.id),
         fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
         gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
@@ -444,23 +456,20 @@ async function createIssueItems(
         uomId: item?.uomId ? parseInt(item.uomId) : null,
         customData: item?.customData ? item.customData : null,
         qty: item?.qty ? String(item.qty) : null,
-        IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
-          create: item.IndentItemVendors.map((vendor) => ({
-            label: vendor?.label ? String(vendor.label) : null,
-            value: vendor?.value ? parseInt(vendor.value) : null,
-            vendorId: vendor?.value ? parseInt(vendor.value) : null,
-          }))
-        } : [],
+        IndentItemVendors:
+          item?.IndentItemVendors?.length > 0
+            ? {
+                create: item.IndentItemVendors.map((vendor) => ({
+                  label: vendor?.label ? String(vendor.label) : null,
+                  value: vendor?.value ? parseInt(vendor.value) : null,
+                  vendorId: vendor?.value ? parseInt(vendor.value) : null,
+                })),
+              }
+            : [],
       },
     });
-
-
-
   }
-  return createdItem
-
-
-
+  return createdItem;
 }
 
 function findRemovedItemsGoods(dataFound, indentItems) {
@@ -485,29 +494,28 @@ async function update(id, body, files) {
     orderId,
     departmentId,
     employeeId,
-    requiredDate
-
+    requiredDate,
   } = await body;
-
 
   const dataFound = await prisma.Indent.findUnique({
     where: { id: parseInt(id) },
     include: {
-      IndentItems: true
+      IndentItems: true,
     },
   });
   if (!dataFound) return NoRecordFound("Indent");
 
-
-  const IndentItems = typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
+  const IndentItems =
+    typeof indentItems === "string" ? JSON.parse(indentItems) : indentItems;
   const removedItemsGoods = findRemovedItemsGoods(dataFound, indentItems);
-  const removeItemsGoodsIds = removedItemsGoods.map((item) => parseInt(item.id));
+  const removeItemsGoodsIds = removedItemsGoods.map((item) =>
+    parseInt(item.id),
+  );
 
   let data;
 
   await prisma.$transaction(async (tx) => {
     if (removeItemsGoodsIds.length > 0) {
-
       await tx.IndentItems.deleteMany({
         where: { id: { in: removeItemsGoodsIds } },
       });
@@ -523,23 +531,23 @@ async function update(id, body, files) {
     });
 
     await updateinwardItems(tx, IndentItems, data);
-
-
   });
-
-
 
   return { statusCode: 0, data };
 }
 
 // ── UPDATE INWARD ITEMS ───────────────────────────────────────────────────────
-async function updateinwardItems(
-  tx,
-  indentItems,
-  indentRecord,
-) {
-  for (const item of indentItems) {
+async function updateinwardItems(tx, indentItems, indentRecord) {
+  if (!indentItems || indentItems.length === 0) return;
 
+  const newItemsCount = indentItems.filter((item) => !item.id).length;
+  const newDocIds =
+    newItemsCount > 0
+      ? await generateNextItemsDocIds(tx, indentRecord, newItemsCount)
+      : [];
+  let newDocIdIndex = 0;
+
+  for (const item of indentItems) {
     let createdOrUpdatedItem;
     if (item.id) {
       createdOrUpdatedItem = await tx.IndentItems.update({
@@ -554,19 +562,26 @@ async function updateinwardItems(
           qty: item?.qty ? String(item.qty) : null,
           IndentItemVendors: {
             deleteMany: {},
-            ...(item?.IndentItemVendors?.length > 0 ? {
-              create: item.IndentItemVendors.map((vendor) => ({
-                label: vendor?.label ? String(vendor.label) : null,
-                value: vendor?.value ? parseInt(vendor.value) : null,
-                vendorId: vendor?.value ? parseInt(vendor.value) : null,
-              }))
-            } : {})
-          }
+            ...(item?.IndentItemVendors?.length > 0
+              ? {
+                  create: item.IndentItemVendors.map((vendor) => ({
+                    label: vendor?.label ? String(vendor.label) : null,
+                    value: vendor?.value ? parseInt(vendor.value) : null,
+                    vendorId: vendor?.value ? parseInt(vendor.value) : null,
+                  })),
+                }
+              : {}),
+          },
         },
       });
     } else {
+      const itemsDocId = Array.isArray(newDocIds)
+        ? newDocIds[newDocIdIndex++]
+        : newDocIds;
+
       createdOrUpdatedItem = await tx.IndentItems.create({
         data: {
+          itemsDocId,
           indentId: parseInt(indentRecord.id),
           fabricId: item?.fabricId ? parseInt(item.fabricId) : null,
           gsmId: item?.gsmId ? parseInt(item.gsmId) : null,
@@ -575,35 +590,36 @@ async function updateinwardItems(
           uomId: item?.uomId ? parseInt(item.uomId) : null,
           customData: item?.customData ? item.customData : null,
           qty: item?.qty ? String(item.qty) : null,
-          IndentItemVendors: item?.IndentItemVendors?.length > 0 ? {
-            create: item.IndentItemVendors.map((vendor) => ({
-              label: vendor?.label ? String(vendor.label) : null,
-              value: vendor?.value ? parseInt(vendor.value) : null,
-              vendorId: vendor?.value ? parseInt(vendor.value) : null,
-            }))
-          } : undefined,
+          IndentItemVendors:
+            item?.IndentItemVendors?.length > 0
+              ? {
+                  create: item.IndentItemVendors.map((vendor) => ({
+                    label: vendor?.label ? String(vendor.label) : null,
+                    value: vendor?.value ? parseInt(vendor.value) : null,
+                    vendorId: vendor?.value ? parseInt(vendor.value) : null,
+                  })),
+                }
+              : undefined,
         },
       });
     }
-
   }
-
 }
 
 // ── REMOVE ────────────────────────────────────────────────────────────────────
 async function remove(id) {
   const data = await prisma.Indent.delete({
     where: {
-      id: parseInt(id)
+      id: parseInt(id),
     },
-  })
+  });
 
   await prisma.approvalLog.deleteMany({
     where: {
       referenceId: parseInt(id),
-      referencePage: REFERENCE_PAGE
+      referencePage: REFERENCE_PAGE,
     },
-  })
+  });
   return { statusCode: 0, data };
 }
 
@@ -709,29 +725,29 @@ async function getPurchaseDetailStock(req) {
     statusCode: 0,
     data: isMaterial
       ? data.map((d) => ({
-        invNo: d.invNo,
-        styleItemId: d.styleItemId,
-        fabricId: d.fabricId,
-        hsnId: d.hsnId,
-        uomId: d.uomId,
-        fabWidth: d.fabWidth,
-        fabMeter: d._sum.fabMeter,
-        accessoryId: d.accessoryId,
-        accessoryGroupId: d.accessoryGroupId,
-        qty: d._sum.qty,
-        styleId: d.styleId,
-        portionId: d.portionId,
-      }))
+          invNo: d.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          hsnId: d.hsnId,
+          uomId: d.uomId,
+          fabWidth: d.fabWidth,
+          fabMeter: d._sum.fabMeter,
+          accessoryId: d.accessoryId,
+          accessoryGroupId: d.accessoryGroupId,
+          qty: d._sum.qty,
+          styleId: d.styleId,
+          portionId: d.portionId,
+        }))
       : data.map((d) => ({
-        invNo: purchaseData.invNo,
-        styleItemId: d.styleItemId,
-        fabricId: d.fabricId,
-        hsnId: d.hsnId,
-        uomId: d.uomId,
-        stkQty: d._sum.qty,
-        styleId: d.styleId,
-        styleNo: d.styleNo,
-      })),
+          invNo: purchaseData.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          hsnId: d.hsnId,
+          uomId: d.uomId,
+          stkQty: d._sum.qty,
+          styleId: d.styleId,
+          styleNo: d.styleNo,
+        })),
     returnType: purchaseData.inwardType,
     supplierId: purchaseData.supplierId,
   };
@@ -751,13 +767,13 @@ function manualFilterSearchDataPurchaseInwardItems(
     (item) =>
       (searchDocDate
         ? String(getDateFromDateTime(item.PurchaseInward.docDate)).includes(
-          searchDocDate,
-        )
+            searchDocDate,
+          )
         : true) &&
       (searchDcDate
         ? String(getDateFromDateTime(item.PurchaseInward.dcDate)).includes(
-          searchDcDate,
-        )
+            searchDcDate,
+          )
         : true) &&
       (returnTypeToSearch
         ? returnTypeToSearch.includes(item.PurchaseInward.inwardType)
@@ -881,16 +897,12 @@ async function getPurchaseInwardItems(req) {
   return { statusCode: 0, data, totalCount };
 }
 
-
-
-
-
 function manualFilterSearchDataPIItems(searchPIDate, data) {
   return data.filter((item) =>
     searchPIDate
       ? String(getDateFromDateTime(item.PurchaseInward?.docDate)).includes(
-        searchPIDate,
-      )
+          searchPIDate,
+        )
       : true,
   );
 }
@@ -1004,7 +1016,7 @@ export {
 async function submit(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "SUBMITTED" }
+    data: { status: "SUBMITTED" },
   });
   return { statusCode: 0, data };
 }
@@ -1019,14 +1031,14 @@ async function approve(id, body) {
       referenceId,
       actionType,
     } = body;
-    console.log(body, "body")
+    console.log(body, "body");
 
     if (!userId) return { statusCode: 1, message: "userId is required" };
     if (actionType === "REJECT" && !remarks?.trim()) {
       return { statusCode: 1, message: "Remarks required for rejection" };
     }
 
-    console.log(actionType === "APPROVE")
+    console.log(actionType === "APPROVE");
 
     if (actionType === "APPROVE") {
       return await approveRecord(
@@ -1049,7 +1061,7 @@ async function approve(id, body) {
 async function reject(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "REJECTED" }
+    data: { status: "REJECTED" },
   });
   return { statusCode: 0, data };
 }
@@ -1057,7 +1069,7 @@ async function reject(id, body) {
 async function returnIndent(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "RETURNED" }
+    data: { status: "RETURNED" },
   });
   return { statusCode: 0, data };
 }
@@ -1065,16 +1077,9 @@ async function returnIndent(id, body) {
 async function cancel(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "CANCELLED" }
+    data: { status: "CANCELLED" },
   });
   return { statusCode: 0, data };
 }
 
-export {
-  submit,
-  approve,
-  reject,
-  returnIndent,
-  cancel,
-
-}
+export { submit, approve, reject, returnIndent, cancel };

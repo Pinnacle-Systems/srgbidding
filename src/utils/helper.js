@@ -468,3 +468,6 @@ export function getDateTimeRange(date) {
   endTime.setHours(23, 59, 59, 99);
   return { startTime, endTime };
 }
+
+export { generateNextItemsDocId, generateNextItemsDocIds } from "./indentItemHelper.js";
+

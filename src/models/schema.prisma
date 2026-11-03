@@ -2964,6 +2964,7 @@ model Indent {
 
 model IndentItems {
   id                Int                 @id @default(autoincrement())
+  itemsDocId        String              @unique
   Indent            Indent?             @relation(fields: [indentId], references: [id], onDelete: Cascade)
   indentId          Int?
   Itemgroup         ItemGroup?          @relation(fields: [itemGroupId], references: [id])
@@ -2997,6 +2998,8 @@ model IndentItems {
   status            String?             @default("")
   IndentItemVendors IndentItemVendors[]
   BiddingIndent     BiddingIndent[]
+
+  @@index([indentId])
 }
 
 model IndentItemVendors {
