@@ -58,7 +58,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
     department: typeof ind.Indent?.Department === 'object'
       ? ind.Indent?.Department?.name
       : (ind.department || 'General'),
-    item_name: ind.Yarn?.name || ind.Fabric?.name || ind.Item?.name || 'Item',
+    item_name: ind.Yarn?.name || ind.Fabric?.name || ind.Item?.name || (typeof ind.item_name === 'object' ? ind.item_name?.name : ind.item_name) || 'Item',
     count: ind.Counts?.name || ind.count || '-',
     blend: ind.YarnBlend?.name || ind.blend || '-',
     shade: ind.Color?.name || ind.shade || '-',
@@ -66,10 +66,28 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
     uom: typeof ind.Uom === 'object' ? ind.Uom?.name : (ind.uom || 'kg'),
     requiredBy: ind.requiredBy || ind.Indent?.requiredDate || '-',
     commonDocuments: ind.commonDocuments || [],
+    yarnId: ind.yarnId || ind.Yarn?.id || null,
+    yarnBlendId: ind.yarnBlendId || ind.YarnBlend?.id || null,
+    countsId: ind.countsId || ind.Counts?.id || null,
+    colorId: ind.colorId || ind.Color?.id || null,
+    uomId: ind.uomId || ind.Uom?.id || null,
+    fabricId: ind.fabricId || ind.Fabric?.id || null,
+    gsmId: ind.gsmId || ind.Gsm?.id || null,
+    itemId: ind.itemId || ind.Item?.id || null,
+    width: ind.width || '',
+    make: ind.make || '',
+    machine: ind.machine || '',
+    partNo: ind.partNo || '',
+    spec: ind.spec || '',
+    ply: ind.ply || '',
+    ciCas: ind.ciCas || ind.code || '',
+    strength: ind.strength || '',
+    hazard: ind.hazard || '',
+    customData: ind.customData || {},
     vendors: (ind.vendors || ind.IndentItemVendors || []).map(v => ({
-      id: v.vendorId !== undefined ? v.vendorId : v.id,
-      name: v.name || v.label || v.Vendor?.name || `Vendor ${v.vendorId || v.id}`,
-      label: v.label || v.name || v.Vendor?.name || `Vendor ${v.vendorId || v.id}`,
+      id: v.vendorId !== undefined ? v.vendorId : (v.value !== undefined ? v.value : v.id),
+      name: v.name || v.label || v.Vendor?.name || `Vendor ${v.vendorId || v.value || v.id}`,
+      label: v.label || v.name || v.Vendor?.name || `Vendor ${v.vendorId || v.value || v.id}`,
       documents: v.documents || []
     }))
   });
@@ -93,6 +111,22 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
       ...prev,
       lots: prev.lots.map(lot =>
         lot.id === lotId ? { ...lot, indents: lot.indents.filter(i => i.id !== indentId) } : lot
+      )
+    }));
+  };
+
+  const updateIndent = (lotId, indentId, updatedFields) => {
+    setBidData(prev => ({
+      ...prev,
+      lots: (prev.lots || []).map(lot =>
+        lot.id === lotId
+          ? {
+              ...lot,
+              indents: (lot.indents || []).map(ind =>
+                ind.id === indentId ? { ...ind, ...updatedFields } : ind
+              )
+            }
+          : lot
       )
     }));
   };
@@ -275,6 +309,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
                 onOpenChat={handleOpenChat}
                 onOpenDrawer={handleOpenDrawer}
                 onRemoveIndent={removeIndent}
+                onUpdateIndent={updateIndent}
               />
             </div>
           </>

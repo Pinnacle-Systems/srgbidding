@@ -208,7 +208,7 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
         )}
       </div>
 
-      <div className="w-full h-[calc(100vh-100px)] pl-6 pr-2 mt-2">
+      <div className="w-full h-[calc(100vh-110px)] pl-6 pr-2 mt-2">
         {/* Main Form Area */}
         <div className="bg-white border border-slate-200 rounded-md shadow-sm flex flex-col h-full overflow-hidden">
           <div className="flex-1 overflow-y-auto p-3">

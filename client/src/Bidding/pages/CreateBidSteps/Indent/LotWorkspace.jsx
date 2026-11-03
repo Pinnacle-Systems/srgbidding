@@ -26,6 +26,7 @@ export default function LotWorkspace({
   onOpenChat,
   onOpenDrawer,
   onRemoveIndent,
+  onUpdateIndent,
 }) {
   const [typeFilter, setTypeFilter] = useState('All');
   const [vendorFilter, setVendorFilter] = useState('');
@@ -227,10 +228,12 @@ export default function LotWorkspace({
           <IndentTableByType
             indents={visibleIndents}
             typeKey={activeType === 'All' ? 'all' : getTypeKey(activeType)}
+            activeTypeName={activeType}
             lotId={lot.id}
             onOpenChat={onOpenChat}
             onOpenDrawer={onOpenDrawer}
             onRemoveIndent={onRemoveIndent}
+            onUpdateIndent={onUpdateIndent}
           />
         </>
       )}

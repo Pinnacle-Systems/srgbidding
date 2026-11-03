@@ -2533,7 +2533,7 @@ export default function Form({
             onClick={handleCreate}
             className="bg-white border h-6 border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-xs px-2 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Terms & Conditions
+            + Add New Customer & Supplier
           </button>
           <div className="flex items-center gap-2">
             <button
