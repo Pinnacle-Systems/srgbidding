@@ -1,252 +1,483 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import secureLocalStorage from "react-secure-storage";
 import {
-    useGetUserQuery,
-    useGetUserByIdQuery,
-    useAddUserMutation,
-    useUpdateUserMutation,
-    useDeleteUserMutation,
+  useGetUserQuery,
+  useGetUserByIdQuery,
+  useAddUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
 } from "../../../redux/services/UsersMasterService";
 import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
 import { useGetRolesQuery } from "../../../redux/services/RolesMasterService";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
 
 import FormHeader from "../FormHeader";
 import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
-import { TextInput, CheckBox, DropdownInput, MultiSelectDropdown } from "../../../Inputs";
+import {
+  TextInput,
+  CheckBox,
+  DropdownInput,
+  MultiSelectDropdown,
+} from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
-import { dropDownListObject, multiSelectOption, multiSelectOptionSelectedApiData } from '../../../Utils/contructObject';
+import {
+  dropDownListObject,
+  multiSelectOption,
+  multiSelectOptionSelectedApiData,
+} from "../../../Utils/contructObject";
 
 const MODEL = "User Master";
 
 export default function Form() {
-    const [form, setForm] = useState(false);
+  const [form, setForm] = useState(false);
 
-    const [readOnly, setReadOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
 
-    const [id, setId] = useState("")
-    const [name, setName] = useState("");
-    const [password, setPassword] = useState("")
-    const [active, setActive] = useState(true);
-    const [role, setRole] = useState("");
-    const [branches, setBranches] = useState([]);
-    const [employee, setEmployee] = useState("");
-    const [indentCreationAccess, setIndentCreationAccess] = useState([]);
-    const [indentApprovalAccess, setIndentApprovalAccess] = useState([]);
+  const [id, setId] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [active, setActive] = useState(true);
+  const [role, setRole] = useState("");
+  const [branches, setBranches] = useState([]);
+  const [employee, setEmployee] = useState("");
+  const [partyType, setPartyType] = useState("");
+  const [partyId, setPartyId] = useState("");
+  const [indentCreationAccess, setIndentCreationAccess] = useState([]);
+  const [indentApprovalAccess, setIndentApprovalAccess] = useState([]);
 
-    const indentCategoryOptions = [
-        { label: "Yarn", value: "Yarn" },
-        { label: "Fabric", value: "Fabric" },
-        { label: "Spare Part", value: "Spare Part" },
-        { label: "Dyes & Chemicals", value: "Dyes & Chemicals" }
-    ];
+  const partyTypeOptions = [
+    { show: "Customer", value: "Customer" },
+    { show: "Supplier", value: "Supplier" },
+  ];
 
+  const indentCategoryOptions = [
+    { label: "Yarn", value: "Yarn" },
+    { label: "Fabric", value: "Fabric" },
+    { label: "Spare Part", value: "Spare Part" },
+    { label: "Dyes & Chemicals", value: "Dyes & Chemicals" },
+  ];
 
-    const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState("");
 
-    const childRecord = useRef(0);
+  const childRecord = useRef(0);
 
-    const params = {
-        companyId: secureLocalStorage.getItem(
-            sessionStorage.getItem("sessionId") + "userCompanyId"
-        ),
-    };
-    const { data: employeeList, isLoading: isEmployeeLoading, isFetching: isEmployeeFetching } =
-        useGetEmployeeQuery({ params: { ...params, active: true } }, { skip: !form });
+  const params = {
+    companyId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId",
+    ),
+  };
+  const {
+    data: employeeList,
+    isLoading: isEmployeeLoading,
+    isFetching: isEmployeeFetching,
+  } = useGetEmployeeQuery(
+    { params: { ...params, active: true } },
+    { skip: !form },
+  );
 
-    const { data: roleList, isLoading: isRoleLoading, isFetching: isRoleFetching } =
-        useGetRolesQuery({ params: { ...params, active: true, defaultRole: false } }, { skip: !form });
+  const {
+    data: roleList,
+    isLoading: isRoleLoading,
+    isFetching: isRoleFetching,
+  } = useGetRolesQuery(
+    { params: { ...params, active: true, defaultRole: false } },
+    { skip: !form },
+  );
 
-    const { data: branchesList, isLoading: branchesLoading, isFetching: branchesFetching } =
-        useGetBranchQuery({ params: { ...params, active: true, defaultRole: false } }, { skip: !form });
+  const {
+    data: branchesList,
+    isLoading: branchesLoading,
+    isFetching: branchesFetching,
+  } = useGetBranchQuery(
+    { params: { ...params, active: true, defaultRole: false } },
+    { skip: !form },
+  );
 
-    const { data: allData, isLoading, isFetching } = useGetUserQuery({ params: { ...params, defaultRole: false }, searchParams: searchValue });
+  const { data: partyList, isLoading: isPartyLoading } = useGetPartyQuery(
+    { params: { ...params, active: true } },
+    { skip: !form },
+  );
 
-
-    const {
-        data: singleData,
-        isFetching: isSingleFetching,
-        isLoading: isSingleLoading,
-    } = useGetUserByIdQuery(id, { skip: !id });
-
-    const [addData] = useAddUserMutation();
-    const [updateData] = useUpdateUserMutation();
-    const [removeData] = useDeleteUserMutation();
-
-    const syncFormWithDb = useCallback((data) => {
-        // if (id) setReadOnly(true);
-        setId(data?.id ? data.id : "");
-        setName(data?.username ? data.username : "");
-        setActive(id ? (data?.active ? data.active : false) : true);
-        setRole(data?.roleId ? data.roleId : "");
-        setEmployee(data?.Employee?.id ? data?.Employee?.id : "");
-        setBranches(data ? data?.UserOnBranch.map((branch) => { return { value: branch.branchId, label: branch.Branch.branchName } }) : []);
-        
-        const mapAccessToDropdown = (accessArray) => accessArray ? accessArray.map(item => ({ label: item, value: item })) : [];
-        setIndentCreationAccess(mapAccessToDropdown(data?.indentCreationAccess));
-        setIndentApprovalAccess(mapAccessToDropdown(data?.indentApprovalAccess));
-    }, [id]);
-
-    useEffect(() => {
-        syncFormWithDb(singleData?.data);
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
-
-    const data = {
-        username: name, password, active, roleId: role, branches: multiSelectOptionSelectedApiData(branches), employeeId: employee, id,
-        indentCreationAccess: indentCreationAccess?.map(item => item.value) || [],
-        indentApprovalAccess: indentApprovalAccess?.map(item => item.value) || []
+  const partyOptions = useMemo(() => {
+    if (!partyList?.data || !partyType) return [];
+    const list = Array.isArray(partyList.data) ? partyList.data : [];
+    if (partyType === "Customer") {
+      return list
+        .filter((p) => p.isCustomer)
+        .map((p) => ({ show: p.name, value: p.id }));
     }
-
-    const validateData = (data) => {
-        if (data.username && (id ? true : data.password) && data.roleId && data.branches && data.employeeId) {
-            return true;
-        }
-        return false;
+    if (partyType === "Supplier") {
+      return list
+        .filter((p) => p.isSupplier)
+        .map((p) => ({ show: p.name, value: p.id }));
     }
+    return [];
+  }, [partyList, partyType]);
 
-    const handleSubmitCustom = async (callback, data, text) => {
-        try {
-            await callback(data)
-            setId("")
-            syncFormWithDb(undefined)
-            toast.success(text + "Successfully");
-        } catch (error) {
-            console.log("handle");
-        }
-    };
+  const selectedRole = useMemo(() => {
+    return roleList?.data?.find((r) => String(r.id) === String(role));
+  }, [roleList, role]);
 
-    const saveData = () => {
-        if (!validateData(data)) {
-            toast.info("Please fill all required fields...!", {
-                position: "top-center",
-            });
-            return;
-        }
-        if (!window.confirm("Are you sure save the details ...?")) {
-            return;
-        }
-        if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
-        } else {
-            handleSubmitCustom(addData, data, "Added");
-        }
-    };
+  const isVendorRole = useMemo(() => {
+    return selectedRole?.name?.trim().toLowerCase() === "vendor";
+  }, [selectedRole]);
 
-    const deleteData = async () => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return;
-            }
-            try {
-                await removeData(id)
-                setId("");
-                toast.success("Deleted Successfully");
-            } catch (error) {
-                toast.error("something went wrong");
-            }
-        }
-    };
+  useEffect(() => {
+    if (isVendorRole) {
+      setIndentCreationAccess([]);
+      setIndentApprovalAccess([]);
+    }
+  }, [isVendorRole]);
 
-    const handleKeyDown = (event) => {
-        let charCode = String.fromCharCode(event.which).toLowerCase();
-        if ((event.ctrlKey || event.metaKey) && charCode === "s") {
-            event.preventDefault();
-            saveData();
-        }
-    };
+  const {
+    data: allData,
+    isLoading,
+    isFetching,
+  } = useGetUserQuery({
+    params: { ...params, defaultRole: false },
+    searchParams: searchValue,
+  });
 
-    const onNew = () => {
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetUserByIdQuery(id, { skip: !id });
+
+  const [addData] = useAddUserMutation();
+  const [updateData] = useUpdateUserMutation();
+  const [removeData] = useDeleteUserMutation();
+
+  const syncFormWithDb = useCallback(
+    (data) => {
+      // if (id) setReadOnly(true);
+      setId(data?.id ? data.id : "");
+      setName(data?.username ? data.username : "");
+      setActive(id ? (data?.active ? data.active : false) : true);
+      setRole(data?.roleId ? data.roleId : "");
+      setEmployee(data?.Employee?.id ? data?.Employee?.id : "");
+      setPartyType(data?.partyType ? data.partyType : "");
+      setPartyId(
+        data?.partyId ? data.partyId : data?.Party?.id ? data.Party.id : "",
+      );
+      setBranches(
+        data
+          ? data?.UserOnBranch.map((branch) => {
+              return {
+                value: branch.branchId,
+                label: branch.Branch.branchName,
+              };
+            })
+          : [],
+      );
+
+      const mapAccessToDropdown = (accessArray) =>
+        accessArray
+          ? accessArray.map((item) => ({ label: item, value: item }))
+          : [];
+      setIndentCreationAccess(mapAccessToDropdown(data?.indentCreationAccess));
+      setIndentApprovalAccess(mapAccessToDropdown(data?.indentApprovalAccess));
+    },
+    [id],
+  );
+
+  useEffect(() => {
+    syncFormWithDb(singleData?.data);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  const data = {
+    username: name,
+    password,
+    active,
+    roleId: role,
+    branches: multiSelectOptionSelectedApiData(branches),
+    employeeId: employee || null,
+    partyType: partyType || null,
+    partyId: partyId ? parseInt(partyId) : null,
+    id,
+    indentCreationAccess: isVendorRole
+      ? []
+      : indentCreationAccess?.map((item) => item.value) || [],
+    indentApprovalAccess: isVendorRole
+      ? []
+      : indentApprovalAccess?.map((item) => item.value) || [],
+  };
+
+  const validateData = (data) => {
+    if (
+      data.username &&
+      (id ? true : data.password) &&
+      data.roleId &&
+      data.branches
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const handleSubmitCustom = async (callback, data, text) => {
+    try {
+      await callback(data);
+      setId("");
+      syncFormWithDb(undefined);
+      toast.success(text + "Successfully");
+    } catch (error) {
+      console.log("handle");
+    }
+  };
+
+  const saveData = () => {
+    if (!validateData(data)) {
+      toast.info("Please fill all required fields...!", {
+        position: "top-center",
+      });
+      return;
+    }
+    if (!window.confirm("Are you sure save the details ...?")) {
+      return;
+    }
+    if (id) {
+      handleSubmitCustom(updateData, data, "Updated");
+    } else {
+      handleSubmitCustom(addData, data, "Added");
+    }
+  };
+
+  const deleteData = async () => {
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        await removeData(id);
         setId("");
-        setReadOnly(false);
-        setForm(true);
-        setSearchValue("");
-    };
-
-    function onDataClick(id) {
-        setId(id);
-        setForm(true);
+        toast.success("Deleted Successfully");
+      } catch (error) {
+        toast.error("something went wrong");
+      }
     }
-    const tableHeaders = ["Username", "Role", "Status"]
-    const tableDataNames = ["dataObj.username", "dataObj?.role?.name", 'dataObj.active ? ACTIVE : INACTIVE']
+  };
 
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
 
-    if (!form)
-        return (
-            <ReportTemplate
-                heading={MODEL}
-                tableHeaders={tableHeaders}
-                tableDataNames={tableDataNames}
-                loading={
-                    isLoading || isFetching
-                }
-                setForm={setForm}
-                data={allData?.data}
-                onClick={onDataClick}
-                onNew={onNew}
-                searchValue={searchValue}
-                setSearchValue={setSearchValue}
-            />
-        );
+  const onNew = () => {
+    setId("");
+    setReadOnly(false);
+    setForm(true);
+    setSearchValue("");
+    setPartyType("");
+    setPartyId("");
+  };
 
+  function onDataClick(id) {
+    setId(id);
+    setForm(true);
+  }
+  const tableHeaders = ["Username", "Role", "Status"];
+  const tableDataNames = [
+    "dataObj.username",
+    "dataObj?.role?.name",
+    "dataObj.active ? ACTIVE : INACTIVE",
+  ];
+
+  if (!form)
     return (
-        <div
-            onKeyDown={handleKeyDown}
-            className="md:items-start md:justify-items-center grid h-full bg-theme"
-        >
-            <div className="flex flex-col frame w-full h-full">
-                <FormHeader
-                    onNew={onNew}
-                    onClose={() => {
-                        setForm(false);
-                        setSearchValue("");
-                    }}
-                    model={MODEL}
-                    saveData={saveData}
-                    setReadOnly={setReadOnly}
-                    deleteData={deleteData}
-                    childRecord={childRecord.current}
-                />
-
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-visible">
-
-                    <div className="col-span-3 border overflow-visible pb-16">
-                        <div className='mr-1 md:ml-2'>
-                            <fieldset className='frame my-1'>
-                                <legend className='sub-heading'>User Info</legend>
-                                <form className='grid grid-cols-1 md:grid-cols-2 gap-4 my-2' autoComplete="chrome-off">
-                                    <div className="relative z-[100]"><TextInput name="Username" type="normal" value={name} setValue={setName} required={true} readOnly={readOnly} /></div>
-                                    {!id
-                                        ?
-                                        <div className="relative z-[90]"><TextInput name="Password" type="password" value={password} setValue={setPassword} required={true} readOnly={readOnly} /></div>
-                                        :
-                                        ""
-                                    }
-                                    <div className="relative z-[80]"><DropdownInput name="Employee" options={!employeeList ? [] : employeeList?.data.map(employee => { return { show: `${employee.regNo}/${employee.name}/${employee.EmployeeCategory?.name}`, value: employee.id } })} value={employee} setValue={setEmployee} required={true} readOnly={readOnly} /></div>
-                                    <div className="relative z-[70]"><DropdownInput name="Role" options={dropDownListObject(roleList ? roleList?.data : [], "name", "id")} value={role} setValue={setRole} required={true} readOnly={readOnly} /></div>
-                                    <div className="relative z-[60]"><MultiSelectDropdown readOnly={readOnly} name="Branch" selected={branches} setSelected={setBranches} options={multiSelectOption(branchesList ? branchesList.data : [], "branchName", "id")} /></div>
-                                    <div className="relative z-[50]"><MultiSelectDropdown readOnly={readOnly} name="Indent Creation Access" selected={indentCreationAccess} setSelected={setIndentCreationAccess} options={indentCategoryOptions} /></div>
-                                    <div className="relative z-[40]"><MultiSelectDropdown readOnly={readOnly} name="Indent Approval Access" selected={indentApprovalAccess} setSelected={setIndentApprovalAccess} options={indentCategoryOptions} /></div>
-                                    <div className="relative z-[30]"><CheckBox name="Active" value={active} setValue={setActive} /></div>
-                                </form>
-                            </fieldset>
-                        </div>
-                    </div>
-                    <div className="frame hidden md:block overflow-x-hidden">
-                        <FormReport
-                            searchValue={searchValue}
-                            setSearchValue={setSearchValue}
-                            setId={setId}
-                            tableHeaders={tableHeaders}
-                            tableDataNames={tableDataNames}
-                            data={allData?.data}
-                            loading={
-                                isLoading || isFetching
-                            }
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
+      <ReportTemplate
+        heading={MODEL}
+        tableHeaders={tableHeaders}
+        tableDataNames={tableDataNames}
+        loading={isLoading || isFetching}
+        setForm={setForm}
+        data={allData?.data}
+        onClick={onDataClick}
+        onNew={onNew}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+      />
     );
+
+  return (
+    <div
+      onKeyDown={handleKeyDown}
+      className="md:items-start md:justify-items-center grid h-full bg-theme"
+    >
+      <div className="flex flex-col frame w-full h-full">
+        <FormHeader
+          onNew={onNew}
+          onClose={() => {
+            setForm(false);
+            setSearchValue("");
+          }}
+          model={MODEL}
+          saveData={saveData}
+          setReadOnly={setReadOnly}
+          deleteData={deleteData}
+          childRecord={childRecord.current}
+        />
+
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-x-2 overflow-visible">
+          <div className="col-span-3 border overflow-visible pb-16">
+            <div className="mr-1 md:ml-2">
+              <fieldset className="frame my-1">
+                <legend className="sub-heading">User Info</legend>
+                <form
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 my-2"
+                  autoComplete="chrome-off"
+                >
+                  <div className="relative z-[100]">
+                    <TextInput
+                      name="Username"
+                      type="normal"
+                      value={name}
+                      setValue={setName}
+                      required={true}
+                      readOnly={readOnly}
+                    />
+                  </div>
+                  {!id ? (
+                    <div className="relative z-[95]">
+                      <TextInput
+                        name="Password"
+                        type="password"
+                        value={password}
+                        setValue={setPassword}
+                        required={true}
+                        readOnly={readOnly}
+                      />
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                  <div className="relative z-[90]">
+                    <DropdownInput
+                      name="Party Type"
+                      options={partyTypeOptions}
+                      value={partyType}
+                      setValue={(val) => {
+                        setPartyType(val);
+                        setPartyId("");
+                      }}
+                      readOnly={readOnly}
+                      clear={true}
+                    />
+                  </div>
+                  <div className="relative z-[85]">
+                    <DropdownInput
+                      name="Party"
+                      options={partyOptions}
+                      value={partyId}
+                      setValue={setPartyId}
+                      readOnly={readOnly || !partyType}
+                      disabled={readOnly || !partyType}
+                      clear={true}
+                    />
+                  </div>
+                  <div className="relative z-[70]">
+                    <DropdownInput
+                      name="Role"
+                      options={dropDownListObject(
+                        roleList ? roleList?.data : [],
+                        "name",
+                        "id",
+                      )}
+                      value={role}
+                      setValue={setRole}
+                      required={true}
+                      readOnly={readOnly}
+                    />
+                  </div>
+                  <div className="relative z-[80]">
+                    <DropdownInput
+                      name="Employee"
+                      options={
+                        !employeeList
+                          ? []
+                          : employeeList?.data.map((employee) => {
+                              return {
+                                show: `${employee.regNo}/${employee.name}/${employee.EmployeeCategory?.name}`,
+                                value: employee.id,
+                              };
+                            })
+                      }
+                      value={employee}
+                      setValue={setEmployee}
+                      required={false}
+                      readOnly={readOnly}
+                      clear={true}
+                    />
+                  </div>
+
+                  <div className="relative z-[60]">
+                    <MultiSelectDropdown
+                      readOnly={readOnly}
+                      name="Branch"
+                      selected={branches}
+                      setSelected={setBranches}
+                      options={multiSelectOption(
+                        branchesList ? branchesList.data : [],
+                        "branchName",
+                        "id",
+                      )}
+                    />
+                  </div>
+                  {/* <div className="relative z-[50]">
+                    <MultiSelectDropdown
+                      readOnly={readOnly || isVendorRole}
+                      disabled={readOnly || isVendorRole}
+                      name="Indent Creation Access"
+                      selected={isVendorRole ? [] : indentCreationAccess}
+                      setSelected={setIndentCreationAccess}
+                      options={indentCategoryOptions}
+                    />
+                  </div>
+                  <div className="relative z-[40]">
+                    <MultiSelectDropdown
+                      readOnly={readOnly || isVendorRole}
+                      disabled={readOnly || isVendorRole}
+                      name="Indent Approval Access"
+                      selected={isVendorRole ? [] : indentApprovalAccess}
+                      setSelected={setIndentApprovalAccess}
+                      options={indentCategoryOptions}
+                    />
+                  </div> */}
+                  <div className="relative z-[30]">
+                    <CheckBox
+                      name="Active"
+                      value={active}
+                      setValue={setActive}
+                    />
+                  </div>
+                </form>
+              </fieldset>
+            </div>
+          </div>
+          <div className="frame hidden md:block overflow-x-hidden">
+            <FormReport
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              setId={setId}
+              tableHeaders={tableHeaders}
+              tableDataNames={tableDataNames}
+              data={allData?.data}
+              loading={isLoading || isFetching}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

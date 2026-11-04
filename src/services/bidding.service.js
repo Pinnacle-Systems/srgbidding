@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.js";
 import { NoRecordFound } from "../configs/Responses.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
@@ -50,39 +51,34 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
 
 
 async function get(req) {
-  const { companyId } = req.query;
+  const { companyId, partyId, vendorId } = req.query;
+  const targetVendorId = partyId || vendorId;
+
+  const where = {};
+  if (companyId) {
+    where.Branch = {
+      companyId: parseInt(companyId),
+    };
+  }
+  if (targetVendorId) {
+    where.BiddingLots = {
+      some: {
+        BiddingIndent: {
+          some: {
+            BiddingIndentvendors: {
+              some: {
+                vendorId: parseInt(targetVendorId),
+              },
+            },
+          },
+        },
+      },
+    };
+  }
 
   const data = await prisma.Bidding.findMany({
-    where: {
-
-    },
+    where,
     include: {
-      BiddingLots: {
-        include: {
-          BiddingIndent: {
-            include: {
-
-              BiddingIndentvendors: true,
-              BiddingIndentChat: true
-
-            }
-          }
-        }
-      }
-    }
-  });
-
-
-  return { statusCode: 0, data };
-}
-
-async function getOne(id) {
-  const data = await prisma.Bidding.findUnique({
-    where: {
-      id: parseInt(id),
-    },
-    include: {
-      createdBy: true,
       Branch: true,
       BiddingLots: {
         include: {
@@ -94,6 +90,85 @@ async function getOne(id) {
                 },
               },
               BiddingIndentChat: true,
+              biddingIndentAttachments: true,
+              Item: true,
+              Uom: true,
+              Color: true,
+              Size: true,
+              Itemgroup: true,
+              Fabric: true,
+              Yarn: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { id: "desc" },
+  });
+
+  return { statusCode: 0, data };
+}
+
+async function getOne(id, req) {
+  let targetVendorId = req?.query?.partyId || req?.query?.vendorId;
+  if (!targetVendorId && req?.headers?.authorization) {
+    try {
+      const token = req.headers.authorization.split(" ")[1];
+      const decoded = jwt.verify(token, "RANDOM-TOKEN");
+      if (decoded?.partyId) {
+        targetVendorId = decoded.partyId;
+      } else if (decoded?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(decoded.userId) },
+          select: { partyId: true, role: { select: { name: true } } },
+        });
+        if (user?.role?.name?.toLowerCase() === "vendor" && user?.partyId) {
+          targetVendorId = user.partyId;
+        }
+      }
+    } catch (e) {}
+  }
+
+  const data = await prisma.Bidding.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+    include: {
+      createdBy: true,
+      Branch: true,
+      BiddingLots: {
+        where: targetVendorId
+          ? {
+              BiddingIndent: {
+                some: {
+                  BiddingIndentvendors: {
+                    some: {
+                      vendorId: parseInt(targetVendorId),
+                    },
+                  },
+                },
+              },
+            }
+          : undefined,
+        include: {
+          BiddingIndent: {
+            where: targetVendorId
+              ? {
+                  BiddingIndentvendors: {
+                    some: {
+                      vendorId: parseInt(targetVendorId),
+                    },
+                  },
+                }
+              : undefined,
+            include: {
+              BiddingIndentvendors: {
+                include: {
+                  Vendor: true,
+                },
+              },
+              BiddingIndentChat: true,
+              biddingIndentAttachments: true,
               Item: true,
               Uom: true,
               Color: true,
@@ -118,42 +193,80 @@ async function getOne(id) {
 
 async function getSearch(req) {
   const { searchKey } = req.params;
+  const { companyId, partyId, vendorId } = req.query;
+  const targetVendorId = partyId || vendorId;
+
+  const where = {
+    OR: [
+      {
+        name: {
+          contains: searchKey,
+          mode: "insensitive",
+        },
+      },
+      {
+        docId: {
+          contains: searchKey,
+          mode: "insensitive",
+        },
+      },
+      {
+        bidNo: {
+          contains: searchKey,
+          mode: "insensitive",
+        },
+      },
+    ],
+  };
+
+  if (companyId) {
+    where.Branch = {
+      companyId: parseInt(companyId),
+    };
+  }
+  if (targetVendorId) {
+    where.BiddingLots = {
+      some: {
+        BiddingIndent: {
+          some: {
+            BiddingIndentvendors: {
+              some: {
+                vendorId: parseInt(targetVendorId),
+              },
+            },
+          },
+        },
+      },
+    };
+  }
 
   const data = await prisma.Bidding.findMany({
-    where: {
-      OR: [
-        {
-          name: {
-            contains: searchKey,
-            mode: "insensitive",
-          },
-        },
-        {
-          docId: {
-            contains: searchKey,
-            mode: "insensitive",
-          },
-        },
-        {
-          bidNo: {
-            contains: searchKey,
-            mode: "insensitive",
-          },
-        },
-      ],
-    },
+    where,
     include: {
+      Branch: true,
       BiddingLots: {
         include: {
           BiddingIndent: {
             include: {
-              BiddingIndentvendors: true,
+              BiddingIndentvendors: {
+                include: {
+                  Vendor: true,
+                },
+              },
               BiddingIndentChat: true,
+              Item: true,
+              Uom: true,
+              Color: true,
+              Size: true,
+              Itemgroup: true,
+              Fabric: true,
+              Yarn: true,
             },
           },
         },
       },
     },
+    orderBy: { id: "desc" },
   });
 
   return { statusCode: 0, data };
@@ -297,7 +410,7 @@ const updateIndentsStatus = async (lotsList, newStatus, fallbackBidId = null, cl
   return uniqueIndentIds;
 };
 
-async function create(body) {
+async function create(body, req) {
   const { finYearId, branchId, draftSave } = body;
 
   const details = body.details || {};
@@ -379,7 +492,7 @@ async function create(body) {
   return { statusCode: 0, data };
 }
 
-async function update(id, body) {
+async function update(id, body, req) {
   const bidId = parseInt(id);
   const dataFound = await prisma.Bidding.findUnique({
     where: { id: bidId },
@@ -387,9 +500,112 @@ async function update(id, body) {
 
   if (!dataFound) return NoRecordFound("Bidding");
 
-  const details = body.details || {};
-  const terms = body.terms || {};
+  let details = body.details || {};
+  let terms = body.terms || {};
+  let lotsList = body.lots || body.BiddingLots;
 
+  if (typeof details === "string") {
+    try { details = JSON.parse(details); } catch (e) {}
+  }
+  if (typeof terms === "string") {
+    try { terms = JSON.parse(terms); } catch (e) {}
+  }
+  if (typeof lotsList === "string") {
+    try { lotsList = JSON.parse(lotsList); } catch (e) { lotsList = []; }
+  }
+
+  const isVendorReq =
+    body.isVendor === true ||
+    body.isVendor === "true" ||
+    body.userRole?.toLowerCase() === "vendor";
+
+  // Collect any documents attached across indents
+  const incomingDocs = [];
+  if (Array.isArray(lotsList)) {
+    lotsList.forEach((lot) => {
+      const indents = lot.indents || lot.BiddingIndent || [];
+      indents.forEach((ind) => {
+        const bIndentId = parseId(ind.biddingIndentId || ind.id);
+        const vendors = ind.vendors || ind.BiddingIndentvendors || [];
+        vendors.forEach((v) => {
+          const docs = v.documents || [];
+          docs.forEach((d) => {
+            incomingDocs.push({
+              ...d,
+              biddingIndentId: bIndentId,
+            });
+          });
+        });
+      });
+    });
+  }
+
+  // Helper to sync attachments into BiddingIndentAttachments
+  const syncAttachments = async (tx, docsToSync) => {
+    for (const doc of docsToSync) {
+      if (!doc.biddingIndentId) continue;
+      const matchingFile = req?.files?.find(
+        (f) => f.originalname === doc.fileName
+      );
+      const filePath = matchingFile
+        ? matchingFile.filename
+        : doc.filePath || doc.fileName;
+
+      if (doc.id && typeof doc.id === "number") {
+        await tx.biddingIndentAttachments.update({
+          where: { id: doc.id },
+          data: {
+            name: doc.title || doc.name || doc.fileName,
+            fileName: doc.fileName,
+            filePath: filePath,
+            date: new Date(),
+          },
+        });
+      } else {
+        await tx.biddingIndentAttachments.create({
+          data: {
+            biddingIndentId: doc.biddingIndentId,
+            name: doc.title || doc.name || doc.fileName,
+            fileName: doc.fileName,
+            filePath: filePath,
+            date: new Date(),
+          },
+        });
+      }
+    }
+  };
+
+  // IF VENDOR: Preserve all bid details and lots; only update attachments
+  if (isVendorReq) {
+    const data = await prisma.$transaction(async (tx) => {
+      await syncAttachments(tx, incomingDocs);
+
+      return await tx.Bidding.findUnique({
+        where: { id: bidId },
+        include: {
+          BiddingLots: {
+            include: {
+              BiddingIndent: {
+                include: {
+                  BiddingIndentvendors: {
+                    include: {
+                      Vendor: true,
+                    },
+                  },
+                  BiddingIndentChat: true,
+                  biddingIndentAttachments: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    return { statusCode: 0, data, message: "Documents saved successfully" };
+  }
+
+  // IF ADMIN: Process full bid updates
   const name = body.name || body.bidTitle || details.bidTitle || details.name;
   const docId = body.docId || body.bidNo || details.docId || details.bidNo;
   const bidNo = body.bidNo || body.docId || details.bidNo || details.docId;
@@ -410,11 +626,7 @@ async function update(id, body) {
   const parsedQueryDeadline = parseDate(queryDeadline);
   const parsedClosingDate = parseDate(closingDate);
 
-  const lotsList = body.lots || body.BiddingLots;
-
-  // Wrap all updates and indent status syncing in an atomic transaction
   const data = await prisma.$transaction(async (tx) => {
-    // If lots are passed in an update, delete existing child lots and recreate them
     if (Array.isArray(lotsList)) {
       await tx.BiddingLots.deleteMany({
         where: { biddingId: bidId }
@@ -456,6 +668,8 @@ async function update(id, body) {
                     Vendor: true,
                   },
                 },
+                BiddingIndentChat: true,
+                biddingIndentAttachments: true,
               },
             },
           },
@@ -463,7 +677,8 @@ async function update(id, body) {
       },
     });
 
-    // Update associated indents status atomically within the same transaction
+    await syncAttachments(tx, incomingDocs);
+
     const targetStatus = (status !== undefined ? status : dataFound.status) === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
     await updateIndentsStatus(lotsList, targetStatus, bidId, tx);
 
