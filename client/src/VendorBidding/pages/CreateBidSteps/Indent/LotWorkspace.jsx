@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import IndentTableByType from './IndentTableByType';
+import { useBiddingAuth } from '../../../../Bidding/context/BiddingAuthContext';
+import { getCommonParams } from '../../../../Utils/helper';
 import {
   DOC_STATE_META,
   countUpdateNeeded,
@@ -28,6 +30,10 @@ export default function LotWorkspace({
   onRemoveIndent,
   onUpdateIndent,
 }) {
+  const { role } = useBiddingAuth?.() || {};
+  const { userRole, partyId, partyType } = getCommonParams();
+  const isVendor = role === 'Vendor' || partyType?.toUpperCase() === 'VENDOR' || userRole?.toLowerCase() === 'vendor' || Boolean(!userRole && partyId);
+
   const [typeFilter, setTypeFilter] = useState('All');
   const [vendorFilter, setVendorFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -111,16 +117,18 @@ export default function LotWorkspace({
           </p> */}
         </div>
 
-        <button
-          type="button"
-          onClick={() => onOpenAssignModal(lot)}
-          className="inline-flex items-center gap-1.5 py-1.5 px-3.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-sm transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 5v14M5 12h14" />
-          </svg>
-          Assign Indents
-        </button>
+        {!isVendor && (
+          <button
+            type="button"
+            onClick={() => onOpenAssignModal(lot)}
+            className="inline-flex items-center gap-1.5 py-1.5 px-3.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold shadow-sm transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 5v14M5 12h14" />
+            </svg>
+            Assign Indents
+          </button>
+        )}
       </div>
 
       {indents.length === 0 ? (

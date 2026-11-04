@@ -112,7 +112,8 @@ export default function BidDetails({ id, bidData, setBidData }) {
             placeholder="Search Customer Name..."
             value={bidData.bidTitle}
             name="bidTitle"
-            setValue={handleChange}
+            readOnly
+            disabled
           />
         </div>
 
@@ -122,21 +123,16 @@ export default function BidDetails({ id, bidData, setBidData }) {
           placeholder="Search Customer Name..."
           value={bidData.submissionDeadline}
           name="submissionDeadline"
-          setValue={handleChange}
-          // readOnly={false}
+          readOnly
+          disabled
         />
         <div className="col-span-2">
           <SearchableTableCellSelect
             name="Terms and Conditions"
             value={bidData.termId}
             options={itemOptions}
-            // disabled={readOnly}
-            onChange={(nextValue) => {
-              setBidData((prev) => ({
-                ...prev,
-                termId: nextValue,
-              }));
-            }}
+            readOnly
+            disabled
             className={""}
             // addNewModalWidth="w-[90%] h-[95%]"
             // childComponent={ItemMaster}
@@ -160,7 +156,7 @@ export default function BidDetails({ id, bidData, setBidData }) {
           </select>
         </div> */}
       </div>
-      <div className="md:col-span-2 mt-4">
+      {/* <div className="md:col-span-2 mt-4">
         <label className="block text-[14px] font-bold text-slate-700 mb-2">
           Bid Overall Summary
         </label>
@@ -238,7 +234,7 @@ export default function BidDetails({ id, bidData, setBidData }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

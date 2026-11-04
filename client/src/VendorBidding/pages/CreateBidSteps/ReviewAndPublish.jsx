@@ -1,6 +1,12 @@
+import { useBiddingAuth } from '../../../Bidding/context/BiddingAuthContext';
+import { getCommonParams } from '../../../Utils/helper';
 import React, { useMemo } from 'react';
 
 export default function ReviewAndPublish({ onBack, bidData, setBidData }) {
+  const { role } = useBiddingAuth?.() || {};
+  const { userRole, partyId, partyType } = getCommonParams();
+  const isVendor = role === 'Vendor' || partyType?.toUpperCase() === 'VENDOR' || userRole?.toLowerCase() === 'vendor' || Boolean(!userRole && partyId);
+
   const lots = bidData.lots || [];
 
   const totalLots = lots.length;
@@ -42,9 +48,11 @@ export default function ReviewAndPublish({ onBack, bidData, setBidData }) {
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
-        <h3 className="text-lg font-bold text-slate-900">Review & Publish Bid</h3>
+        <h3 className="text-lg font-bold text-slate-900">{isVendor ? "Review Bid" : "Review & Publish Bid"}</h3>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Please audit all bid details, lot groupings, indent specifications, and invited vendor documents before publishing.
+          {isVendor
+            ? "Please audit all bid details, lot groupings, indent specifications, and invited vendor documents."
+            : "Please audit all bid details, lot groupings, indent specifications, and invited vendor documents before publishing."}
         </p>
       </div>
 
@@ -168,7 +176,7 @@ export default function ReviewAndPublish({ onBack, bidData, setBidData }) {
           <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Pre-Publish Readiness Checklist</span>
+          <span>{isVendor ? "Bid Summary & Readiness" : "Pre-Publish Readiness Checklist"}</span>
         </h5>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-emerald-900">
           <div className="flex items-center gap-2">

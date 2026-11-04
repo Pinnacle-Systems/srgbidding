@@ -17,7 +17,29 @@ export const YarnHeaders = ({ headerClasses }) => (
   </>
 );
 
-export const YarnRowCells = ({ indent, cellClasses, onFieldChange }) => {
+export const YarnRowCells = ({ indent, cellClasses, onFieldChange, readOnly }) => {
+  if (readOnly) {
+    const uomName = typeof indent.uom === 'object' ? indent.uom?.name : (indent.uom || '-');
+    return (
+      <>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.item_name || indent.Yarn?.name || '-'}>
+          {indent.item_name || indent.Yarn?.name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.blend || indent.YarnBlend?.name || '-'}>
+          {indent.blend || indent.YarnBlend?.name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.count || indent.Counts?.name || '-'}>
+          {indent.count || indent.Counts?.name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.shade || indent.Color?.name || '-'}>
+          {indent.shade || indent.Color?.name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={uomName}>
+          {uomName}
+        </td>
+      </>
+    );
+  }
   const { data: yarnList } = useGetYarnMasterQuery({ params: {} });
   const { data: yarnBlendList } = useGetYarnBlendMasterQuery({ params: {} });
   const { data: countsList } = useGetCountsMasterQuery({ params: {} });

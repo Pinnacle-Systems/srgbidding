@@ -58,8 +58,21 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
         name: lot?.name || `Lot ${lot?.lotNumber || idx + 1}`,
         indents: lot?.BiddingIndent?.map((ind) => {
           const custom = ind?.customData || {};
+          const dbAttachments = (ind?.biddingIndentAttachments || []).map((att) => ({
+            id: att.id,
+            title: att.name || att.fileName,
+            name: att.name || att.fileName,
+            fileName: att.fileName,
+            filePath: att.filePath,
+            category: "TDS",
+            version: "1.0",
+            status: "Up to Date",
+            updatedAt: att.date ? new Date(att.date).toLocaleDateString("en-GB") : "Recently",
+            uploadedBy: "Vendor",
+          }));
           return {
             id: ind?.indentItemId || ind?.id,
+            biddingIndentId: ind?.id,
             indentId: ind?.indentId,
             indentItemId: ind?.indentItemId,
             docId: custom?.docId || ind?.indentId,
@@ -69,14 +82,17 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
             qty: ind?.qty || 0,
             uom: ind?.Uom?.name || "KGS",
             category: ind?.indentType || "Yarn",
-            commonDocuments: custom?.commonDocuments || [],
+            commonDocuments: dbAttachments.length > 0 ? dbAttachments : (custom?.commonDocuments || []),
             vendors: ind?.BiddingIndentvendors?.map((v) => ({
               id: v?.vendorId,
               vendorId: v?.vendorId,
               name: v?.Vendor?.name || `Vendor #${v?.vendorId}`,
               label: v?.Vendor?.name || `Vendor #${v?.vendorId}`,
               status: v?.status || "INVITED",
-              documents: (custom?.vendorDocuments || []).find((vd) => vd?.vendorId === v?.vendorId)?.documents || [],
+              documents:
+                dbAttachments.length > 0
+                  ? dbAttachments
+                  : ((custom?.vendorDocuments || []).find((vd) => vd?.vendorId === v?.vendorId)?.documents || []),
             })) || [],
             ...(custom.specs || {}),
           };
@@ -96,11 +112,67 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
 
   const handleSaveDraft = async (isPublishing = false) => {
     try {
-      const payload = {
-        ...bidData,
-        status: isPublishing ? "PUBLISHED" : (bidData.status || "DRAFT"),
-        branchId, userId, companyId, finYearId, userRole
-      };
+      const allFiles = [];
+      const sanitizedLots = (bidData.lots || []).map((lot) => ({
+        ...lot,
+        indents: (lot.indents || []).map((ind) => {
+          const biddingIndentId = ind.biddingIndentId || ind.id;
+          const cleanDoc = (doc) => {
+            if (doc.file instanceof File) {
+              allFiles.push(doc.file);
+            }
+            const { file, ...rest } = doc;
+            return {
+              ...rest,
+              biddingIndentId,
+              fileName: doc.file instanceof File ? doc.file.name : (doc.fileName || doc.title),
+            };
+          };
+
+          return {
+            ...ind,
+            commonDocuments: (ind.commonDocuments || []).map(cleanDoc),
+            vendors: (ind.vendors || []).map((v) => ({
+              ...v,
+              documents: (v.documents || []).map(cleanDoc),
+            })),
+          };
+        }),
+      }));
+
+      let payload;
+      if (allFiles.length > 0) {
+        const formData = new FormData();
+        formData.append("status", isPublishing ? "PUBLISHED" : (bidData.status || "DRAFT"));
+        formData.append("branchId", branchId || "");
+        formData.append("userId", userId || "");
+        formData.append("companyId", companyId || "");
+        formData.append("finYearId", finYearId || "");
+        formData.append("userRole", userRole || "Admin");
+        formData.append("name", bidData.bidTitle || bidData.name || "");
+        formData.append("docId", bidData.docId || "");
+        formData.append("bidNo", bidData.bidNo || "");
+        formData.append("lots", JSON.stringify(sanitizedLots));
+        formData.append("details", JSON.stringify(bidData.details || {}));
+        formData.append("terms", JSON.stringify(bidData.terms || {}));
+
+        allFiles.forEach((f) => {
+          formData.append("images", f);
+        });
+
+        payload = { formData };
+      } else {
+        payload = {
+          ...bidData,
+          lots: sanitizedLots,
+          status: isPublishing ? "PUBLISHED" : (bidData.status || "DRAFT"),
+          branchId,
+          userId,
+          companyId,
+          finYearId,
+          userRole,
+        };
+      }
 
       let result;
       if (bidData.id) {

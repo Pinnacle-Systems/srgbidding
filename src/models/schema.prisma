@@ -3121,44 +3121,45 @@ model BiddingLots {
 }
 
 model BiddingIndent {
-  id                   Int                    @id @default(autoincrement())
-  BiddingLots          BiddingLots?           @relation(fields: [biddingLotId], references: [id], onDelete: Cascade)
-  biddingLotId         Int?
-  createdAt            DateTime?              @default(now())
-  updatedAt            DateTime?              @updatedAt
-  Indent               Indent?                @relation(fields: [indentId], references: [id], onDelete: Cascade)
-  indentId             Int?
-  IndentItems          IndentItems?           @relation(fields: [indentItemId], references: [id], onDelete: Cascade)
-  indentItemId         Int?
-  indentType           String?
-  Itemgroup            ItemGroup?             @relation(fields: [itemGroupId], references: [id])
-  itemGroupId          Int?
-  Item                 Item?                  @relation(fields: [itemId], references: [id])
-  itemId               Int?
-  Size                 Size?                  @relation(fields: [sizeId], references: [id])
-  sizeId               Int?
-  Color                Color?                 @relation(fields: [colorId], references: [id])
-  colorId              Int?
-  Uom                  Uom?                   @relation(fields: [uomId], references: [id])
-  uomId                Int?
-  Hsn                  Hsn?                   @relation(fields: [hsnId], references: [id])
-  hsnId                Int?
-  Gsm                  Gsm?                   @relation(fields: [gsmId], references: [id])
-  gsmId                Int?
-  Yarn                 Yarn?                  @relation(fields: [yarnId], references: [id])
-  yarnId               Int?
-  Fabric               Fabric?                @relation(fields: [fabricId], references: [id])
-  fabricId             Int?
-  YarnBlend            YarnBlend?             @relation(fields: [yarnBlendId], references: [id])
-  yarnBlendId          Int?
-  Counts               Counts?                @relation(fields: [countsId], references: [id])
-  countsId             Int?
-  price                String?
-  qty                  String?
-  make                 String?
-  customData           Json?
-  BiddingIndentvendors BiddingIndentvendors[]
-  BiddingIndentChat    BiddingIndentChat[]
+  id                       Int                        @id @default(autoincrement())
+  BiddingLots              BiddingLots?               @relation(fields: [biddingLotId], references: [id], onDelete: Cascade)
+  biddingLotId             Int?
+  createdAt                DateTime?                  @default(now())
+  updatedAt                DateTime?                  @updatedAt
+  Indent                   Indent?                    @relation(fields: [indentId], references: [id], onDelete: Cascade)
+  indentId                 Int?
+  IndentItems              IndentItems?               @relation(fields: [indentItemId], references: [id], onDelete: Cascade)
+  indentItemId             Int?
+  indentType               String?
+  Itemgroup                ItemGroup?                 @relation(fields: [itemGroupId], references: [id])
+  itemGroupId              Int?
+  Item                     Item?                      @relation(fields: [itemId], references: [id])
+  itemId                   Int?
+  Size                     Size?                      @relation(fields: [sizeId], references: [id])
+  sizeId                   Int?
+  Color                    Color?                     @relation(fields: [colorId], references: [id])
+  colorId                  Int?
+  Uom                      Uom?                       @relation(fields: [uomId], references: [id])
+  uomId                    Int?
+  Hsn                      Hsn?                       @relation(fields: [hsnId], references: [id])
+  hsnId                    Int?
+  Gsm                      Gsm?                       @relation(fields: [gsmId], references: [id])
+  gsmId                    Int?
+  Yarn                     Yarn?                      @relation(fields: [yarnId], references: [id])
+  yarnId                   Int?
+  Fabric                   Fabric?                    @relation(fields: [fabricId], references: [id])
+  fabricId                 Int?
+  YarnBlend                YarnBlend?                 @relation(fields: [yarnBlendId], references: [id])
+  yarnBlendId              Int?
+  Counts                   Counts?                    @relation(fields: [countsId], references: [id])
+  countsId                 Int?
+  price                    String?
+  qty                      String?
+  make                     String?
+  customData               Json?
+  BiddingIndentvendors     BiddingIndentvendors[]
+  BiddingIndentChat        BiddingIndentChat[]
+  biddingIndentAttachments BiddingIndentAttachments[]
 }
 
 model BiddingIndentvendors {
@@ -3174,4 +3175,14 @@ model BiddingIndentChat {
   id              Int            @id @default(autoincrement())
   BiddingIndent   BiddingIndent? @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
   biddingIndentId Int?
+}
+
+model BiddingIndentAttachments {
+  id              Int            @id @default(autoincrement())
+  BiddingIndent   BiddingIndent? @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
+  biddingIndentId Int?
+  date            DateTime?
+  name            String?
+  fileName        String?
+  filePath        String?
 }

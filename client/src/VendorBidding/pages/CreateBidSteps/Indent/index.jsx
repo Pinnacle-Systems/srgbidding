@@ -53,6 +53,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
 
   const normalizeIndent = (ind) => ({
     id: ind.id,
+    biddingIndentId: ind.biddingIndentId || ind.id,
     docId: ind.Indent?.docId || ind.docId || `IND-${ind.id}`,
     category: ind.Indent?.indentType || ind.category || 'General',
     department: typeof ind.Indent?.Department === 'object'

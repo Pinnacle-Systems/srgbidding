@@ -12,6 +12,7 @@ import CreateBid from "./CreateBid";
 import BiddingCommunicationsPage from "./pages/Communications";
 import VendorPortal from "./VendorPortal";
 import VendorBids from "../VendorBidding/vendorBidsReports";
+import VendorCreateBid from "../VendorBidding/CreateBid";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
@@ -67,11 +68,48 @@ function BiddingAppContent() {
     }
 
     if (role === "Vendor") {
-      return (
-        <VendorBids
-          initialView={currentView === "workspace" ? "workspace" : "bids"}
-        />
-      );
+      switch (currentView) {
+        case "bids":
+        case "dashboard":
+          return (
+            <VendorBids
+              setCurrentView={setCurrentView}
+              setEditingBidId={setEditingBidId}
+              onOpenCommunications={(bidId) => {
+                setSelectedBidIdForComms(bidId);
+                setCurrentView("communications");
+              }}
+            />
+          );
+        case "create":
+          return (
+            <VendorCreateBid
+              editingBidId={editingBidId}
+              onBackToBids={() => {
+                setEditingBidId(null);
+                setCurrentView("bids");
+              }}
+            />
+          );
+        case "communications":
+          return (
+            <BiddingCommunicationsPage
+              initialBidId={selectedBidIdForComms}
+              onBackToBids={() => setCurrentView("bids")}
+            />
+          );
+        default:
+          return (
+            <VendorBids
+              setCurrentView={setCurrentView}
+              setEditingBidId={setEditingBidId}
+              onOpenCommunications={(bidId) => {
+                setSelectedBidIdForComms(bidId);
+                setCurrentView("communications");
+              }}
+            />
+          );
+      }
     }
 
     return (

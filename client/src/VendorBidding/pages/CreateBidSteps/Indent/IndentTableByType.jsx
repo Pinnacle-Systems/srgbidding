@@ -1,3 +1,5 @@
+import { useBiddingAuth } from '../../../../Bidding/context/BiddingAuthContext';
+import { getCommonParams } from '../../../../Utils/helper';
 import React, { useMemo } from 'react';
 import Swal from 'sweetalert2';
 import SearchableTableCellSelect from '../../../../HostelStore/Components/ReusableComponents/SearchableTableCellSelect';
@@ -68,6 +70,9 @@ export default function IndentTableByType({
   onRemoveIndent,
   onUpdateIndent,
 }) {
+  const { role } = useBiddingAuth?.() || {};
+  const { userRole, partyId, partyType } = getCommonParams();
+  const isVendor = role === 'Vendor' || partyType?.toUpperCase() === 'VENDOR' || userRole?.toLowerCase() === 'vendor' || Boolean(!userRole && partyId);
   // Determine effective schema type name for dynamic custom fields
   const schemaTypeName = useMemo(() => {
     const raw = (activeTypeName || typeKey || '').toLowerCase();
@@ -248,7 +253,9 @@ export default function IndentTableByType({
               ) : (
                 indents.map((indent, idx) => {
                   const state = DOC_STATE_META[docState(getIndentVendorDocs(indent))];
-                  const docsCount = getIndentDocsCount(indent);
+                  const docsCount = isVendor
+    ? (indent.vendors || []).reduce((sum, v) => sum + (v.documents ? v.documents.length : 0), 0)
+    : getIndentDocsCount(indent);
                   const needsUpdate = indentNeedsUpdate(indent);
                   const indentLabel = indent.docId || indent.id;
                   const docsLabel = `Documents for ${indentLabel}: ${docsCount}${needsUpdate ? ', update needed' : ''
@@ -286,6 +293,7 @@ export default function IndentTableByType({
                           indent={indent}
                           cellClasses={cellClasses}
                           onFieldChange={handleFieldChange}
+                          readOnly={isVendor}
                         />
                       )}
 
@@ -295,6 +303,7 @@ export default function IndentTableByType({
                           cellClasses={cellClasses}
                           inputClasses={inputClasses}
                           onFieldChange={handleFieldChange}
+                          readOnly={isVendor}
                         />
                       )}
 
@@ -304,6 +313,7 @@ export default function IndentTableByType({
                           cellClasses={cellClasses}
                           inputClasses={inputClasses}
                           onFieldChange={handleFieldChange}
+                          readOnly={isVendor}
                         />
                       )}
 
@@ -313,6 +323,7 @@ export default function IndentTableByType({
                           cellClasses={cellClasses}
                           inputClasses={inputClasses}
                           onFieldChange={handleFieldChange}
+                          readOnly={isVendor}
                         />
                       )}
 
@@ -322,12 +333,20 @@ export default function IndentTableByType({
                           cellClasses={cellClasses}
                           inputClasses={inputClasses}
                           onFieldChange={handleFieldChange}
+                          readOnly={isVendor}
                         />
                       )}
 
                       {/* --- DYNAMIC CUSTOM FIELDS CELLS --- */}
                       {dynamicFields.map((field) => {
                         const customVal = indent.customData?.[field.name] ?? '';
+                        if (isVendor) {
+                          return (
+                            <td key={field.name} className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={customVal || '-'}>
+                              {customVal || '-'}
+                            </td>
+                          );
+                        }
                         if (field.type === 'select') {
                           const options = field.options
                             ? field.options.split(',').map((o) => ({ id: o.trim(), name: o.trim() }))
@@ -358,25 +377,40 @@ export default function IndentTableByType({
 
                       {/* --- VENDORS MULTI-SELECT CELL --- */}
                       <td className={cellClasses}>
-                        <SearchableTableMultiCellSelect
-                          value={indent.vendors || []}
-                          options={partyOptions}
-                          onChange={(nextValues) => handleVendorsChange(indent, nextValues)}
-                          placeholder="Select vendors..."
-                          className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
-                        />
+                        {isVendor ? (
+                          <div
+                            className="px-2 py-1 text-[11px] text-gray-800 truncate"
+                            title={(indent.vendors || []).map((v) => (typeof v === 'object' ? (v.name || v.label) : v)).filter(Boolean).join(', ')}
+                          >
+                            {(indent.vendors || []).map((v) => (typeof v === 'object' ? (v.name || v.label) : v)).filter(Boolean).join(', ') || '-'}
+                          </div>
+                        ) : (
+                          <SearchableTableMultiCellSelect
+                            value={indent.vendors || []}
+                            options={partyOptions}
+                            onChange={(nextValues) => handleVendorsChange(indent, nextValues)}
+                            placeholder="Select vendors..."
+                            className="border-transparent group-hover:border-gray-300 focus-within:border-blue-500"
+                          />
+                        )}
                       </td>
 
                       {/* --- QTY CELL --- */}
                       <td className={cellClasses}>
-                        <input
-                          type="number"
-                          value={indent.qty ?? ''}
-                          onChange={(e) => handleFieldChange(indent, 'qty', Number(e.target.value) || 0)}
-                          onFocus={(e) => e.target.select()}
-                          className={numInputClasses}
-                          placeholder="0.00"
-                        />
+                        {isVendor ? (
+                          <div className="px-2 py-1 text-right text-[11px] font-semibold text-slate-800">
+                            {Number(indent.qty || 0).toLocaleString()}
+                          </div>
+                        ) : (
+                          <input
+                            type="number"
+                            value={indent.qty ?? ''}
+                            onChange={(e) => handleFieldChange(indent, 'qty', Number(e.target.value) || 0)}
+                            onFocus={(e) => e.target.select()}
+                            className={numInputClasses}
+                            placeholder="0.00"
+                          />
+                        )}
                       </td>
 
                       {/* --- DOCS BADGE / DRAWER TRIGGER --- */}
@@ -412,7 +446,7 @@ export default function IndentTableByType({
                             <ChatIcon />
                             <span>Chat</span>
                           </button>
-                          {onRemoveIndent && (
+                          {!isVendor && onRemoveIndent && (
                             <button
                               type="button"
                               onClick={() => handleRemove(indent)}

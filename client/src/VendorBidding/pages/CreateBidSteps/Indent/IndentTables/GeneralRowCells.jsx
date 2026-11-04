@@ -12,7 +12,27 @@ export const GeneralHeaders = ({ headerClasses }) => (
   </>
 );
 
-export const GeneralRowCells = ({ indent, cellClasses, inputClasses, onFieldChange }) => {
+export const GeneralRowCells = ({ indent, cellClasses, inputClasses, onFieldChange, readOnly }) => {
+  if (readOnly) {
+    const deptName = typeof indent.department === 'object' ? indent.department?.name : (indent.department || '-');
+    const uomName = typeof indent.uom === 'object' ? indent.uom?.name : (indent.uom || '-');
+    return (
+      <>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.item_name || '-'}>
+          {indent.item_name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={deptName}>
+          {deptName}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.spec || '-'}>
+          {indent.spec || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={uomName}>
+          {uomName}
+        </td>
+      </>
+    );
+  }
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params: {} });
 
   const resolvedUomId =

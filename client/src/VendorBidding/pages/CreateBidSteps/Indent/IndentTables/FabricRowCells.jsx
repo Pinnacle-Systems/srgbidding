@@ -16,7 +16,29 @@ export const FabricHeaders = ({ headerClasses }) => (
   </>
 );
 
-export const FabricRowCells = ({ indent, cellClasses, inputClasses, onFieldChange }) => {
+export const FabricRowCells = ({ indent, cellClasses, inputClasses, onFieldChange, readOnly }) => {
+  if (readOnly) {
+    const uomName = typeof indent.uom === 'object' ? indent.uom?.name : (indent.uom || '-');
+    return (
+      <>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.item_name || '-'}>
+          {indent.item_name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.gsm || '-'}>
+          {indent.gsm || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.width || '-'}>
+          {indent.width || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.shade || '-'}>
+          {indent.shade || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={uomName}>
+          {uomName}
+        </td>
+      </>
+    );
+  }
   const { data: fabricList } = useGetFabricMasterQuery({ params: {} });
   const { data: gsmList } = useGetGsmMasterQuery({ params: {} });
   const { data: colorList } = useGetColorMasterQuery({ params: {} });

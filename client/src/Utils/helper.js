@@ -319,6 +319,16 @@ export const getCommonParams = () => ({
   userRole: secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userRole",
   ),
+  partyId:
+    secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "partyId",
+    ) ||
+    secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userPartyId",
+    ),
+  partyType: secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "partyType",
+  ),
   token: `Bearer ${secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "token")} `,
 });
 

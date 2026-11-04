@@ -1,3 +1,5 @@
+import { useBiddingAuth } from '../../../../Bidding/context/BiddingAuthContext';
+import { getCommonParams } from '../../../../Utils/helper';
 import React, { useState, useEffect, useRef } from 'react';
 import IndentDocumentsView from '../IndentDrawer/IndentDocumentsView';
 import IndentMessagesView from '../IndentDrawer/IndentMessagesView';
@@ -11,8 +13,17 @@ export default function IndentChatDrawer({
   onSendMessage,
   onUpdateDocuments,
 }) {
-  const vendors = indent?.vendors || [];
-  const commonDocs = indent?.commonDocuments || [];
+  const { role } = useBiddingAuth?.() || {};
+  const { userRole, partyId, partyType } = getCommonParams();
+  const isVendor = role === 'Vendor' || partyType?.toUpperCase() === 'VENDOR' || userRole?.toLowerCase() === 'vendor' || Boolean(!userRole && partyId);
+
+  const rawVendors = indent?.vendors || [];
+  const vendors = (isVendor && partyId)
+    ? (rawVendors.filter(v => String(v.id || v.vendorId) === String(partyId)).length > 0
+        ? rawVendors.filter(v => String(v.id || v.vendorId) === String(partyId))
+        : rawVendors)
+    : rawVendors;
+  const commonDocs = isVendor ? [] : (indent?.commonDocuments || []);
 
   const [activeTab, setActiveTab] = useState(initialTab || 'docs'); // 'chat' | 'docs'
   const [selectedVendorId, setSelectedVendorId] = useState(vendors[0]?.id || null);
@@ -25,18 +36,25 @@ export default function IndentChatDrawer({
     if (initialTab) {
       setActiveTab(initialTab);
     }
-    if (vendors.length > 0) {
-      if (!selectedVendorId || (!vendors.some(v => v.id === selectedVendorId) && selectedVendorId !== 'common')) {
-        setSelectedVendorId(vendors[0].id);
+    if (isVendor) {
+      const myVendor = (partyId && vendors.find(v => String(v.id || v.vendorId) === String(partyId))) || vendors[0];
+      if (myVendor) {
+        setSelectedVendorId(myVendor.id);
       }
     } else {
-      setSelectedVendorId('common');
+      if (vendors.length > 0) {
+        if (!selectedVendorId || (!vendors.some(v => v.id === selectedVendorId) && selectedVendorId !== 'common')) {
+          setSelectedVendorId(vendors[0].id);
+        }
+      } else {
+        setSelectedVendorId('common');
+      }
     }
-  }, [indent, initialTab]);
+  }, [indent, initialTab, isVendor, partyId]);
 
   if (!isOpen || !indent) return null;
 
-  const isCommonSelected = selectedVendorId === 'common';
+  const isCommonSelected = !isVendor && selectedVendorId === 'common';
   const activeVendor = isCommonSelected
     ? { id: 'common', name: 'All Vendors (Common Specs)', label: 'Common' }
     : (vendors.find(v => v.id === selectedVendorId) || vendors[0]);
@@ -50,7 +68,7 @@ export default function IndentChatDrawer({
     (sum, v) => sum + (v.documents ? v.documents.length : 0),
     0
   );
-  const totalAllDocsCount = totalVendorDocsCount + commonDocs.length;
+  const totalAllDocsCount = isVendor ? totalVendorDocsCount : (totalVendorDocsCount + commonDocs.length);
 
   const chatKey = `${indent.id}_${activeVendor?.id}`;
   const conversation = messages[chatKey] || [];
@@ -182,8 +200,8 @@ export default function IndentChatDrawer({
               {activeTab === 'docs' ? 'Filter by:' : 'Vendor:'}
             </span>
 
-            {/* Common Specs option (available in Documents tab) */}
-            {activeTab === 'docs' && (
+            {/* Common Specs option (available only for Admin in Documents tab) */}
+            {!isVendor && activeTab === 'docs' && (
               <button
                 type="button"
                 onClick={() => setSelectedVendorId('common')}

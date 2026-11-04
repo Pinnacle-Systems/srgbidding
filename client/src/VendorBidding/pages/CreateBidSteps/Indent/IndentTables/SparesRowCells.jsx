@@ -14,7 +14,29 @@ export const SparesHeaders = ({ headerClasses }) => (
   </>
 );
 
-export const SparesRowCells = ({ indent, cellClasses, inputClasses, onFieldChange }) => {
+export const SparesRowCells = ({ indent, cellClasses, inputClasses, onFieldChange, readOnly }) => {
+  if (readOnly) {
+    const uomName = typeof indent.uom === 'object' ? indent.uom?.name : (indent.uom || '-');
+    return (
+      <>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.item_name || '-'}>
+          {indent.item_name || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.machine || '-'}>
+          {indent.machine || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.partNo || '-'}>
+          {indent.partNo || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={indent.make || '-'}>
+          {indent.make || '-'}
+        </td>
+        <td className="px-2 py-1 border border-gray-300 text-[11px] text-gray-800 truncate" title={uomName}>
+          {uomName}
+        </td>
+      </>
+    );
+  }
   const { data: itemList } = useGetItemMasterQuery({ params: {} });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params: {} });
 

@@ -56,6 +56,7 @@ async function login(req) {
           },
         },
       },
+      Party: true,
       Employee: {
         include: {
           branchId: true,
@@ -117,6 +118,8 @@ async function login(req) {
       roleName: data?.role?.name,
       companyId: data?.role?.companyId,
       finyearId: FinyearData?.id,
+      partyId: data?.partyId,
+      partyType: data?.partyType,
     },
     "RANDOM-TOKEN",
     { expiresIn: deviceby == "android" ? "30m" : "24h" },

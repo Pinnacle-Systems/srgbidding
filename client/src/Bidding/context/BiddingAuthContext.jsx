@@ -26,15 +26,24 @@ const decodeJwt = (token) => {
 export const useBiddingAuth = () => useContext(BiddingAuthContext);
 
 export const BiddingAuthProvider = ({ children }) => {
-  const { branchId, userId, companyId, finYearId, userRole, token } = getCommonParams();
+  const { branchId, userId, companyId, finYearId, userRole, token, partyId, partyType } = getCommonParams();
 
-  const [vendorId, setVendorId] = useState(null);
+  const [vendorId, setVendorId] = useState(() => {
+    const decoded = decodeJwt(token);
+    return partyId || decoded?.partyId || null;
+  });
 
   const getInitialRole = () => {
     const decoded = decodeJwt(token);
-    const roleStr = decoded?.roleName || "";
+    const roleStr = decoded?.roleName || userRole || "";
+    if (
+      partyType?.toUpperCase() === "VENDOR" ||
+      roleStr.toUpperCase().includes("VENDOR") ||
+      (!roleStr && partyId)
+    ) {
+      return "Vendor";
+    }
     if (roleStr.toUpperCase().includes("ADMIN")) return "Admin";
-    if (roleStr.toUpperCase().includes("VENDOR")) return "Vendor";
     if (roleStr.toUpperCase().includes("APPROV")) return "Approver";
     return roleStr || "Admin"; // Fallback default
   };
