@@ -32,7 +32,7 @@ export default function
                 <button
                     className="outline-none focus:outline-none px-3 py-1 rounded-sm flex items-center min-w-32"
                 >
-                    <span className="pr-1 text-[13px]  text-gray-600  flex-1">{heading}</span>
+                    <span className="pr-1 text-[13px] font-bold text-slate-700 flex-1">{heading}</span>
                     <span>
                         <svg
                             className="fill-current h-4 w-4 transform group-hover:-rotate-180 transition duration-150 ease-in-out"

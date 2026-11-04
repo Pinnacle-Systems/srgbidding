@@ -22,8 +22,11 @@ function BiddingAppContent() {
 
     if (role === "Admin") {
       switch (currentView) {
-        case "dashboard": return <Dashboard />;
-        case "  ": return (
+        case "dashboard": return <Dashboard setCurrentView={setCurrentView} />;
+
+        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
+
+        case "bids": return (
           <Bids
             setCurrentView={setCurrentView}
             setEditingBidId={setEditingBidId}
@@ -33,7 +36,6 @@ function BiddingAppContent() {
             }}
           />
         );
-        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "communications": return (
           <BiddingCommunicationsPage
             initialBidId={selectedBidIdForComms}

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import Swal from 'sweetalert2';
 
 export const DEFAULT_INDENT_ITEMS = [
     // Yarn (3 items)
@@ -225,7 +224,7 @@ export const getItemName = (item) => {
 };
 
 export const getDocId = (item) => {
-    return item?.Indent?.docId || item?.docId || item?.id || '-';
+    return item?.itemsDocId || item?.docId || item?.id || '-';
 };
 
 export const getRequiredDate = (item) => {
@@ -241,6 +240,79 @@ export const getRequiredDate = (item) => {
     return '-';
 };
 
+/* ───────────── Table columns (shared by every tab) ───────────── */
+
+const ALL_TAB = {
+    id: 'All',
+    label: 'All',
+    hint: 'Every approved, unassigned indent. Pick a type tab to see its detailed columns.',
+};
+const TABS = [ALL_TAB, ...CATEGORIES];
+
+const num = (v) => Number(v || 0).toLocaleString();
+
+const qtyText = (item) => {
+    const uom = getUom(item);
+    return `${num(item.qty)}${uom ? ` ${uom}` : ''}`;
+};
+
+const col = (label, value, opts = {}) => ({ label, value, ...opts });
+
+const QTY_COL = col('Qty', qtyText, { align: 'right' });
+
+const TYPE_COLUMNS = {
+    All: [
+        col('Type', (i) => getCategory(i)),
+        col('Item', (i) => getItemName(i), { strong: true }),
+        QTY_COL,
+    ],
+    Yarn: [
+        col('Yarn name', (i) => i.Yarn?.name || getItemName(i), { strong: true }),
+        col('Count', (i) => i.Counts?.name || i.count),
+        col('Blend', (i) => i.YarnBlend?.name || i.blend),
+        col('Ply', (i) => i.ply || i.customData?.ply),
+        col('Shade', (i) => i.shade || i.Color?.name || i.customData?.shade),
+        QTY_COL,
+    ],
+    Fabric: [
+        col('Fabric name', (i) => i.Fabric?.name || getItemName(i), { strong: true }),
+        col('Construction', (i) => i.construction || i.customData?.construction),
+        col('GSM', (i) => i.gsm || i.Gsm?.name),
+        col('Width', (i) => i.width || i.customData?.width),
+        col('Finish / Color', (i) => i.shade || i.Color?.name),
+        QTY_COL,
+    ],
+    'Machine spares': [
+        col('Spare name', (i) => getItemName(i), { strong: true }),
+        col('Part no', (i) => i.partNo),
+        col('Make', (i) => i.make),
+        col('Specification', (i) => i.spec),
+        QTY_COL,
+    ],
+    'Dyes and chemicals': [
+        col('Name', (i) => getItemName(i), { strong: true }),
+        col('Code', (i) => i.code),
+        col('Brand', (i) => i.brand),
+        col('Grade', (i) => i.grade),
+        QTY_COL,
+    ],
+    General: [
+        col('Item name', (i) => getItemName(i), { strong: true }),
+        col('Specification', (i) => i.spec),
+        QTY_COL,
+    ],
+};
+
+const display = (v) => (v === undefined || v === null || v === '' ? '-' : String(v));
+
+const cellBase = 'px-2.5 py-1 whitespace-nowrap';
+const headBase =
+    'sticky top-0 z-10 bg-slate-200 px-2.5 py-2 font-semibold text-slate-800 border-b border-slate-300 whitespace-nowrap';
+
+/**
+ * Modal body for picking indents for a lot. Dense table that uses the full
+ * modal height; "All" is the default tab so the most indents are visible at once.
+ */
 export default function IndentSelection({
     matches = [],
     initialSelected = [],
@@ -249,7 +321,7 @@ export default function IndentSelection({
     allAssignedIds = [],
     title = '',
 }) {
-    const [activeCategory, setActiveCategory] = useState('Yarn');
+    const [activeCategory, setActiveCategory] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedDept, setSelectedDept] = useState('All departments');
     const [selectedIds, setSelectedIds] = useState([]);
@@ -258,22 +330,26 @@ export default function IndentSelection({
         if (matches && matches.length > 0) {
             return matches;
         }
-        return DEFAULT_INDENT_ITEMS;
+        return [];
     }, [matches]);
 
     const availableItems = useMemo(() => {
         return allItems.filter(item => !allAssignedIds.includes(item.id));
     }, [allItems, allAssignedIds]);
 
-    // Initialize selected IDs from initialSelected
+    // Initialize selected IDs from initialSelected. Keyed on the ids themselves (not the
+    // array identity) so a parent re-render never wipes the user's in-progress selection.
+    const initialIdsKey = (initialSelected || [])
+        .map(i => (typeof i === 'object' ? i.id : i))
+        .join('|');
     useEffect(() => {
         if (initialSelected && initialSelected.length > 0) {
-            const ids = initialSelected.map(i => (typeof i === 'object' ? i.id : i));
-            setSelectedIds(ids);
+            setSelectedIds(initialSelected.map(i => (typeof i === 'object' ? i.id : i)));
         } else {
             setSelectedIds([]);
         }
-    }, [initialSelected]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialIdsKey]);
 
     // Gather unique departments for dropdown
     const departments = useMemo(() => {
@@ -285,8 +361,9 @@ export default function IndentSelection({
         return ['All departments', ...Array.from(set)];
     }, [availableItems]);
 
-    // Current category items
+    // Items in the active tab ("All" = every available item)
     const categoryItems = useMemo(() => {
+        if (activeCategory === 'All') return availableItems;
         return availableItems.filter(
             item => getCategory(item).toLowerCase() === activeCategory.toLowerCase()
         );
@@ -341,125 +418,103 @@ export default function IndentSelection({
     };
 
     const handleAddSelection = () => {
-        if (selectedIds.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Items Selected',
-                text: 'Please select at least one indent item before adding.',
-                confirmButtonColor: '#2563eb',
-            });
-            return;
-        }
-
+        if (selectedIds.length === 0) return;
         const selectedObjects = allItems.filter(item => selectedIds.includes(item.id));
         if (onConfirm) {
             onConfirm(selectedObjects);
         }
     };
 
-    // Selection counts calculation
+    // Selection summary: count, per-type breakdown and quantity totals
     const totalSelectedCount = selectedIds.length;
-    const uniqueSelectedTypes = useMemo(() => {
-        const types = new Set();
+    const selectionSummary = useMemo(() => {
+        const byType = new Map();
+        const byUom = new Map();
         allItems.forEach(item => {
-            if (selectedIds.includes(item.id)) {
-                types.add(getCategory(item));
-            }
+            if (!selectedIds.includes(item.id)) return;
+            const type = getCategory(item);
+            byType.set(type, (byType.get(type) || 0) + 1);
+            const uom = getUom(item);
+            byUom.set(uom, (byUom.get(uom) || 0) + Number(item.qty || 0));
         });
-        return types;
+        return {
+            types: Array.from(byType.entries()).map(([type, count]) => `${type} ${count}`).join(' · '),
+            qty: Array.from(byUom.entries())
+                .map(([uom, total]) => `${num(total)}${uom ? ` ${uom}` : ''}`)
+                .join(' · '),
+        };
     }, [allItems, selectedIds]);
 
-    const activeCategoryConfig = CATEGORIES.find(c => c.id === activeCategory) || CATEGORIES[0];
+    const columns = TYPE_COLUMNS[activeCategory] || TYPE_COLUMNS.All;
+    const activeTab = TABS.find(t => t.id === activeCategory) || ALL_TAB;
+    const checkboxCls = 'w-3.5 h-3.5 accent-teal-700 cursor-pointer';
 
     return (
-        <div className="flex flex-col h-full bg-white text-slate-800 rounded-xl overflow-hidden">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-900">Select indent items</h2>
-                        {title && (
-                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                                {title}
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">Approved and unassigned lines only</p>
-                </div>
-
-                {onClose && (
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-4 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-sm font-medium transition-colors"
-                    >
-                        Close
-                    </button>
+        <div className="flex flex-col h-full bg-white text-slate-800 rounded-lg overflow-hidden">
+            {/* Header: title + lot (right padding leaves room for the modal's own close button) */}
+            <div className="pl-4 pr-10 py-2.5 border-b border-slate-200 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 className="text-base font-semibold text-slate-900">Select indent items</h2>
+                {title && (
+                    <span className="text-xs font-semibold px-2.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 leading-5">
+                        {title}
+                    </span>
                 )}
+                <span className="text-xs text-slate-500">Approved and unassigned lines only</span>
             </div>
 
-            {/* Main Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                {/* Category Tab Pills with Dynamic Counts */}
-                <div className="flex flex-wrap items-center gap-2">
-                    {CATEGORIES.map(category => {
-                        const itemsInCat = availableItems.filter(
-                            i => getCategory(i).toLowerCase() === category.id.toLowerCase()
-                        );
-                        const totalCount = itemsInCat.length;
-                        const selectedCount = itemsInCat.filter(i => selectedIds.includes(i.id)).length;
-                        const isActive = activeCategory === category.id;
+            {/* Toolbar: type tabs + search + department, all on one row */}
+            <div className="px-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <div className="flex flex-wrap gap-0.5" role="group" aria-label="Indent type">
+                    {TABS.map(tab => {
+                        const itemsInTab = tab.id === 'All'
+                            ? availableItems
+                            : availableItems.filter(i => getCategory(i).toLowerCase() === tab.id.toLowerCase());
+                        const selectedCount = itemsInTab.filter(i => selectedIds.includes(i.id)).length;
+                        const isActive = activeCategory === tab.id;
 
                         return (
                             <button
-                                key={category.id}
+                                key={tab.id}
                                 type="button"
+                                title={tab.hint}
+                                aria-pressed={isActive}
                                 onClick={() => {
-                                    setActiveCategory(category.id);
+                                    setActiveCategory(tab.id);
                                     setSearchTerm('');
                                 }}
-                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
-                                    isActive
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                }`}
-                            >
-                                <span>{category.label}</span>
-                                <span
-                                    className={`text-xs px-1.5 py-0.5 rounded-full ${
-                                        isActive ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-600'
+                                className={`px-3 pt-2.5 pb-2 text-xs border-b-2 transition-colors flex items-center gap-1.5 ${isActive
+                                    ? 'border-teal-700 text-teal-800 font-semibold'
+                                    : 'border-transparent text-slate-600 font-medium hover:text-slate-900'
                                     }`}
+                            >
+                                <span>{tab.label}</span>
+                                <span
+                                    className={`min-w-[34px] px-1.5 rounded-full text-center text-[11px] font-medium ${isActive ? 'bg-teal-100 text-teal-800' : 'bg-slate-200 text-slate-700'
+                                        }`}
                                 >
-                                    {selectedCount}/{totalCount}
+                                    {selectedCount}/{itemsInTab.length}
                                 </span>
                             </button>
                         );
                     })}
                 </div>
 
-                {/* Contextual Info Banner */}
-                <div className="bg-blue-50/80 border border-blue-200/80 text-blue-900 rounded-lg px-4 py-2.5 text-xs flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{activeCategoryConfig.hint}</span>
-                </div>
-
-                {/* Search & Department Filter Toolbar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                    <div className="relative flex-1 max-w-md">
+                <div className="flex flex-wrap items-center gap-2 py-1.5">
+                    <div className="relative">
                         <input
                             type="text"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             placeholder="Search indent no, item, department"
-                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            aria-label="Search indents"
+                            className="w-64 h-8 pl-8 pr-7 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-700 transition-colors"
                         />
                         <svg
-                            className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+                            className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
+                            aria-hidden="true"
                         >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -467,19 +522,20 @@ export default function IndentSelection({
                             <button
                                 type="button"
                                 onClick={() => setSearchTerm('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                aria-label="Clear search"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs"
                             >
                                 ✕
                             </button>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs text-slate-500 font-medium whitespace-nowrap">Department:</label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                        <span className="whitespace-nowrap">Department</span>
                         <select
                             value={selectedDept}
                             onChange={e => setSelectedDept(e.target.value)}
-                            className="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="h-8 bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2 focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-700"
                         >
                             {departments.map(dept => (
                                 <option key={dept} value={dept}>
@@ -487,223 +543,153 @@ export default function IndentSelection({
                                 </option>
                             ))}
                         </select>
-                    </div>
-                </div>
-
-                {/* Table Container */}
-                <div className="border border-slate-200 rounded-lg overflow-x-auto shadow-sm">
-                    <table className="w-full text-left border-collapse text-sm">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                            <tr>
-                                <th className="px-3 py-3 w-10 text-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={isAllCategorySelected}
-                                        ref={el => {
-                                            if (el) el.indeterminate = isSomeCategorySelected;
-                                        }}
-                                        onChange={e => handleSelectAllCategory(e.target.checked)}
-                                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
-                                    />
-                                </th>
-                                <th className="px-3 py-3 font-semibold">Indent no</th>
-                                <th className="px-3 py-3 font-semibold">Department</th>
-
-                                {/* Adaptive Columns by Category */}
-                                {activeCategory === 'Yarn' && (
-                                    <>
-                                        <th className="px-3 py-3 font-semibold">Yarn Name</th>
-                                        <th className="px-3 py-3 font-semibold">Count</th>
-                                        <th className="px-3 py-3 font-semibold">Blend</th>
-                                        <th className="px-3 py-3 font-semibold">Ply</th>
-                                        <th className="px-3 py-3 font-semibold">Shade</th>
-                                        <th className="px-3 py-3 font-semibold text-right">Qty (kg)</th>
-                                    </>
-                                )}
-
-                                {activeCategory === 'Fabric' && (
-                                    <>
-                                        <th className="px-3 py-3 font-semibold">Fabric Name</th>
-                                        <th className="px-3 py-3 font-semibold">Construction</th>
-                                        <th className="px-3 py-3 font-semibold">GSM</th>
-                                        <th className="px-3 py-3 font-semibold">Width</th>
-                                        <th className="px-3 py-3 font-semibold">Finish / Color</th>
-                                        <th className="px-3 py-3 font-semibold text-right">Qty</th>
-                                    </>
-                                )}
-
-                                {activeCategory === 'Machine spares' && (
-                                    <>
-                                        <th className="px-3 py-3 font-semibold">Machine Spare Name</th>
-                                        <th className="px-3 py-3 font-semibold">Part No</th>
-                                        <th className="px-3 py-3 font-semibold">Make</th>
-                                        <th className="px-3 py-3 font-semibold">Specification</th>
-                                        <th className="px-3 py-3 font-semibold text-right">Qty</th>
-                                    </>
-                                )}
-
-                                {activeCategory === 'Dyes and chemicals' && (
-                                    <>
-                                        <th className="px-3 py-3 font-semibold">Dyes and chemicals Name</th>
-                                        <th className="px-3 py-3 font-semibold">Code</th>
-                                        <th className="px-3 py-3 font-semibold">Brand</th>
-                                        <th className="px-3 py-3 font-semibold">Grade</th>
-                                        <th className="px-3 py-3 font-semibold text-right">Qty (kg)</th>
-                                    </>
-                                )}
-
-                                {activeCategory === 'General' && (
-                                    <>
-                                        <th className="px-3 py-3 font-semibold">Item Name</th>
-                                        <th className="px-3 py-3 font-semibold">Specification</th>
-                                        <th className="px-3 py-3 font-semibold">UOM</th>
-                                        <th className="px-3 py-3 font-semibold text-right">Qty</th>
-                                    </>
-                                )}
-
-                                <th className="px-3 py-3 font-semibold">Required by</th>
-                            </tr>
-                        </thead>
-
-                        <tbody className="divide-y divide-slate-100 bg-white">
-                            {filteredItems.length === 0 ? (
-                                <tr>
-                                    <td colSpan={10} className="px-6 py-10 text-center text-slate-400">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <svg className="w-8 h-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            <p className="font-medium text-slate-600">No indent items found</p>
-                                            <p className="text-xs text-slate-400 mt-1">
-                                                Try adjusting your search terms or department filter.
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredItems.map(item => {
-                                    const isSelected = selectedIds.includes(item.id);
-
-                                    return (
-                                        <tr
-                                            key={item.id}
-                                            onClick={() => handleToggleItem(item.id)}
-                                            className={`cursor-pointer transition-colors ${
-                                                isSelected ? 'bg-blue-50/70 hover:bg-blue-50' : 'hover:bg-slate-50'
-                                            }`}
-                                        >
-                                            <td className="px-3 py-3 text-center" onClick={e => e.stopPropagation()}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => handleToggleItem(item.id)}
-                                                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
-                                                />
-                                            </td>
-
-                                            <td className="px-3 py-3 font-medium text-slate-900">{getDocId(item)}</td>
-                                            <td className="px-3 py-3 text-slate-600">{getDepartment(item)}</td>
-
-                                            {/* Adaptive Table Cells by Category */}
-                                            {activeCategory === 'Yarn' && (
-                                                <>
-                                                    <td className="px-3 py-3 text-slate-600">{item.Yarn?.name || getItemName(item)}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.Counts?.name || item.count || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.YarnBlend?.name || item.blend || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.ply || item.customData?.ply || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.shade || item.Color?.name || item.customData?.shade || '-'}</td>
-                                                    <td className="px-3 py-3 text-right font-medium text-slate-900">
-                                                        {Number(item.qty || 0).toLocaleString()}
-                                                    </td>
-                                                </>
-                                            )}
-
-                                            {activeCategory === 'Fabric' && (
-                                                <>
-                                                    <td className="px-3 py-3 text-slate-600">{item.Fabric?.name || getItemName(item)}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.construction || item.customData?.construction || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.gsm || item.Gsm?.name || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.width || item.customData?.width || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.shade || item.Color?.name || '-'}</td>
-                                                    <td className="px-3 py-3 text-right font-medium text-slate-900">
-                                                        {Number(item.qty || 0).toLocaleString()} {getUom(item)}
-                                                    </td>
-                                                </>
-                                            )}
-
-                                            {activeCategory === 'Machine spares' && (
-                                                <>
-                                                    <td className="px-3 py-3 text-slate-600">{getItemName(item)}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.partNo || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.make || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.spec || '-'}</td>
-                                                    <td className="px-3 py-3 text-right font-medium text-slate-900">
-                                                        {Number(item.qty || 0).toLocaleString()} {getUom(item)}
-                                                    </td>
-                                                </>
-                                            )}
-
-                                            {activeCategory === 'Dyes and chemicals' && (
-                                                <>
-                                                    <td className="px-3 py-3 text-slate-600">{getItemName(item)}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.code || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.brand || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.grade || '-'}</td>
-                                                    <td className="px-3 py-3 text-right font-medium text-slate-900">
-                                                        {Number(item.qty || 0).toLocaleString()}
-                                                    </td>
-                                                </>
-                                            )}
-
-                                            {activeCategory === 'General' && (
-                                                <>
-                                                    <td className="px-3 py-3 text-slate-600">{getItemName(item)}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{item.spec || '-'}</td>
-                                                    <td className="px-3 py-3 text-slate-600">{getUom(item) || '-'}</td>
-                                                    <td className="px-3 py-3 text-right font-medium text-slate-900">
-                                                        {Number(item.qty || 0).toLocaleString()}
-                                                    </td>
-                                                </>
-                                            )}
-
-                                            <td className="px-3 py-3 text-slate-600 whitespace-nowrap">
-                                                {getRequiredDate(item)}
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                    </label>
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-sm text-slate-600 font-medium">
-                    <span>{totalSelectedCount} selected across {uniqueSelectedTypes.size} type(s)</span>
+            {/* Table — takes all remaining height and scrolls; header stays pinned */}
+            <div className="flex-1 min-h-0 overflow-auto">
+                <table className="w-full min-w-[860px] text-xs text-left border-collapse">
+                    <caption className="sr-only">{activeTab.hint}</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" className={`${headBase} w-9 text-center`}>
+                                <input
+                                    type="checkbox"
+                                    checked={isAllCategorySelected}
+                                    ref={el => {
+                                        if (el) el.indeterminate = isSomeCategorySelected;
+                                    }}
+                                    onChange={e => handleSelectAllCategory(e.target.checked)}
+                                    aria-label="Select all shown indents"
+                                    className={checkboxCls}
+                                />
+                            </th>
+                            <th scope="col" className={headBase}>Indent no</th>
+                            <th scope="col" className={headBase}>Department</th>
+                            {columns.map(c => (
+                                <th
+                                    key={c.label}
+                                    scope="col"
+                                    className={`${headBase} ${c.align === 'right' ? 'text-right' : ''}`}
+                                >
+                                    {c.label}
+                                </th>
+                            ))}
+                            <th scope="col" className={headBase}>Required by</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {filteredItems.length === 0 ? (
+                            <tr>
+                                <td colSpan={columns.length + 4} className="px-6 py-12 text-center text-slate-500">
+                                    <p className="font-medium text-slate-700">No indent items found</p>
+                                    <p className="text-xs mt-1">Try adjusting your search terms, type or department filter.</p>
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredItems.map((item, idx) => {
+                                const isSelected = selectedIds.includes(item.id);
+                                const docId = getDocId(item);
+
+                                return (
+                                    <tr
+                                        key={item.id}
+                                        onClick={() => handleToggleItem(item.id)}
+                                        className={`cursor-pointer border-b border-slate-100 transition-colors ${isSelected
+                                            ? 'bg-teal-50 hover:bg-teal-100/70'
+                                            : idx % 2
+                                                ? 'bg-slate-50/70 hover:bg-teal-50/60'
+                                                : 'bg-white hover:bg-teal-50/60'
+                                            }`}
+                                    >
+                                        <td className={`${cellBase} text-center`} onClick={e => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleToggleItem(item.id)}
+                                                aria-label={`Select ${docId}`}
+                                                className={checkboxCls}
+                                            />
+                                        </td>
+                                        <td className={`${cellBase} font-mono text-[11.5px] font-semibold text-slate-900`}>{docId}</td>
+                                        <td className={`${cellBase} text-slate-700`}>{getDepartment(item)}</td>
+
+                                        {columns.map(c => {
+                                            const text = display(c.value(item));
+                                            return (
+                                                <td
+                                                    key={c.label}
+                                                    title={text}
+                                                    className={`${cellBase} max-w-[260px] truncate ${c.align === 'right' ? 'text-right tabular-nums font-medium text-slate-900' : 'text-slate-700'
+                                                        } ${c.strong ? 'font-medium text-slate-900' : ''}`}
+                                                >
+                                                    {text}
+                                                </td>
+                                            );
+                                        })}
+
+                                        <td className={`${cellBase} text-slate-700`}>{getRequiredDate(item)}</td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Footer: showing / selection summary + actions */}
+            <div className="px-4 py-2.5 border-t border-slate-300 bg-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-slate-600">
+                    <span>
+                        Showing <b className="font-semibold text-slate-900">{filteredItems.length}</b> of {categoryItems.length}
+                    </span>
+                    <span className="text-slate-900 font-semibold">
+                        {totalSelectedCount} selected
+                        {totalSelectedCount > 0 && (
+                            <span className="font-normal text-slate-600"> · {selectionSummary.types}</span>
+                        )}
+                    </span>
+                    {totalSelectedCount > 0 && selectionSummary.qty && (
+                        <span>Qty {selectionSummary.qty}</span>
+                    )}
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-2">
                     <button
                         type="button"
                         onClick={handleClearAll}
                         disabled={totalSelectedCount === 0}
-                        className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                            totalSelectedCount === 0
-                                ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
-                        }`}
+                        className={`h-8 px-3 rounded-lg border text-xs font-medium transition-colors ${totalSelectedCount === 0
+                            ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
+                            }`}
                     >
                         Clear all
                     </button>
 
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="h-8 px-3 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    )}
+
                     <button
                         type="button"
                         onClick={handleAddSelection}
-                        className="flex-1 sm:flex-none px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors"
+                        disabled={totalSelectedCount === 0}
+                        title={totalSelectedCount === 0 ? 'Select at least one indent' : undefined}
+                        className={`h-8 px-4 rounded-lg text-xs font-semibold shadow-sm transition-colors ${totalSelectedCount === 0
+                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                            : 'bg-teal-700 hover:bg-teal-800 text-white'
+                            }`}
                     >
-                        Add to bid
+                        {totalSelectedCount > 0 ? `Add ${totalSelectedCount} to bid` : 'Add to bid'}
                     </button>
                 </div>
             </div>

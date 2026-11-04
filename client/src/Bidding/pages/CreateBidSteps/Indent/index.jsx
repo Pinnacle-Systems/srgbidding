@@ -12,7 +12,7 @@ export { DEFAULT_DEMO_LOTS } from './demoLots';
 
 export default function Indents({ onBack, onNext, bidData, setBidData }) {
   const { data: internalIndentData } = useGetInternalIndentItemsQuery({
-    params: {},
+    params: { status: "PUBLISHED" },
   });
 
 
@@ -121,11 +121,11 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
       lots: (prev.lots || []).map(lot =>
         lot.id === lotId
           ? {
-              ...lot,
-              indents: (lot.indents || []).map(ind =>
-                ind.id === indentId ? { ...ind, ...updatedFields } : ind
-              )
-            }
+            ...lot,
+            indents: (lot.indents || []).map(ind =>
+              ind.id === indentId ? { ...ind, ...updatedFields } : ind
+            )
+          }
           : lot
       )
     }));
@@ -239,7 +239,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
       <Modal
         isOpen={Boolean(activeLotId)}
         onClose={closeModal}
-        widthClass="w-[90%] h-[90%]"
+        widthClass="w-[96%] h-[94%] !p-2"
       >
         <IndentSelection
           matches={dataSource}

@@ -197,12 +197,12 @@ export default function IndentTableByType({
   return (
     <>
       <div className="flex-1 min-h-0 overflow-auto border-t border-slate-200">
-        <div style={{ minWidth: 1200 }}>
+        <div style={{ minWidth: 1500 }}>
           <table className="w-full border-collapse bg-white">
             <thead className="bg-slate-200 sticky top-0 z-10 text-slate-700">
               <tr>
                 <th className={`${headerClasses} w-10 text-center`}>#</th>
-                <th className={`${headerClasses} w-28`}>Indent</th>
+                <th className={`${headerClasses} w-64`}>Indent</th>
                 {typeKey === 'all' && <th className={`${headerClasses} w-24`}>Type</th>}
 
                 {/* Type-Specific Column Headers */}

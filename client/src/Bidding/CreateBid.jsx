@@ -8,16 +8,37 @@ import moment from "moment";
 import { getCommonParams } from "../Utils/helper";
 import Indents from "./pages/CreateBidSteps/Indent";
 import Vendors from "./pages/CreateBidSteps/Vendors";
+import { validateBidForPublish } from "./validateBid";
 
 const steps = [
   { id: 1, name: "Bid details" },
   { id: 2, name: "Lots" },
   { id: 3, name: "Indents" },
-  { id: 4, name: "Vendors & Documents" },
-  { id: 5, name: "Review & publish" },
+  // { id: 4, name: "Vendors & Documents" },
+  { id: 4, name: "Review & publish" },
 ];
 
 export default function CreateBid({ editingBidId, onBackToBids }) {
+
+
+
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <BidDetails onNext={nextStep} bidData={bidData} setBidData={setBidData} />;
+      case 2:
+        return <Lots onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
+      case 3:
+        return <Indents onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
+      // case 4:
+      //   return <Vendors onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
+      case 4:
+        return <ReviewAndPublish onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
+      default:
+        return <BidDetails onNext={nextStep} bidData={bidData} setBidData={setBidData} />;
+    }
+  };
 
   const [currentStep, setCurrentStep] = useState(1);
   const [bidData, setBidData] = useState({
@@ -89,12 +110,34 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
   const [createBid, { isLoading: isCreating }] = useCreateBidMutation();
   const [updateBid, { isLoading: isUpdating }] = useUpdateBidMutation();
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(5, prev + 1));
+  const nextStep = () => setCurrentStep((prev) => Math.min(steps.length, prev + 1));
   const prevStep = () => setCurrentStep((prev) => Math.max(1, prev - 1));
 
 
 
+  // Anything past DRAFT (published, closing, awarded, ...) is read-only.
+  const isLocked = Boolean(bidData.status) && String(bidData.status).toUpperCase() !== "DRAFT";
+
   const handleSaveDraft = async (isPublishing = false) => {
+    if (isLocked) return;
+
+    if (isPublishing) {
+      const { valid, issues, firstStep } = validateBidForPublish(bidData);
+      if (!valid) {
+        const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        await Swal.fire({
+          icon: "warning",
+          title: "Complete these before publishing",
+          html: `<ul style="text-align:left;font-size:13px;line-height:1.6;padding-left:18px;list-style:disc">${issues
+            .map((i) => `<li>${esc(i.message)}</li>`)
+            .join("")}</ul>`,
+          confirmButtonText: `Go to step ${firstStep}`,
+        });
+        setCurrentStep(firstStep);
+        return;
+      }
+    }
+
     try {
       const payload = {
         ...bidData,
@@ -129,6 +172,9 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
         toast: true,
         position: "top-end",
       });
+
+      // After publishing, the bid is locked: go back to the reports page.
+      if (isPublishing && onBackToBids) onBackToBids();
     } catch (err) {
       console.error("Error saving bid:", err);
       Swal.fire({
@@ -150,29 +196,14 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
     </svg>
   );
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <BidDetails onNext={nextStep} bidData={bidData} setBidData={setBidData} />;
-      case 2:
-        return <Lots onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
-      case 3:
-        return <Indents onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
-      case 4:
-        return <Vendors onNext={nextStep} onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
-      case 5:
-        return <ReviewAndPublish onBack={prevStep} bidData={bidData} setBidData={setBidData} />;
-      default:
-        return <BidDetails onNext={nextStep} bidData={bidData} setBidData={setBidData} />;
-    }
-  };
+
 
 
 
   return (
-    <div className="animate-in fade-in duration-500 w-full h-full">
+    <div className="animate-in fade-in duration-500 w-full h-full flex flex-col">
       {/* Stepper Bar & Draft Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-4 mt-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-4 mt-2 shrink-0">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
 
 
@@ -208,34 +239,36 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
         )}
       </div>
 
-      <div className="w-full h-[calc(100vh-110px)] pl-6 pr-2 mt-2">
+      <div className="w-full flex-1 min-h-0 pl-6 pr-2 mt-2 pb-1">
         {/* Main Form Area */}
         <div className="bg-white border border-slate-200 rounded-md shadow-sm flex flex-col h-full overflow-hidden">
           <div className="flex-1 overflow-y-auto p-3">
-            {renderStep()}
+            {isLocked && (
+              <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                <span aria-hidden="true">🔒</span>
+                This bid is {String(bidData.status).toLowerCase()} and can no longer be edited. You can review it step by step.
+              </div>
+            )}
+            {/* A disabled fieldset turns every input, select and button inside it read-only. */}
+            <fieldset disabled={isLocked} className="m-0 min-w-0 border-0 p-0">
+              {renderStep()}
+            </fieldset>
           </div>
 
           {/* Stepper Footer Action Bar */}
-          <div className="flex items-center justify-between p-2 sm:p-3 border-t border-slate-100 bg-slate-50/70 flex-shrink-0">
+          <div className="flex items-center justify-between  p-1 border-t border-slate-100 bg-slate-50/70 flex-shrink-0">
             <div>
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="px-5 py-2 border border-slate-200 bg-white rounded-md text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm text-sm"
-                >
-                  Back
-                </button>
-              )}
+
             </div>
 
             <div className="flex items-center gap-2.5">
-              {/* Partial Save / Save Draft button (always available at any step) */}
+              {/* Save Draft: only while the bid is still a draft */}
+              {!isLocked && (
               <button
                 type="button"
                 onClick={() => handleSaveDraft(false)}
                 disabled={isCreating || isUpdating}
-                className="px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-md text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-4 py-1.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-md text-sm transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 title="Save current progress as draft in database"
               >
                 <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -243,8 +276,19 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
                 </svg>
                 <span>{isCreating || isUpdating ? "Saving..." : (bidData.id ? "Save Changes" : "Save as Draft")}</span>
               </button>
-
-              {currentStep < 5 ? (
+              )}
+              <div>
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="px-5 py-1.5 border border-slate-200 bg-white rounded-md text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm text-sm"
+                  >
+                    Back
+                  </button>
+                )}
+              </div>
+              {currentStep < steps.length ? (
                 <button
                   type="button"
                   onClick={nextStep}
@@ -252,12 +296,20 @@ export default function CreateBid({ editingBidId, onBackToBids }) {
                 >
                   Next
                 </button>
+              ) : isLocked ? (
+                <button
+                  type="button"
+                  onClick={onBackToBids}
+                  className="px-6 py-2 bg-slate-700 text-white rounded-md font-medium hover:bg-slate-800 transition-colors shadow-sm text-sm cursor-pointer"
+                >
+                  Back to reports
+                </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => handleSaveDraft(true)}
                   disabled={isCreating || isUpdating}
-                  className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition-colors shadow-sm text-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-6 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium transition-colors shadow-sm text-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

@@ -9,7 +9,7 @@ import { useGetUnitOfMeasurementMasterQuery } from '../../../../../redux/uniform
 
 export const YarnHeaders = ({ headerClasses }) => (
   <>
-    <th className={`${headerClasses} w-52`}>Yarn Name</th>
+    <th className={`${headerClasses} w-96`}>Yarn Name</th>
     <th className={`${headerClasses} w-44`}>Composition/Blend</th>
     <th className={`${headerClasses} w-28`}>Counts</th>
     <th className={`${headerClasses} w-32`}>Color</th>

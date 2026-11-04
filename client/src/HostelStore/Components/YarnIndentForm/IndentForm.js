@@ -32,8 +32,6 @@ import { useGetCountsMasterQuery } from "../../../redux/uniformService/CountsMas
 import { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection.jsx";
 import YarnTable from "./YarnIndentTable.jsx";
 import { useGetIndentTypeMasterByNameQuery } from "../../../redux/uniformService/IndentTypeMasterService.js";
-import TransactionLayout from "../../../Basic/components/Reuseable/TransactionLayout.jsx";
-import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const IndentForm = ({
   onClose,
@@ -188,7 +186,7 @@ const IndentForm = ({
     docDate,
     branchId,
     userId,
-    indentType: activeTab, // save the current tab as the type
+    indentType: activeTab,
     priority,
     requiredDate: deliveryDate,
     departmentId,

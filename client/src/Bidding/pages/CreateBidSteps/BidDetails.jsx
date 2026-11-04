@@ -86,13 +86,13 @@ export default function BidDetails({ id, bidData, setBidData }) {
         <ReusableInput label="Bid Date" value={bidData.date || ''} type="date" required readOnly disabled />
 
         <div className='col-span-2'>
-          <ReusableInput label="Bid Tittle" placeholder="Search Customer Name..."
+          <ReusableInputNew label="Bid Tittle" placeholder="Enter Bid Tittle"
             value={bidData.bidTitle} name="bidTitle" setValue={handleChange}
 
           />
         </div>
 
-        <ReusableInput type="date" label="Submission Deadline" placeholder="Search Customer Name..."
+        <ReusableInputNew type="date" label="Submission Deadline"
           value={bidData.submissionDeadline} name="submissionDeadline" setValue={handleChange}
         // readOnly={false}
         />
