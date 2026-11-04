@@ -8,21 +8,29 @@ const BiddingApi = createApi({
   tagTypes: ["Bidding"],
   endpoints: (builder) => ({
     getBids: builder.query({
-      query: (params) => ({
+      query: (arg) => ({
         url: BIDDING_API,
         method: "GET",
-        params,
+        params: arg?.params !== undefined ? arg.params : arg,
       }),
       providesTags: ["Bidding"],
     }),
     getBidById: builder.query({
-      query: (id) => {
+      query: (arg) => {
+        const id = typeof arg === "object" ? arg.id : arg;
+        const params = typeof arg === "object" ? (arg.params || arg) : undefined;
+        let queryParams = params;
+        if (queryParams && queryParams.id) {
+          const { id: _, ...rest } = queryParams;
+          queryParams = rest;
+        }
         return {
           url: `${BIDDING_API}/${id}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
           },
+          params: queryParams,
         };
       },
       providesTags: ["City"],
@@ -31,7 +39,7 @@ const BiddingApi = createApi({
       query: (payload) => ({
         url: BIDDING_API,
         method: "POST",
-        body: payload,
+        body: payload instanceof FormData ? payload : (payload.formData || payload),
       }),
       invalidatesTags: ["Bidding"],
     }),
@@ -39,7 +47,7 @@ const BiddingApi = createApi({
       query: ({ id, ...payload }) => ({
         url: `${BIDDING_API}/${id}`,
         method: "PUT",
-        body: payload,
+        body: payload instanceof FormData ? payload : (payload.formData || payload),
       }),
       invalidatesTags: ["Bidding"],
     }),

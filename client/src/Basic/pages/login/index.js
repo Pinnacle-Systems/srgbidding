@@ -96,6 +96,18 @@ const Login = () => {
                   sessionStorage.getItem("sessionId") + "superAdmin",
                   true,
                 );
+                secureLocalStorage.setItem(
+                  sessionStorage.getItem("sessionId") + "partyId",
+                  result.data.userInfo.partyId,
+                );
+                secureLocalStorage.setItem(
+                  sessionStorage.getItem("sessionId") + "userPartyId",
+                  result.data.userInfo.partyId,
+                );
+                secureLocalStorage.setItem(
+                  sessionStorage.getItem("sessionId") + "partyType",
+                  result.data.userInfo.partyType,
+                );
                 navigate(PRODUCT_ADMIN_HOME_PATH);
               } else {
                 // const currentPlanActive =
@@ -146,6 +158,18 @@ const Login = () => {
                   secureLocalStorage.setItem(
                     sessionStorage.getItem("sessionId") + "userRole",
                     result.data.userInfo.role.name,
+                  );
+                  secureLocalStorage.setItem(
+                    sessionStorage.getItem("sessionId") + "partyId",
+                    result.data.userInfo.partyId,
+                  );
+                  secureLocalStorage.setItem(
+                    sessionStorage.getItem("sessionId") + "userPartyId",
+                    result.data.userInfo.partyId,
+                  );
+                  secureLocalStorage.setItem(
+                    sessionStorage.getItem("sessionId") + "partyType",
+                    result.data.userInfo.partyType,
                   );
                   setIsGlobalOpen(true);
                 } else {

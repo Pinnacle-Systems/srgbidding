@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { useBiddingAuth, BiddingAuthProvider } from "./context/BiddingAuthContext";
+import {
+  useBiddingAuth,
+  BiddingAuthProvider,
+} from "./context/BiddingAuthContext";
 import BiddingLayout from "./layouts/BiddingLayout";
 
 // Current existing components (Acting as Admin/Management views for now)
@@ -8,25 +11,21 @@ import Bids from "./BidsReports";
 import CreateBid from "./CreateBid";
 import BiddingCommunicationsPage from "./pages/Communications";
 import VendorPortal from "./VendorPortal";
+import VendorBids from "../VendorBidding/vendorBidsReports";
+import VendorCreateBid from "../VendorBidding/CreateBid";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
   const [editingBidId, setEditingBidId] = useState(null);
   const [selectedBidIdForComms, setSelectedBidIdForComms] = useState(null);
   const { role } = useBiddingAuth();
-
-
+  console.log(role, "role");
 
   const renderView = () => {
-
-
     if (role === "Admin") {
       switch (currentView) {
-        case "dashboard": return <Dashboard setCurrentView={setCurrentView} />;
-
-        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
-
-        case "bids": return (
+        case "dashboard": return <Dashboard />;
+        case "  ": return (
           <Bids
             setCurrentView={setCurrentView}
             setEditingBidId={setEditingBidId}
@@ -36,6 +35,7 @@ function BiddingAppContent() {
             }}
           />
         );
+        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
         case "communications": return (
           <BiddingCommunicationsPage
             initialBidId={selectedBidIdForComms}
@@ -47,16 +47,64 @@ function BiddingAppContent() {
       }
     }
 
-
     if (role === "Vendor") {
-      return <VendorPortal initialView={currentView === "workspace" ? "workspace" : "bids"} />;
+      switch (currentView) {
+        case "bids":
+        case "dashboard":
+          return (
+            <VendorBids
+              setCurrentView={setCurrentView}
+              setEditingBidId={setEditingBidId}
+              onOpenCommunications={(bidId) => {
+                setSelectedBidIdForComms(bidId);
+                setCurrentView("communications");
+              }}
+            />
+          );
+        case "create":
+          return (
+            <VendorCreateBid
+              editingBidId={editingBidId}
+              onBackToBids={() => {
+                setEditingBidId(null);
+                setCurrentView("bids");
+              }}
+            />
+          );
+        case "communications":
+          return (
+            <BiddingCommunicationsPage
+              initialBidId={selectedBidIdForComms}
+              onBackToBids={() => setCurrentView("bids")}
+            />
+          );
+        default:
+          return (
+            <VendorBids
+              setCurrentView={setCurrentView}
+              setEditingBidId={setEditingBidId}
+              onOpenCommunications={(bidId) => {
+                setSelectedBidIdForComms(bidId);
+                setCurrentView("communications");
+              }}
+            />
+          );
+      }
     }
 
-    return <div className="p-8"><h1 className="text-2xl font-bold text-red-500">Unauthorized Role</h1></div>;
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-red-500">Unauthorized Role</h1>
+      </div>
+    );
   };
 
   return (
-    <BiddingLayout currentView={currentView} setCurrentView={setCurrentView} role={role}>
+    <BiddingLayout
+      currentView={currentView}
+      setCurrentView={setCurrentView}
+      role={role}
+    >
       {renderView()}
     </BiddingLayout>
   );
