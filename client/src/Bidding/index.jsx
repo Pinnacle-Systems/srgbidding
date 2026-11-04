@@ -24,26 +24,46 @@ function BiddingAppContent() {
   const renderView = () => {
     if (role === "Admin") {
       switch (currentView) {
-        case "dashboard": return <Dashboard />;
-        case "  ": return (
-          <Bids
-            setCurrentView={setCurrentView}
-            setEditingBidId={setEditingBidId}
-            onOpenCommunications={(bidId) => {
-              setSelectedBidIdForComms(bidId);
-              setCurrentView("communications");
-            }}
-          />
-        );
-        case "create": return (<CreateBid editingBidId={editingBidId} onBackToBids={() => { setEditingBidId(null); setCurrentView("bids"); }} />);
-        case "communications": return (
-          <BiddingCommunicationsPage
-            initialBidId={selectedBidIdForComms}
-            onBackToBids={() => setCurrentView("bids")}
-          />
-        );
-        case "compare": return <div className="p-8"><h1 className="text-2xl font-bold">Quote Comparison Placeholder</h1></div>;
-        default: return <Dashboard />;
+        case "dashboard":
+          return <Dashboard />;
+        case "bids":
+          return (
+            <Bids
+              setCurrentView={setCurrentView}
+              setEditingBidId={setEditingBidId}
+              onOpenCommunications={(bidId) => {
+                setSelectedBidIdForComms(bidId);
+                setCurrentView("communications");
+              }}
+            />
+          );
+        case "create":
+          return (
+            <CreateBid
+              editingBidId={editingBidId}
+              onBackToBids={() => {
+                setEditingBidId(null);
+                setCurrentView("bids");
+              }}
+            />
+          );
+        case "communications":
+          return (
+            <BiddingCommunicationsPage
+              initialBidId={selectedBidIdForComms}
+              onBackToBids={() => setCurrentView("bids")}
+            />
+          );
+        case "compare":
+          return (
+            <div className="p-8">
+              <h1 className="text-2xl font-bold">
+                Quote Comparison Placeholder
+              </h1>
+            </div>
+          );
+        default:
+          return <Dashboard />;
       }
     }
 

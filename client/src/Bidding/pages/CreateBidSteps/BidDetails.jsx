@@ -123,7 +123,11 @@ export default function BidDetails({ id, bidData, setBidData }) {
           value={bidData.submissionDeadline}
           name="submissionDeadline"
           setValue={handleChange}
+<<<<<<< HEAD
         // readOnly={false}
+=======
+          // readOnly={false}
+>>>>>>> 015454e08b417b54ee5e430712e8f92af4bdcdd4
         />
         <div className="col-span-2">
           <SearchableTableCellSelect
@@ -138,11 +142,19 @@ export default function BidDetails({ id, bidData, setBidData }) {
               }));
             }}
             className={""}
+<<<<<<< HEAD
           // addNewModalWidth="w-[90%] h-[95%]"
           // childComponent={ItemMaster}
           // addNewLabel="+ Add New Item"
           // handlers={handlers}
           // movedToNextSaveNewRef={movedToNextSaveNewRef}
+=======
+            // addNewModalWidth="w-[90%] h-[95%]"
+            // childComponent={ItemMaster}
+            // addNewLabel="+ Add New Item"
+            // handlers={handlers}
+            // movedToNextSaveNewRef={movedToNextSaveNewRef}
+>>>>>>> 015454e08b417b54ee5e430712e8f92af4bdcdd4
           />
         </div>
 
