@@ -1,22 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useGetInternalIndentItemsQuery } from '../../../../redux/uniformService/InternalIndent';
-import Modal from '../../../../UiComponents/Modal';
-import { DEFAULT_DEMO_LOTS } from './demoLots';
-import LotRail from './LotRail';
-import LotWorkspace from './LotWorkspace';
-import { countUpdateNeeded, getLotVendors } from './indentHelpers';
-import IndentSelection from './IndentSelection';
-import IndentChatDrawer from './IndentChatDrawer';
+import React, { useState, useEffect } from "react";
+import { useGetInternalIndentItemsQuery } from "../../../../redux/uniformService/InternalIndent";
+import Modal from "../../../../UiComponents/Modal";
+import { DEFAULT_DEMO_LOTS } from "./demoLots";
+import LotRail from "./LotRail";
+import LotWorkspace from "./LotWorkspace";
+import { countUpdateNeeded, getLotVendors } from "./indentHelpers";
+import IndentSelection from "./IndentSelection";
+import IndentChatDrawer from "./IndentChatDrawer";
 
-export { DEFAULT_DEMO_LOTS } from './demoLots';
+export { DEFAULT_DEMO_LOTS } from "./demoLots";
 
 export default function Indents({ onBack, onNext, bidData, setBidData }) {
   const { data: internalIndentData } = useGetInternalIndentItemsQuery({
     params: {},
   });
-
-
-
 
   // Automatically initialize with demo lots if no lots exist yet
   // useEffect(() => {
@@ -28,7 +25,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
   //   }
   // }, []);
 
-  console.log(bidData, "bidData")
+  console.log(bidData, "bidData");
 
   const [activeLotId, setActiveLotId] = useState(null);
   const [selectedLotId, setSelectedLotId] = useState(null); // null → first lot
@@ -37,7 +34,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
   const [chatDrawerState, setChatDrawerState] = useState({
     isOpen: false,
     indent: null,
-    initialTab: 'docs', // 'chat' | 'docs'
+    initialTab: "docs", // 'chat' | 'docs'
   });
 
   // Conversation storage: { [`${indentId}_${vendorId}`]: [ { sender: 'user', senderName: 'Me', text: '...', timestamp: '12:30' } ] }
@@ -55,17 +52,25 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
     id: ind.id,
     biddingIndentId: ind.biddingIndentId || ind.id,
     docId: ind.Indent?.docId || ind.docId || `IND-${ind.id}`,
-    category: ind.Indent?.indentType || ind.category || 'General',
-    department: typeof ind.Indent?.Department === 'object'
-      ? ind.Indent?.Department?.name
-      : (ind.department || 'General'),
-    item_name: ind.Yarn?.name || ind.Fabric?.name || ind.Item?.name || (typeof ind.item_name === 'object' ? ind.item_name?.name : ind.item_name) || 'Item',
-    count: ind.Counts?.name || ind.count || '-',
-    blend: ind.YarnBlend?.name || ind.blend || '-',
-    shade: ind.Color?.name || ind.shade || '-',
+    category: ind.Indent?.indentType || ind.category || "General",
+    department:
+      typeof ind.Indent?.Department === "object"
+        ? ind.Indent?.Department?.name
+        : ind.department || "General",
+    item_name:
+      ind.Yarn?.name ||
+      ind.Fabric?.name ||
+      ind.Item?.name ||
+      (typeof ind.item_name === "object"
+        ? ind.item_name?.name
+        : ind.item_name) ||
+      "Item",
+    count: ind.Counts?.name || ind.count || "-",
+    blend: ind.YarnBlend?.name || ind.blend || "-",
+    shade: ind.Color?.name || ind.shade || "-",
     qty: Number(ind.qty || 0),
-    uom: typeof ind.Uom === 'object' ? ind.Uom?.name : (ind.uom || 'kg'),
-    requiredBy: ind.requiredBy || ind.Indent?.requiredDate || '-',
+    uom: typeof ind.Uom === "object" ? ind.Uom?.name : ind.uom || "kg",
+    requiredBy: ind.requiredBy || ind.Indent?.requiredDate || "-",
     commonDocuments: ind.commonDocuments || [],
     yarnId: ind.yarnId || ind.Yarn?.id || null,
     yarnBlendId: ind.yarnBlendId || ind.YarnBlend?.id || null,
@@ -75,64 +80,79 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
     fabricId: ind.fabricId || ind.Fabric?.id || null,
     gsmId: ind.gsmId || ind.Gsm?.id || null,
     itemId: ind.itemId || ind.Item?.id || null,
-    width: ind.width || '',
-    make: ind.make || '',
-    machine: ind.machine || '',
-    partNo: ind.partNo || '',
-    spec: ind.spec || '',
-    ply: ind.ply || '',
-    ciCas: ind.ciCas || ind.code || '',
-    strength: ind.strength || '',
-    hazard: ind.hazard || '',
+    width: ind.width || "",
+    make: ind.make || "",
+    machine: ind.machine || "",
+    partNo: ind.partNo || "",
+    spec: ind.spec || "",
+    ply: ind.ply || "",
+    ciCas: ind.ciCas || ind.code || "",
+    strength: ind.strength || "",
+    hazard: ind.hazard || "",
     customData: ind.customData || {},
-    vendors: (ind.vendors || ind.IndentItemVendors || []).map(v => ({
-      id: v.vendorId !== undefined ? v.vendorId : (v.value !== undefined ? v.value : v.id),
-      name: v.name || v.label || v.Vendor?.name || `Vendor ${v.vendorId || v.value || v.id}`,
-      label: v.label || v.name || v.Vendor?.name || `Vendor ${v.vendorId || v.value || v.id}`,
-      documents: v.documents || []
-    }))
+    vendors: (ind.vendors || ind.IndentItemVendors || []).map((v) => ({
+      id:
+        v.vendorId !== undefined
+          ? v.vendorId
+          : v.value !== undefined
+            ? v.value
+            : v.id,
+      name:
+        v.name ||
+        v.label ||
+        v.Vendor?.name ||
+        `Vendor ${v.vendorId || v.value || v.id}`,
+      label:
+        v.label ||
+        v.name ||
+        v.Vendor?.name ||
+        `Vendor ${v.vendorId || v.value || v.id}`,
+      documents: v.documents || [],
+    })),
   });
 
   const assignSelected = (selectedObjects) => {
     // 1. Normalize every selected indent so docId, item_name, uom are flat & clean
-    console.log(selectedObjects, "selectedObjects")
-    const enriched = selectedObjects.map(ind => normalizeIndent(ind));
+    console.log(selectedObjects, "selectedObjects");
+    const enriched = selectedObjects.map((ind) => normalizeIndent(ind));
 
-    setBidData(prev => ({
+    setBidData((prev) => ({
       ...prev,
-      lots: prev.lots.map(lot =>
-        lot.id === activeLotId ? { ...lot, indents: enriched } : lot
-      )
+      lots: prev.lots.map((lot) =>
+        lot.id === activeLotId ? { ...lot, indents: enriched } : lot,
+      ),
     }));
     closeModal();
   };
 
   const removeIndent = (lotId, indentId) => {
-    setBidData(prev => ({
+    setBidData((prev) => ({
       ...prev,
-      lots: prev.lots.map(lot =>
-        lot.id === lotId ? { ...lot, indents: lot.indents.filter(i => i.id !== indentId) } : lot
-      )
+      lots: prev.lots.map((lot) =>
+        lot.id === lotId
+          ? { ...lot, indents: lot.indents.filter((i) => i.id !== indentId) }
+          : lot,
+      ),
     }));
   };
 
   const updateIndent = (lotId, indentId, updatedFields) => {
-    setBidData(prev => ({
+    setBidData((prev) => ({
       ...prev,
-      lots: (prev.lots || []).map(lot =>
+      lots: (prev.lots || []).map((lot) =>
         lot.id === lotId
           ? {
               ...lot,
-              indents: (lot.indents || []).map(ind =>
-                ind.id === indentId ? { ...ind, ...updatedFields } : ind
-              )
+              indents: (lot.indents || []).map((ind) =>
+                ind.id === indentId ? { ...ind, ...updatedFields } : ind,
+              ),
             }
-          : lot
-      )
+          : lot,
+      ),
     }));
   };
 
-  const handleOpenDrawer = (indent, tab = 'docs') => {
+  const handleOpenDrawer = (indent, tab = "docs") => {
     setChatDrawerState({
       isOpen: true,
       indent,
@@ -141,30 +161,39 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
   };
 
   const handleOpenChat = (indent) => {
-    handleOpenDrawer(indent, 'chat');
+    handleOpenDrawer(indent, "chat");
   };
 
   const handleCloseChat = () => {
     setChatDrawerState({
       isOpen: false,
       indent: null,
-      initialTab: 'docs',
+      initialTab: "docs",
     });
   };
 
-  const handleSendMessage = ({ indentId, vendorId, text, sendToAll, allVendorIds }) => {
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const handleSendMessage = ({
+    indentId,
+    vendorId,
+    text,
+    sendToAll,
+    allVendorIds,
+  }) => {
+    const timeStr = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     const newMsg = {
-      sender: 'user',
-      senderName: 'You',
+      sender: "user",
+      senderName: "You",
       text,
       timestamp: timeStr,
     };
 
-    setChatMessages(prev => {
+    setChatMessages((prev) => {
       const next = { ...prev };
       if (sendToAll && allVendorIds) {
-        allVendorIds.forEach(vId => {
+        allVendorIds.forEach((vId) => {
           const key = `${indentId}_${vId}`;
           next[key] = [...(next[key] || []), newMsg];
         });
@@ -176,61 +205,72 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
     });
   };
 
-  const handleUpdateDocuments = ({ indentId, vendorId, documents, commonDocuments }) => {
-    setBidData(prev => ({
+  const handleUpdateDocuments = ({
+    indentId,
+    vendorId,
+    documents,
+    commonDocuments,
+  }) => {
+    setBidData((prev) => ({
       ...prev,
-      lots: (prev.lots || []).map(lot => ({
+      lots: (prev.lots || []).map((lot) => ({
         ...lot,
-        indents: (lot.indents || []).map(ind => {
+        indents: (lot.indents || []).map((ind) => {
           if (ind.id !== indentId) return ind;
 
-          if (vendorId === 'common') {
+          if (vendorId === "common") {
             return { ...ind, commonDocuments };
           }
 
           return {
             ...ind,
-            commonDocuments: commonDocuments !== undefined ? commonDocuments : ind.commonDocuments,
-            vendors: (ind.vendors || []).map(v => {
+            commonDocuments:
+              commonDocuments !== undefined
+                ? commonDocuments
+                : ind.commonDocuments,
+            vendors: (ind.vendors || []).map((v) => {
               if (v.id === vendorId) {
                 return { ...v, documents };
               }
               return v;
-            })
+            }),
           };
-        })
-      }))
+        }),
+      })),
     }));
 
     // Real-time update in open drawer
-    setChatDrawerState(prev => {
+    setChatDrawerState((prev) => {
       if (!prev.indent || prev.indent.id !== indentId) return prev;
-      if (vendorId === 'common') {
+      if (vendorId === "common") {
         return { ...prev, indent: { ...prev.indent, commonDocuments } };
       }
       return {
         ...prev,
         indent: {
           ...prev.indent,
-          commonDocuments: commonDocuments !== undefined ? commonDocuments : prev.indent.commonDocuments,
-          vendors: (prev.indent.vendors || []).map(v =>
-            v.id === vendorId ? { ...v, documents } : v
-          )
-        }
+          commonDocuments:
+            commonDocuments !== undefined
+              ? commonDocuments
+              : prev.indent.commonDocuments,
+          vendors: (prev.indent.vendors || []).map((v) =>
+            v.id === vendorId ? { ...v, documents } : v,
+          ),
+        },
       };
     });
   };
 
-  const activeLot = (bidData.lots || []).find(l => l.id === activeLotId);
+  const activeLot = (bidData.lots || []).find((l) => l.id === activeLotId);
   const dataSource = internalIndentData?.data || [];
 
   // Lot shown in the workspace (falls back to the first lot, e.g. after a lot is removed)
   const lots = bidData.lots || [];
-  const selectedLot = lots.find(l => l.id === selectedLotId) || lots[0];
+  const selectedLot = lots.find((l) => l.id === selectedLotId) || lots[0];
   const selectedLotIndex = selectedLot ? lots.indexOf(selectedLot) : -1;
 
   // Summary line across all lots
-  const allIndents = lots.flatMap(l => l.indents || []);
+  const allIndents = lots.flatMap((l) => l.indents || []);
   const totalVendors = getLotVendors(allIndents).length;
   const totalUpdateNeeded = countUpdateNeeded(allIndents);
 
@@ -248,11 +288,9 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
           initialSelected={activeLot?.indents || []}
           onConfirm={assignSelected}
           onClose={closeModal}
-          allAssignedIds={
-            (bidData.lots || [])
-              .filter(l => l.id !== activeLotId)
-              .flatMap(l => (l.indents || []).map(i => i.id))
-          }
+          allAssignedIds={(bidData.lots || [])
+            .filter((l) => l.id !== activeLotId)
+            .flatMap((l) => (l.indents || []).map((i) => i.id))}
         />
       </Modal>
 
@@ -268,15 +306,15 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
       />
 
       <div className="h-full min-h-[420px] flex flex-col gap-2">
-        {(!selectedLot) ? (
+        {!selectedLot ? (
           <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
-            <p className="text-sm font-medium text-slate-600">No lots available.</p>
-            <button
-              onClick={() => setBidData(prev => ({ ...prev, lots: DEFAULT_DEMO_LOTS }))}
-              className="mt-3 px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-semibold hover:bg-teal-700 transition-colors"
-            >
-              Load Demo Lots
-            </button>
+            <p className="text-sm font-medium text-slate-600">
+              No lots available.
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Please add at least one lot in Step 2 (Lots) before configuring
+              indents.
+            </p>
           </div>
         ) : (
           <>

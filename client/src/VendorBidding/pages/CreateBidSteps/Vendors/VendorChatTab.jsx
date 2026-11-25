@@ -30,18 +30,11 @@ export default function VendorChatTab({
     });
 
     const list = Array.from(map.values());
-    if (list.length === 0) {
-      return [
-        { id: 'v1', name: 'Kovai Yarns', lotName: 'Lot 1 - Yarn', indentDocId: 'IND-101', itemName: '30s Combed Cotton' },
-        { id: 'v2', name: 'Annai Spinners', lotName: 'Lot 1 - Yarn', indentDocId: 'IND-101', itemName: '30s Combed Cotton' },
-        { id: 'v3', name: 'Sri Murugan Mills', lotName: 'Lot 1 - Yarn', indentDocId: 'IND-102', itemName: '40s Carded Yarn' },
-      ];
-    }
     return list;
   }, [lots]);
 
   const [activeVendorId, setActiveVendorId] = useState(
-    initialTargetVendorId || uniqueVendors[0]?.id || 'v1'
+    initialTargetVendorId || uniqueVendors[0]?.id || null
   );
   const [chatSearch, setChatSearch] = useState('');
   const [inputText, setInputText] = useState(initialText || '');
@@ -69,27 +62,8 @@ export default function VendorChatTab({
   const activeVendor = uniqueVendors.find(v => String(v.id) === String(activeVendorId)) || uniqueVendors[0];
 
   // Retrieve messages for active vendor (or broadcast)
-  const currentThreadKey = isBroadcast ? 'broadcast' : String(activeVendor?.id || 'v1');
-  const threadMessages = chatMessages[currentThreadKey] || [
-    {
-      sender: 'system',
-      senderName: 'System',
-      text: 'Pre-bid query window is open. You can send questions, clarifications, and document requests directly to vendors.',
-      timestamp: '10:00 AM'
-    },
-    {
-      sender: 'vendor',
-      senderName: activeVendor?.name || 'Vendor',
-      text: 'Good day! We have reviewed the specifications for this lot. What is the expected delivery schedule for Unit 1?',
-      timestamp: '10:15 AM'
-    },
-    {
-      sender: 'user',
-      senderName: 'You (Procurement)',
-      text: 'Delivery must be completed within 14 days from PO release in staggered batches of 2,500 kg.',
-      timestamp: '10:30 AM'
-    }
-  ];
+  const currentThreadKey = isBroadcast ? 'broadcast' : String(activeVendor?.id || '');
+  const threadMessages = chatMessages[currentThreadKey] || [];
 
   const handleSend = (e) => {
     e?.preventDefault();
@@ -232,16 +206,16 @@ export default function VendorChatTab({
           <div className="p-3 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs">
-                {isBroadcast ? '📢' : (activeVendor?.name.slice(0, 2).toUpperCase() || 'V')}
+                {isBroadcast ? '📢' : (activeVendor?.name?.slice(0, 2)?.toUpperCase() || 'V')}
               </div>
               <div>
                 <h5 className="font-bold text-slate-900 text-xs sm:text-sm">
-                  {isBroadcast ? 'Broadcast Channel (All Invited Vendors)' : activeVendor?.name}
+                  {isBroadcast ? 'Broadcast Channel (All Invited Vendors)' : (activeVendor?.name || 'No Vendor Selected')}
                 </h5>
                 <p className="text-[11px] text-slate-500">
                   {isBroadcast
                     ? `Message will be delivered to ${uniqueVendors.length} vendors simultaneously`
-                    : `Context: ${activeVendor?.lotName} • ${activeVendor?.itemName}`}
+                    : `Context: ${activeVendor?.lotName || '-'} • ${activeVendor?.itemName || '-'}`}
                 </p>
               </div>
             </div>

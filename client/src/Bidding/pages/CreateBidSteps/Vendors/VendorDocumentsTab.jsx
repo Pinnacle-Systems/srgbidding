@@ -60,61 +60,11 @@ export default function VendorDocumentsTab({ bidData, setBidData, onRequestChatR
         });
       });
 
-      // Default common docs if none added yet
-      if (commonDocsMap.size === 0) {
-        return [
-          {
-            id: 'c-doc-1',
-            title: 'Technical Bid Specification Guidelines',
-            category: 'Specification',
-            fileName: 'Technical_Spec_Guidelines_v1.0.pdf',
-            fileSize: '2.4 MB',
-            version: '1.0',
-            status: 'Up to Date',
-            uploadDate: '2026-10-15',
-            notes: 'Standard technical terms and delivery guidelines'
-          },
-          {
-            id: 'c-doc-2',
-            title: 'General Commercial Terms & Conditions',
-            category: 'Compliance',
-            fileName: 'General_Commercial_Terms_v1.0.pdf',
-            fileSize: '1.1 MB',
-            version: '1.0',
-            status: 'Up to Date',
-            uploadDate: '2026-10-15',
-            notes: 'Payment terms: 45 days, Quality penalty clauses'
-          }
-        ];
-      }
       return Array.from(commonDocsMap.values());
     } else {
       // Find docs for selected vendor
       const vendor = uniqueVendors.find(v => String(v.id) === String(selectedTargetId));
-      return vendor?.documents || [
-        {
-          id: `vd-${selectedTargetId}-1`,
-          title: 'Mill Quality Test Certificate',
-          category: 'Test Certificate',
-          fileName: `${(vendor?.name || 'vendor').replace(/\s+/g, '_')}_TestCert_v1.0.pdf`,
-          fileSize: '1.8 MB',
-          version: '1.0',
-          status: 'Up to Date',
-          uploadDate: '2026-10-14',
-          notes: 'Lot test compliance certificate'
-        },
-        {
-          id: `vd-${selectedTargetId}-2`,
-          title: 'OEKO-TEX / ISO Standard Compliance',
-          category: 'Compliance',
-          fileName: 'ISO_Compliance_Certificate.pdf',
-          fileSize: '850 KB',
-          version: '1.0',
-          status: 'Update Needed',
-          uploadDate: '2026-09-10',
-          notes: 'Expired on 2026-09-30. Revised certificate required.'
-        }
-      ];
+      return vendor?.documents || [];
     }
   }, [selectedTargetId, lots, uniqueVendors]);
 

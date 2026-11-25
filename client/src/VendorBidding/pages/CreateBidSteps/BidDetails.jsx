@@ -30,19 +30,19 @@ export default function BidDetails({ id, bidData, setBidData }) {
   const totalVendors = uniqueVendorIds.size;
 
   const queryDeadline =
-    bidData.queryDeadline || bidData.terms?.queryDeadline || "2026-11-12";
+    bidData.queryDeadline || bidData.terms?.queryDeadline || "";
   const submissionDeadline =
     bidData.submissionDeadline ||
     bidData.terms?.submissionDeadline ||
-    "2026-11-20";
+    "";
   const termsTemplate =
     bidData.termsTemplate ||
     bidData.terms?.termsTemplate ||
-    "Standard Yarn Terms";
+    "";
   const paymentPolicy =
     bidData.paymentPolicy ||
     bidData.terms?.paymentPolicy ||
-    "Payment: 45 days from invoice. Delivery: to Unit 1 stores. Rejection: quality failures replaced at vendor cost.";
+    "";
 
   const { data: termsList } = useGetTermsandCondtionsQuery({});
 

@@ -202,12 +202,12 @@ export default function BiddingCommunicationsHub({
   isEmbedded = false,
   onBack,
 }) {
-  // Normalize input or fallback to the complete 3 Lots / 5 Indents / 19 Vendors dataset
+  // Normalize input or fallback to empty lots
   const bid = useMemo(() => {
     if (initialBidData && Array.isArray(initialBidData.lots) && initialBidData.lots.length > 0) {
       return initialBidData;
     }
-    return DEMO_COMMUNICATIONS_BID;
+    return initialBidData || { lots: [] };
   }, [initialBidData]);
 
   const lots = bid.lots || [];
@@ -267,7 +267,7 @@ export default function BiddingCommunicationsHub({
 
   // Active Thread Selection
   const [selectedThreadKey, setSelectedThreadKey] = useState(
-    allThreads[0]?.threadKey || '101_1'
+    allThreads[0]?.threadKey || null
   );
 
   // Active Workspace Sub-Tab: 'chat' | 'docs'
@@ -281,30 +281,10 @@ export default function BiddingCommunicationsHub({
   const [showSpecsModal, setShowSpecsModal] = useState(false);
 
   // Chat Conversations State: { [threadKey]: [ { id, sender, senderName, text, timestamp, docAttachment } ] }
-  const [conversations, setConversations] = useState({
-    '101_1': [
-      { id: 1, sender: 'system', senderName: 'Bid System', text: 'Pre-bid clarification window opened for Lot 1 > Indent 1 (30s Combed Cotton). All communications are recorded for compliance.', timestamp: '10:00 AM' },
-      { id: 2, sender: 'vendor', senderName: 'Kovai Yarns', text: 'Good morning Procurement Team. We have reviewed the CSP tolerance. Can we submit our Mill Quality Test Certificate by tomorrow evening?', timestamp: '10:18 AM' },
-      { id: 3, sender: 'buyer', senderName: 'You (Procurement Admin)', text: 'Yes Kovai Yarns, that is acceptable. Please ensure the CSP does not fall below 2,850.', timestamp: '10:30 AM' },
-      { id: 4, sender: 'vendor', senderName: 'Kovai Yarns', text: 'Understood. We have attached our latest test report below for your review.', timestamp: '10:45 AM', docAttachment: { title: 'Mill CSP & Hairiness Test Certificate', fileName: 'Kovai_CSP_LabReport_v1.0.pdf', fileSize: '2.1 MB', status: 'Pending Review' } }
-    ],
-    '101_2': [
-      { id: 1, sender: 'system', senderName: 'Bid System', text: 'Pre-bid thread initialized with Annai Spinners Mills.', timestamp: '09:00 AM' },
-      { id: 2, sender: 'vendor', senderName: 'Annai Spinners', text: 'Please clarify delivery timeline for Lot 1. Is staggered delivery allowed?', timestamp: '09:15 AM' },
-      { id: 3, sender: 'buyer', senderName: 'You (Procurement Admin)', text: 'Staggered delivery of 3,000 kg every 7 days is mandatory. Please upload updated compliance document.', timestamp: '09:30 AM' }
-    ],
-    '202_1': [
-      { id: 1, sender: 'system', senderName: 'Bid System', text: 'Pre-bid thread initialized for Lot 2 > Indent 4 (Rib 1x1 Fabric).', timestamp: '11:00 AM' },
-      { id: 2, sender: 'vendor', senderName: 'Kovai Yarns', text: 'Hi, we uploaded the Lycra recovery certificate for this indent.', timestamp: '11:25 AM', docAttachment: { title: 'Lycra Recovery & Elasticity Test Report', fileName: 'Kovai_Rib_Lycra_Report_v1.0.pdf', fileSize: '2.4 MB', status: 'Pending Review' } }
-    ]
-  });
+  const [conversations, setConversations] = useState({});
 
   // Track unread flags per thread
-  const [unreadMap, setUnreadMap] = useState({
-    '101_1': true,
-    '101_2': true,
-    '202_1': true,
-  });
+  const [unreadMap, setUnreadMap] = useState({});
 
   // Chat input
   const [inputText, setInputText] = useState('');

@@ -38,12 +38,12 @@ export default function ReviewAndPublish({ onBack, bidData, setBidData }) {
         });
       });
     });
-    return { total: Math.max(total, 4), needsUpdate };
+    return { total, needsUpdate };
   }, [lots]);
 
-  const queryDeadline = bidData.queryDeadline || bidData.terms?.queryDeadline || '2026-11-12';
-  const submissionDeadline = bidData.submissionDeadline || bidData.terms?.submissionDeadline || '2026-11-20';
-  const termsTemplate = bidData.termsTemplate || bidData.terms?.termsTemplate || 'Standard Yarn Terms';
+  const queryDeadline = bidData.queryDeadline || bidData.terms?.queryDeadline || '';
+  const submissionDeadline = bidData.submissionDeadline || bidData.terms?.submissionDeadline || '';
+  const termsTemplate = bidData.termsTemplate || bidData.terms?.termsTemplate || '';
 
   return (
     <div className="space-y-6 max-w-5xl">

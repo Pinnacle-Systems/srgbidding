@@ -21,7 +21,6 @@ const REFERENCE_PAGE = "INTERNAL INDENT FORM";
 const INDENT_TYPE = "INTERNAL";
 const DOC_PREFIX = "INT";
 
-
 async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
   if (saveType) return "Draft Save";
 
@@ -63,10 +62,6 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType) {
   return newDocId;
 }
 
-
-
-
-
 async function get(req) {
   const {
     branchId,
@@ -89,14 +84,12 @@ async function get(req) {
       docId: searchDocId ? { contains: searchDocId } : undefined,
       AND: finYearDate
         ? [
-          { createdAt: { gte: finYearDate.startDateStartTime } },
-          { createdAt: { lte: finYearDate.endDateEndTime } },
-        ]
+            { createdAt: { gte: finYearDate.startDateStartTime } },
+            { createdAt: { lte: finYearDate.endDateEndTime } },
+          ]
         : undefined,
     },
-    include: {
-
-    },
+    include: {},
     orderBy: { docId: "desc" },
   });
 
@@ -122,7 +115,6 @@ async function get(req) {
 }
 
 async function getOne(id) {
-
   const data = await prisma.Indent.findUnique({
     where: { id: parseInt(id) },
     include: {
@@ -133,9 +125,9 @@ async function getOne(id) {
           Size: true,
           Color: true,
           Uom: true,
-        }
+        },
       },
-    }
+    },
   });
 
   if (!data) return NoRecordFound("Indent");
@@ -173,16 +165,18 @@ async function getIndentItems(req) {
   if (status) {
     indentWhere.status = status;
   } else if (excludeStatus) {
-    indentWhere.status = { notIn: Array.isArray(excludeStatus) ? excludeStatus : [excludeStatus] };
+    indentWhere.status = {
+      notIn: Array.isArray(excludeStatus) ? excludeStatus : [excludeStatus],
+    };
   } else {
     // By default, exclude indents that are already in active bidding (PUBLISHED)
     indentWhere.status = { notIn: ["PUBLISHED"] };
   }
 
   const data = await prisma.IndentItems.findMany({
-    where: {
-      Indent: indentWhere,
-    },
+    // where: {
+    //   Indent: indentWhere,
+    // },
     include: {
       Indent: {
         select: {
@@ -194,7 +188,7 @@ async function getIndentItems(req) {
           Employee: { select: { name: true } },
           indentType: true,
           status: true,
-        }
+        },
       },
       IndentItemVendors: true,
       Itemgroup: { select: { name: true } },
@@ -206,7 +200,7 @@ async function getIndentItems(req) {
       Yarn: { select: { name: true } },
       Fabric: { select: { name: true } },
       YarnBlend: { select: { name: true } },
-      Counts: { select: { name: true } }
+      Counts: { select: { name: true } },
     },
   });
   if (!data) return NoRecordFound("Purchase Inward");
@@ -229,19 +223,28 @@ async function create(body) {
     orderId,
     departmentId,
     employeeId,
-
   } = await body;
 
-  console.log(body, "body")
+  console.log(body, "body");
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime,) : "";
-  let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave,);
+  const shortCode = finYearDate
+    ? getYearShortCodeForFinYear(
+        finYearDate?.startDateStartTime,
+        finYearDate?.endDateEndTime,
+      )
+    : "";
+  let newDocId = await getNextDocId(
+    branchId,
+    shortCode,
+    finYearDate?.startDateStartTime,
+    finYearDate?.endDateEndTime,
+    draftSave,
+  );
 
   let data;
   await prisma.$transaction(async (tx) => {
     data = await tx.Indent.create({
-
       data: {
         docId: newDocId,
         indentType: INDENT_TYPE,
@@ -255,18 +258,25 @@ async function create(body) {
         orderId: orderId ? parseInt(orderId) : null,
         departmentId: departmentId ? parseInt(departmentId) : null,
         employeeId: employeeId ? parseInt(employeeId) : null,
-
       },
     });
 
-    const inwardItems = typeof rawInwardItems === "string" ? JSON.parse(rawInwardItems) : rawInwardItems;
+    const inwardItems =
+      typeof rawInwardItems === "string"
+        ? JSON.parse(rawInwardItems)
+        : rawInwardItems;
 
-    await createIssueItems(tx, inwardItems, data, userId, storeId, branchId, orderId, departmentId, employeeId);
-
-
-
-
-
+    await createIssueItems(
+      tx,
+      inwardItems,
+      data,
+      userId,
+      storeId,
+      branchId,
+      orderId,
+      departmentId,
+      employeeId,
+    );
   });
 
   return { statusCode: 0, data };
@@ -275,7 +285,9 @@ async function create(body) {
 async function calculateFIFOAvailableStock(tx, stockDetail, storeId, branchId) {
   const stockHistory = await tx.stock.findMany({
     where: {
-      itemGroupId: stockDetail?.itemGroupId ? parseInt(stockDetail.itemGroupId) : null,
+      itemGroupId: stockDetail?.itemGroupId
+        ? parseInt(stockDetail.itemGroupId)
+        : null,
       itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
@@ -283,7 +295,7 @@ async function calculateFIFOAvailableStock(tx, stockDetail, storeId, branchId) {
       storeId: parseInt(storeId),
       branchId: branchId ? parseInt(branchId) : undefined,
     },
-    orderBy: { createdAt: "asc" }
+    orderBy: { createdAt: "asc" },
   });
 
   const inBatches = [];
@@ -310,7 +322,7 @@ async function calculateFIFOAvailableStock(tx, stockDetail, storeId, branchId) {
     }
   }
 
-  return inBatches.filter(b => b.availableQty > 0);
+  return inBatches.filter((b) => b.availableQty > 0);
 }
 
 // ── CREATE INWARD ITEMS ───────────────────────────────────────────────────────
@@ -325,28 +337,24 @@ async function createIssueItems(
   departmentId,
   employeeId,
 ) {
-
-
-
-
   const createdItem = await tx.IndentItems.create({
     data: {
       indentId: parseInt(indentRecord.id),
-      itemGroupId: stockDetail?.itemGroupId ? parseInt(stockDetail.itemGroupId) : null,
+      itemGroupId: stockDetail?.itemGroupId
+        ? parseInt(stockDetail.itemGroupId)
+        : null,
       itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
       hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
       issueQty: String(issueQty), // Single total quantity
-      inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
+      inwardItemsId: stockDetail?.inwardItemsId
+        ? parseInt(stockDetail.inwardItemsId)
+        : null,
       price: firstBatchPrice,
     },
   });
-
-
-
-
 }
 
 function findRemovedItemsGoods(dataFound, inwardItems) {
@@ -376,20 +384,13 @@ async function update(id, body, files) {
     employeeId,
   } = await body;
 
-
-
-
-
-
-
   const dataFound = await prisma.Indent.findUnique({
     where: { id: parseInt(id) },
     include: {
-      IndentItems: true
+      IndentItems: true,
     },
   });
   if (!dataFound) return NoRecordFound("MaterialIssue ");
-
 
   const inwardItems =
     typeof rawInwardItems === "string"
@@ -427,12 +428,18 @@ async function update(id, body, files) {
       },
     });
 
-    await updateinwardItems(tx, inwardItems, data, userId, storeId, branchId, orderId, departmentId, employeeId,);
-
-
+    await updateinwardItems(
+      tx,
+      inwardItems,
+      data,
+      userId,
+      storeId,
+      branchId,
+      orderId,
+      departmentId,
+      employeeId,
+    );
   });
-
-
 
   return { statusCode: 0, data };
 }
@@ -449,20 +456,23 @@ async function updateinwardItems(
   departmentId,
   employeeId,
 ) {
-
   let createdOrUpdatedItem;
   if (inwardItem.id) {
     createdOrUpdatedItem = await tx.IndentItems.update({
       where: { id: parseInt(inwardItem.id) },
       data: {
-        itemGroupId: inwardItem?.itemGroupId ? parseInt(inwardItem.itemGroupId) : null,
+        itemGroupId: inwardItem?.itemGroupId
+          ? parseInt(inwardItem.itemGroupId)
+          : null,
         itemId: inwardItem?.itemId ? parseInt(inwardItem.itemId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
         hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
         issueQty: String(issueQty), // Single total quantity
-        inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
+        inwardItemsId: stockDetail?.inwardItemsId
+          ? parseInt(stockDetail.inwardItemsId)
+          : null,
         price: firstBatchPrice,
       },
     });
@@ -470,30 +480,31 @@ async function updateinwardItems(
     createdOrUpdatedItem = await tx.IndentItems.create({
       data: {
         indentId: parseInt(indentRecord.id),
-        itemGroupId: inwardItem?.itemGroupId ? parseInt(inwardItem.itemGroupId) : null,
+        itemGroupId: inwardItem?.itemGroupId
+          ? parseInt(inwardItem.itemGroupId)
+          : null,
         itemId: inwardItem?.itemId ? parseInt(inwardItem.itemId) : null,
         sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
         colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
         uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
         hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
         issueQty: issueQty,
-        inwardItemsId: stockDetail?.inwardItemsId ? parseInt(stockDetail.inwardItemsId) : null,
+        inwardItemsId: stockDetail?.inwardItemsId
+          ? parseInt(stockDetail.inwardItemsId)
+          : null,
         price: firstBatchPrice,
       },
     });
   }
-
-
-
 }
 
 // ── REMOVE ────────────────────────────────────────────────────────────────────
 async function remove(id) {
   const data = await prisma.Indent.delete({
     where: {
-      id: parseInt(id)
+      id: parseInt(id),
     },
-  })
+  });
   return { statusCode: 0, data };
 }
 
@@ -599,29 +610,29 @@ async function getPurchaseDetailStock(req) {
     statusCode: 0,
     data: isMaterial
       ? data.map((d) => ({
-        invNo: d.invNo,
-        styleItemId: d.styleItemId,
-        fabricId: d.fabricId,
-        hsnId: d.hsnId,
-        uomId: d.uomId,
-        fabWidth: d.fabWidth,
-        fabMeter: d._sum.fabMeter,
-        accessoryId: d.accessoryId,
-        accessoryGroupId: d.accessoryGroupId,
-        qty: d._sum.qty,
-        styleId: d.styleId,
-        portionId: d.portionId,
-      }))
+          invNo: d.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          hsnId: d.hsnId,
+          uomId: d.uomId,
+          fabWidth: d.fabWidth,
+          fabMeter: d._sum.fabMeter,
+          accessoryId: d.accessoryId,
+          accessoryGroupId: d.accessoryGroupId,
+          qty: d._sum.qty,
+          styleId: d.styleId,
+          portionId: d.portionId,
+        }))
       : data.map((d) => ({
-        invNo: purchaseData.invNo,
-        styleItemId: d.styleItemId,
-        fabricId: d.fabricId,
-        hsnId: d.hsnId,
-        uomId: d.uomId,
-        stkQty: d._sum.qty,
-        styleId: d.styleId,
-        styleNo: d.styleNo,
-      })),
+          invNo: purchaseData.invNo,
+          styleItemId: d.styleItemId,
+          fabricId: d.fabricId,
+          hsnId: d.hsnId,
+          uomId: d.uomId,
+          stkQty: d._sum.qty,
+          styleId: d.styleId,
+          styleNo: d.styleNo,
+        })),
     returnType: purchaseData.inwardType,
     supplierId: purchaseData.supplierId,
   };
@@ -641,13 +652,13 @@ function manualFilterSearchDataPurchaseInwardItems(
     (item) =>
       (searchDocDate
         ? String(getDateFromDateTime(item.PurchaseInward.docDate)).includes(
-          searchDocDate,
-        )
+            searchDocDate,
+          )
         : true) &&
       (searchDcDate
         ? String(getDateFromDateTime(item.PurchaseInward.dcDate)).includes(
-          searchDcDate,
-        )
+            searchDcDate,
+          )
         : true) &&
       (returnTypeToSearch
         ? returnTypeToSearch.includes(item.PurchaseInward.inwardType)
@@ -771,16 +782,12 @@ async function getPurchaseInwardItems(req) {
   return { statusCode: 0, data, totalCount };
 }
 
-
-
-
-
 function manualFilterSearchDataPIItems(searchPIDate, data) {
   return data.filter((item) =>
     searchPIDate
       ? String(getDateFromDateTime(item.PurchaseInward?.docDate)).includes(
-        searchPIDate,
-      )
+          searchPIDate,
+        )
       : true,
   );
 }
@@ -893,7 +900,7 @@ export {
 async function submit(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "SUBMITTED" }
+    data: { status: "SUBMITTED" },
   });
   return { statusCode: 0, data };
 }
@@ -901,7 +908,7 @@ async function submit(id, body) {
 async function approve(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "APPROVED" }
+    data: { status: "APPROVED" },
   });
   return { statusCode: 0, data };
 }
@@ -909,7 +916,7 @@ async function approve(id, body) {
 async function reject(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "REJECTED" }
+    data: { status: "REJECTED" },
   });
   return { statusCode: 0, data };
 }
@@ -917,7 +924,7 @@ async function reject(id, body) {
 async function returnIndent(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "RETURNED" }
+    data: { status: "RETURNED" },
   });
   return { statusCode: 0, data };
 }
@@ -925,16 +932,9 @@ async function returnIndent(id, body) {
 async function cancel(id, body) {
   const data = await prisma.Indent.update({
     where: { id: parseInt(id) },
-    data: { status: "CANCELLED" }
+    data: { status: "CANCELLED" },
   });
   return { statusCode: 0, data };
 }
 
-export {
-  submit,
-  approve,
-  reject,
-  returnIndent,
-  cancel,
-  getIndentItems
-}
+export { submit, approve, reject, returnIndent, cancel, getIndentItems };

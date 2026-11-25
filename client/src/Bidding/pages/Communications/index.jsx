@@ -31,10 +31,10 @@ export default function BiddingCommunicationsPage({
 
   // Find the selected bid in the fetched list
   const activeBidData = useMemo(() => {
-    if (!selectedBidId) return DEMO_COMMUNICATIONS_BID;
+    if (!selectedBidId) return null;
 
     const found = bidsList.find((b) => String(b.id) === String(selectedBidId));
-    if (!found) return DEMO_COMMUNICATIONS_BID;
+    if (!found) return null;
 
     // Transform raw server model if needed to match lots -> indents -> vendors shape
     if (Array.isArray(found.BiddingLots) && found.BiddingLots.length > 0) {
@@ -51,10 +51,10 @@ export default function BiddingCommunicationsPage({
               docId: custom.docId || ind.indentId || `IND-${ind.id}`,
               item_name: custom.item_name || ind.Item?.name || 'Item',
               category: ind.indentType || custom.category || 'General',
-              department: custom.department || 'Knitting',
+              department: custom.department || 'General',
               qty: ind.qty || 0,
               uom: ind.Uom?.name || 'KGS',
-              requiredBy: custom.requiredBy || '2026-11-30',
+              requiredBy: custom.requiredBy || '',
               commonDocuments: custom.commonDocuments || [],
               specs: custom.specs || {},
               vendors: (ind.BiddingIndentvendors || []).map((v) => ({
@@ -70,7 +70,7 @@ export default function BiddingCommunicationsPage({
       };
     }
 
-    return found.lots && found.lots.length > 0 ? found : DEMO_COMMUNICATIONS_BID;
+    return found.lots && found.lots.length > 0 ? found : null;
   }, [bidsList, selectedBidId]);
 
   return (
@@ -141,10 +141,17 @@ export default function BiddingCommunicationsPage({
       {/* ─────────────────────────────────────────────────────────────
           TRI-PANE COMMUNICATIONS HUB
          ───────────────────────────────────────────────────────────── */}
-      <BiddingCommunicationsHub
-        bidData={activeBidData}
-        onBack={onBackToBids}
-      />
+      {(!activeBidData || !activeBidData.lots || activeBidData.lots.length === 0) ? (
+        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-500">
+          <p className="font-semibold text-sm">No active bid or lots found for communications.</p>
+          <p className="text-xs text-slate-400 mt-1">Select an active bid with configured lots to view vendor communication threads and documents.</p>
+        </div>
+      ) : (
+        <BiddingCommunicationsHub
+          bidData={activeBidData}
+          onBack={onBackToBids}
+        />
+      )}
 
     </div>
   );

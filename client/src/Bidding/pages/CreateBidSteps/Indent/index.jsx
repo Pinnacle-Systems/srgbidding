@@ -270,12 +270,7 @@ export default function Indents({ onBack, onNext, bidData, setBidData }) {
         {(!selectedLot) ? (
           <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-xl">
             <p className="text-sm font-medium text-slate-600">No lots available.</p>
-            <button
-              onClick={() => setBidData(prev => ({ ...prev, lots: DEFAULT_DEMO_LOTS }))}
-              className="mt-3 px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-semibold hover:bg-teal-700 transition-colors"
-            >
-              Load Demo Lots
-            </button>
+            <p className="text-xs text-slate-400 mt-1">Please add at least one lot in Step 2 (Lots) before configuring indents.</p>
           </div>
         ) : (
           <>

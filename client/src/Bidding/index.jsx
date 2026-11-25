@@ -81,16 +81,16 @@ function BiddingAppContent() {
               }}
             />
           );
-        case "create":
-          return (
-            <VendorCreateBid
-              editingBidId={editingBidId}
-              onBackToBids={() => {
-                setEditingBidId(null);
-                setCurrentView("bids");
-              }}
-            />
-          );
+        // case "create":
+        //   return (
+        //     <VendorCreateBid
+        //       editingBidId={editingBidId}
+        //       onBackToBids={() => {
+        //         setEditingBidId(null);
+        //         setCurrentView("bids");
+        //       }}
+        //     />
+        //   );
         case "communications":
           return (
             <BiddingCommunicationsPage
