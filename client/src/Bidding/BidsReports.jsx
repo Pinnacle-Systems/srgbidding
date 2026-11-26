@@ -53,11 +53,19 @@ const getBidStats = (bid) => {
   indents.forEach((ind) => {
     ind.BiddingIndentvendors?.forEach((v) => {
       const vId = v.vendorId || v.id;
+      const hasQuote =
+        v.status === "QUOTED" ||
+        v.status === "Submitted" ||
+        Boolean(v.indentVendorsUpload?.some((u) => u.price !== null && u.price !== undefined));
+
       if (vId && !vendorsMap.has(vId)) {
-        vendorsMap.set(vId, v.status);
-        if (v.status === "QUOTED" || v.status === "Submitted") {
+        vendorsMap.set(vId, hasQuote);
+        if (hasQuote) {
           quotesCount++;
         }
+      } else if (vId && vendorsMap.has(vId) && !vendorsMap.get(vId) && hasQuote) {
+        vendorsMap.set(vId, true);
+        quotesCount++;
       }
     });
   });

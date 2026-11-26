@@ -541,6 +541,7 @@ model Party {
   IndentItemVendorslabel   IndentItemVendors[]       @relation("VendorValue")
   BiddingIndentvendors     BiddingIndentvendors[]    @relation("Vendor")
   users                    User[]
+  indentVendorsUpload      IndentVendorsUpload[]     @relation("VendorUploads")
 }
 
 model PartyBranch {
@@ -3163,12 +3164,26 @@ model BiddingIndent {
 }
 
 model BiddingIndentvendors {
-  id              Int            @id @default(autoincrement())
-  BiddingIndent   BiddingIndent? @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
-  biddingIndentId Int?
-  vendorId        Int?
-  Vendor          Party?         @relation("Vendor", fields: [vendorId], references: [id])
-  status          String?
+  id                  Int                   @id @default(autoincrement())
+  BiddingIndent       BiddingIndent?        @relation(fields: [biddingIndentId], references: [id], onDelete: Cascade)
+  biddingIndentId     Int?
+  vendorId            Int?
+  Vendor              Party?                @relation("Vendor", fields: [vendorId], references: [id])
+  status              String?
+  indentVendorsUpload IndentVendorsUpload[]
+}
+
+model IndentVendorsUpload {
+  id                     Int                  @id @default(autoincrement())
+  BiddingIndentvendors   BiddingIndentvendors @relation(fields: [biddingIndentvendorsId], references: [id], onDelete: Cascade)
+  biddingIndentvendorsId Int
+  vendorId               Int?
+  Vendor                 Party?               @relation("VendorUploads", fields: [vendorId], references: [id])
+  price                  Float?
+  remarks                String?
+  date                   DateTime?
+  fileName               String?
+  filePath               String?
 }
 
 model BiddingIndentChat {

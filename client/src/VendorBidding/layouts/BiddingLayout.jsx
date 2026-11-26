@@ -34,21 +34,50 @@ export default function BiddingLayout({ currentView, setCurrentView, children })
           <button
             onClick={() => setCurrentView("bids")}
             className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${isActive("bids") ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'} ${!isSidebarOpen && 'justify-center'}`}
-            title={role === 'Vendor' ? 'My Bids & Invitations' : 'Bids'}
+            title={role === 'Vendor' ? 'Allocated Items' : 'Bids'}
           >
-            <svg className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? 'mr-3' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-            {isSidebarOpen && <span className="truncate">{role === 'Vendor' ? 'My Bids' : 'Bids'}</span>}
+            {role === "Vendor" ? (
+              <svg
+                className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? "mr-3" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+            ) : (
+              <svg
+                className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? "mr-3" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            )}
+            {isSidebarOpen && <span className="truncate">{role === 'Vendor' ? 'Allocated Items' : 'Bids'}</span>}
           </button>
 
-
-          <button
-            onClick={() => setCurrentView("create")}
-            className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${isActive("create") ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'} ${!isSidebarOpen && 'justify-center'}`}
-            title="Create bid"
-          >
-            <svg className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? 'mr-3' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            {isSidebarOpen && <span className="truncate">Create bid</span>}
-          </button>
+          {role === 'Admin' && (
+            <button
+              onClick={() => setCurrentView("create")}
+              className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${isActive("create") ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'} ${!isSidebarOpen && 'justify-center'}`}
+              title="Create bid"
+            >
+              <svg className={`w-5 h-5 flex-shrink-0 ${isSidebarOpen ? 'mr-3' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              {isSidebarOpen && <span className="truncate">Create bid</span>}
+            </button>
+          )}
 
           {role === 'Admin' && (
             <>

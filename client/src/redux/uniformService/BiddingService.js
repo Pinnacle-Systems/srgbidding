@@ -58,6 +58,30 @@ const BiddingApi = createApi({
       }),
       invalidatesTags: ["Bidding"],
     }),
+    getVendorAllocatedItems: builder.query({
+      query: (arg) => ({
+        url: `${BIDDING_API}/vendor/allocated-items`,
+        method: "GET",
+        params: arg?.params !== undefined ? arg.params : arg,
+      }),
+      providesTags: ["Bidding"],
+    }),
+    submitVendorQuote: builder.mutation({
+      query: ({ biddingIndentId, ...payload }) => ({
+        url: `${BIDDING_API}/vendor/quote/${biddingIndentId}`,
+        method: "POST",
+        body: payload,
+      }),
+      invalidatesTags: ["Bidding"],
+    }),
+    uploadVendorDocument: builder.mutation({
+      query: ({ biddingIndentId, formData }) => ({
+        url: `${BIDDING_API}/vendor/upload/${biddingIndentId}`,
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Bidding"],
+    }),
   }),
 });
 
@@ -67,6 +91,9 @@ export const {
   useCreateBidMutation,
   useUpdateBidMutation,
   useDeleteBidMutation,
+  useGetVendorAllocatedItemsQuery,
+  useSubmitVendorQuoteMutation,
+  useUploadVendorDocumentMutation,
 } = BiddingApi;
 
 export default BiddingApi;

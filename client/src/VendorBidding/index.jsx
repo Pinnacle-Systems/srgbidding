@@ -4,26 +4,35 @@ import {
   BiddingAuthProvider,
 } from "./context/BiddingAuthContext";
 import BiddingLayout from "./layouts/BiddingLayout";
-
-// Current existing components (Acting as Admin/Management views for now)
-import Dashboard from "./Dashboard";
-import Bids from "./BidsReports";
+import VendorAllocatedItems from "./pages/VendorAllocatedItems";
+import VendorDashboard from "./pages/VendorDashboard";
 import BiddingCommunicationsPage from "./pages/Communications";
-import VendorPortal from "./VendorPortal";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
-  const [editingBidId, setEditingBidId] = useState(null);
   const [selectedBidIdForComms, setSelectedBidIdForComms] = useState(null);
   const { role } = useBiddingAuth();
 
   const renderView = () => {
     if (role === "Vendor") {
-      return (
-        <VendorPortal
-          initialView={currentView === "workspace" ? "workspace" : "bids"}
-        />
-      );
+      switch (currentView) {
+        case "communications":
+          return (
+            <BiddingCommunicationsPage
+              initialBidId={selectedBidIdForComms}
+              onBackToBids={() => setCurrentView("bids")}
+            />
+          );
+        case "bids":
+          return <VendorAllocatedItems />;
+        case "dashboard":
+        default:
+          return (
+            <VendorDashboard
+              onNavigateToBids={() => setCurrentView("bids")}
+            />
+          );
+      }
     }
 
     return (

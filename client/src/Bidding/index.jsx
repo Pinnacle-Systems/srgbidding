@@ -11,8 +11,8 @@ import Bids from "./BidsReports";
 import CreateBid from "./CreateBid";
 import BiddingCommunicationsPage from "./pages/Communications";
 import VendorPortal from "./VendorPortal";
-import VendorBids from "../VendorBidding/vendorBidsReports";
-import VendorCreateBid from "../VendorBidding/CreateBid";
+import VendorAllocatedItems from "../VendorBidding/pages/VendorAllocatedItems";
+import VendorDashboard from "../VendorBidding/pages/VendorDashboard";
 
 function BiddingAppContent() {
   const [currentView, setCurrentView] = useState("dashboard");
@@ -69,28 +69,6 @@ function BiddingAppContent() {
 
     if (role === "Vendor") {
       switch (currentView) {
-        case "bids":
-        case "dashboard":
-          return (
-            <VendorBids
-              setCurrentView={setCurrentView}
-              setEditingBidId={setEditingBidId}
-              onOpenCommunications={(bidId) => {
-                setSelectedBidIdForComms(bidId);
-                setCurrentView("communications");
-              }}
-            />
-          );
-        // case "create":
-        //   return (
-        //     <VendorCreateBid
-        //       editingBidId={editingBidId}
-        //       onBackToBids={() => {
-        //         setEditingBidId(null);
-        //         setCurrentView("bids");
-        //       }}
-        //     />
-        //   );
         case "communications":
           return (
             <BiddingCommunicationsPage
@@ -98,15 +76,13 @@ function BiddingAppContent() {
               onBackToBids={() => setCurrentView("bids")}
             />
           );
+        case "bids":
+          return <VendorAllocatedItems />;
+        case "dashboard":
         default:
           return (
-            <VendorBids
-              setCurrentView={setCurrentView}
-              setEditingBidId={setEditingBidId}
-              onOpenCommunications={(bidId) => {
-                setSelectedBidIdForComms(bidId);
-                setCurrentView("communications");
-              }}
+            <VendorDashboard
+              onNavigateToBids={() => setCurrentView("bids")}
             />
           );
       }

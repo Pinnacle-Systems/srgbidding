@@ -87,6 +87,12 @@ async function get(req) {
               BiddingIndentvendors: {
                 include: {
                   Vendor: true,
+                  indentVendorsUpload: {
+                    include: {
+                      Vendor: true,
+                    },
+                    orderBy: { id: "desc" },
+                  },
                 },
               },
               BiddingIndentChat: true,
@@ -165,6 +171,12 @@ async function getOne(id, req) {
               BiddingIndentvendors: {
                 include: {
                   Vendor: true,
+                  indentVendorsUpload: {
+                    include: {
+                      Vendor: true,
+                    },
+                    orderBy: { id: "desc" },
+                  },
                 },
               },
               BiddingIndentChat: true,
@@ -251,6 +263,12 @@ async function getSearch(req) {
               BiddingIndentvendors: {
                 include: {
                   Vendor: true,
+                  indentVendorsUpload: {
+                    include: {
+                      Vendor: true,
+                    },
+                    orderBy: { id: "desc" },
+                  },
                 },
               },
               BiddingIndentChat: true,
@@ -708,4 +726,230 @@ async function remove(id) {
   return { statusCode: 0, data, message: "Bid deleted successfully" };
 }
 
-export { get, getOne, getSearch, create, update, remove };
+const extractVendorId = async (req, body = {}) => {
+  let targetVendorId = body.vendorId || body.partyId || req?.query?.partyId || req?.query?.vendorId || req?.user?.partyId;
+  if (!targetVendorId && req?.headers?.authorization) {
+    try {
+      const token = req.headers.authorization.split(" ")[1];
+      const decoded = jwt.verify(token, "RANDOM-TOKEN");
+      if (decoded?.partyId) {
+        targetVendorId = decoded.partyId;
+      } else if (decoded?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(decoded.userId, 10) },
+          select: { partyId: true, role: { select: { name: true } } },
+        });
+        if (user?.partyId) {
+          targetVendorId = user.partyId;
+        }
+      }
+    } catch (e) {}
+  }
+  return targetVendorId ? parseInt(targetVendorId, 10) : null;
+};
+
+async function getVendorAllocatedItems(req) {
+  const targetVendorId = await extractVendorId(req);
+  if (!targetVendorId) {
+    return { statusCode: 0, data: [] };
+  }
+
+  const items = await prisma.biddingIndent.findMany({
+    where: {
+      BiddingLots: {
+        Bidding: {
+          status: "PUBLISHED",
+        },
+      },
+      BiddingIndentvendors: {
+        some: {
+          vendorId: targetVendorId,
+        },
+      },
+    },
+    include: {
+      BiddingLots: {
+        include: {
+          Bidding: {
+            select: {
+              id: true,
+              docId: true,
+              name: true,
+              submissionDeadline: true,
+              queryDeadline: true,
+              termsTemplate: true,
+              description: true,
+            },
+          },
+        },
+      },
+      Item: true,
+      Uom: true,
+      Color: true,
+      Size: true,
+      Counts: true,
+      YarnBlend: true,
+      Fabric: true,
+      Yarn: true,
+      biddingIndentAttachments: true,
+      BiddingIndentvendors: {
+        where: {
+          vendorId: targetVendorId,
+        },
+        include: {
+          Vendor: true,
+          indentVendorsUpload: {
+            orderBy: { id: "desc" },
+          },
+        },
+      },
+    },
+    orderBy: { id: "desc" },
+  });
+
+  const formatted = items.map((ind) => {
+    const custom = ind.customData || {};
+    const vendorAssignment = ind.BiddingIndentvendors?.[0] || {};
+    const uploads = vendorAssignment.indentVendorsUpload || [];
+    const latestQuoteUpload = uploads.find((u) => u.price !== null && u.price !== undefined);
+    const quotedPrice = latestQuoteUpload?.price || null;
+    const quoteRemarks = latestQuoteUpload?.remarks || "";
+
+    return {
+      bidId: ind.BiddingLots?.Bidding?.id,
+      bidNo: ind.BiddingLots?.Bidding?.docId || `BID-${ind.BiddingLots?.Bidding?.id}`,
+      bidName: ind.BiddingLots?.Bidding?.name || "",
+      biddingIndentId: ind.id,
+      biddingLotId: ind.biddingLotId,
+      indentItemId: ind.indentItemId,
+      biddingIndentVendorId: vendorAssignment.id,
+      itemName: ind.Yarn?.name || ind.Fabric?.name || ind.Item?.name || custom?.item_name || "Item",
+      category: ind.indentType || custom?.category || "General",
+      qty: ind.qty || 0,
+      uom: ind.Uom?.name || "KGS",
+      specs: {
+        count: ind.Counts?.name || custom?.specs?.count,
+        blend: ind.YarnBlend?.name || custom?.specs?.blend,
+        shade: ind.Color?.name || custom?.specs?.shade,
+        gsm: custom?.specs?.gsm,
+        width: custom?.specs?.width,
+        make: ind.make || custom?.specs?.make,
+        partNo: custom?.specs?.partNo,
+        spec: custom?.specs?.spec,
+      },
+      deadlines: {
+        submission: ind.BiddingLots?.Bidding?.submissionDeadline,
+        query: ind.BiddingLots?.Bidding?.queryDeadline,
+      },
+      terms: ind.BiddingLots?.Bidding?.description,
+      buyerDocuments: ind.biddingIndentAttachments || [],
+      vendorUploads: uploads,
+      quotedPrice,
+      quoteRemarks,
+      vendorStatus: vendorAssignment.status || (quotedPrice ? "QUOTED" : "INVITED"),
+    };
+  });
+
+  return { statusCode: 0, data: formatted };
+}
+
+async function submitVendorQuote(biddingIndentId, body, req) {
+  const targetVendorId = await extractVendorId(req, body);
+  if (!targetVendorId) {
+    return { statusCode: 1, message: "Vendor identification failed" };
+  }
+
+  const bIndentId = parseInt(biddingIndentId, 10);
+  const priceVal = parseFloat(body.price);
+
+  if (isNaN(priceVal) || priceVal <= 0) {
+    return { statusCode: 1, message: "Please enter a valid price" };
+  }
+
+  const bVendor = await prisma.biddingIndentvendors.findFirst({
+    where: {
+      biddingIndentId: bIndentId,
+      vendorId: targetVendorId,
+    },
+  });
+
+  if (!bVendor) {
+    return { statusCode: 1, message: "Vendor assignment not found for this indent" };
+  }
+
+  const quoteRecord = await prisma.indentVendorsUpload.create({
+    data: {
+      biddingIndentvendorsId: bVendor.id,
+      vendorId: targetVendorId,
+      price: priceVal,
+      remarks: body.remarks ? String(body.remarks) : null,
+      date: new Date(),
+    },
+  });
+
+  await prisma.biddingIndentvendors.update({
+    where: { id: bVendor.id },
+    data: { status: "QUOTED" },
+  });
+
+  return { statusCode: 0, message: "Quote submitted successfully", data: quoteRecord };
+}
+
+async function uploadVendorIndentDocument(biddingIndentId, body, req) {
+  const targetVendorId = await extractVendorId(req, body);
+  const bIndentId = parseInt(biddingIndentId, 10);
+
+  const bVendor = await prisma.biddingIndentvendors.findFirst({
+    where: {
+      biddingIndentId: bIndentId,
+      vendorId: targetVendorId,
+    },
+  });
+
+  if (!bVendor) {
+    return { statusCode: 1, message: "Vendor assignment not found for this indent" };
+  }
+
+  const files = req.files || [];
+  const createdRecords = [];
+
+  for (const file of files) {
+    const uploadRec = await prisma.indentVendorsUpload.create({
+      data: {
+        biddingIndentvendorsId: bVendor.id,
+        vendorId: targetVendorId,
+        price: body.price ? parseFloat(body.price) : undefined,
+        remarks: body.remarks ? String(body.remarks) : null,
+        date: new Date(),
+        fileName: file.originalname,
+        filePath: file.filename,
+      },
+    });
+    createdRecords.push(uploadRec);
+
+    // Also persist into BiddingIndentAttachments table
+    await prisma.biddingIndentAttachments.create({
+      data: {
+        biddingIndentId: bIndentId,
+        name: body.title || file.originalname,
+        fileName: file.originalname,
+        filePath: file.filename,
+        date: new Date(),
+      },
+    });
+  }
+
+  return { statusCode: 0, message: "Document uploaded successfully", data: createdRecords };
+}
+
+export {
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  getVendorAllocatedItems,
+  submitVendorQuote,
+  uploadVendorIndentDocument,
+};

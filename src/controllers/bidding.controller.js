@@ -7,6 +7,9 @@ import {
   create as _create,
   update as _update,
   remove as _remove,
+  getVendorAllocatedItems as _getVendorAllocatedItems,
+  submitVendorQuote as _submitVendorQuote,
+  uploadVendorIndentDocument as _uploadVendorIndentDocument,
 } from "../services/bidding.service.js";
 
 async function get(req, res, next) {
@@ -95,4 +98,41 @@ async function remove(req, res, next) {
   }
 }
 
-export { get, getOne, getSearch, create, update, remove };
+async function getVendorAllocatedItems(req, res, next) {
+  try {
+    res.json(await _getVendorAllocatedItems(req));
+  } catch (error) {
+    console.error(`Error getVendorAllocatedItems`, error.message);
+    res.json({ statusCode: 1, message: error.message });
+  }
+}
+
+async function submitVendorQuote(req, res, next) {
+  try {
+    res.json(await _submitVendorQuote(req.params.biddingIndentId, req.body, req));
+  } catch (error) {
+    console.error(`Error submitVendorQuote`, error.message);
+    res.json({ statusCode: 1, message: error.message });
+  }
+}
+
+async function uploadVendorIndentDocument(req, res, next) {
+  try {
+    res.json(await _uploadVendorIndentDocument(req.params.biddingIndentId, req.body, req));
+  } catch (error) {
+    console.error(`Error uploadVendorIndentDocument`, error.message);
+    res.json({ statusCode: 1, message: error.message });
+  }
+}
+
+export {
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  getVendorAllocatedItems,
+  submitVendorQuote,
+  uploadVendorIndentDocument,
+};
