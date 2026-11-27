@@ -913,33 +913,52 @@ async function uploadVendorIndentDocument(biddingIndentId, body, req) {
   const files = req.files || [];
   const createdRecords = [];
 
-  for (const file of files) {
+  let fileRemarks = [];
+  if (body.remarks) {
+    try {
+      fileRemarks = typeof body.remarks === "string" ? JSON.parse(body.remarks) : body.remarks;
+    } catch {
+      fileRemarks = body.remarks;
+    }
+  }
+
+  // Determine next quoteVersion: increments every time vendor uploads new attachments
+  const existingUploads = await prisma.indentVendorsUpload.findMany({
+    where: { biddingIndentvendorsId: bVendor.id },
+    select: { quoteVersion: true },
+  });
+
+  let nextVersion = 1;
+  if (existingUploads.length > 0) {
+    const maxVer = Math.max(...existingUploads.map((u) => u.quoteVersion || 1));
+    nextVersion = maxVer + 1;
+  }
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    let remark = null;
+    if (Array.isArray(fileRemarks)) {
+      remark = fileRemarks[i] || null;
+    } else if (typeof fileRemarks === "string") {
+      remark = fileRemarks;
+    }
+
     const uploadRec = await prisma.indentVendorsUpload.create({
       data: {
         biddingIndentvendorsId: bVendor.id,
         vendorId: targetVendorId,
-        price: body.price ? parseFloat(body.price) : undefined,
-        remarks: body.remarks ? String(body.remarks) : null,
+        price: null,
+        remarks: remark,
         date: new Date(),
         fileName: file.originalname,
         filePath: file.filename,
+        quoteVersion: nextVersion,
       },
     });
     createdRecords.push(uploadRec);
-
-    // Also persist into BiddingIndentAttachments table
-    await prisma.biddingIndentAttachments.create({
-      data: {
-        biddingIndentId: bIndentId,
-        name: body.title || file.originalname,
-        fileName: file.originalname,
-        filePath: file.filename,
-        date: new Date(),
-      },
-    });
   }
 
-  return { statusCode: 0, message: "Document uploaded successfully", data: createdRecords };
+  return { statusCode: 0, message: "Attachments uploaded successfully", data: createdRecords };
 }
 
 export {

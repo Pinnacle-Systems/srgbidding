@@ -14,7 +14,7 @@ export default function VendorAllocatedItems() {
     refetch,
   } = useGetVendorAllocatedItemsQuery(
     { partyId },
-    { skip: !partyId, refetchOnMountOrArgChange: true }
+    { skip: !partyId, refetchOnMountOrArgChange: true },
   );
 
   const items = useMemo(() => {
@@ -31,8 +31,10 @@ export default function VendorAllocatedItems() {
 
   // Metrics
   const totalAllocated = items.length;
-  const quotedCount = items.filter((it) => it.quotedPrice !== null && it.quotedPrice !== undefined).length;
-  const pendingCount = totalAllocated - quotedCount;
+  const uploadedCount = items.filter(
+    (it) => (it.vendorUploads || []).filter((u) => u.filePath || u.fileName).length > 0,
+  ).length;
+  const pendingCount = totalAllocated - uploadedCount;
 
   // Filtered Items
   const filteredItems = useMemo(() => {
@@ -45,10 +47,11 @@ export default function VendorAllocatedItems() {
         return false;
       }
 
-      // Status filter
-      const isQuoted = item.quotedPrice !== null && item.quotedPrice !== undefined;
-      if (statusFilter === "PENDING" && isQuoted) return false;
-      if (statusFilter === "QUOTED" && !isQuoted) return false;
+      // Status filter (based on attachments uploaded)
+      const hasUploads =
+        (item.vendorUploads || []).filter((u) => u.filePath || u.fileName).length > 0;
+      if (statusFilter === "PENDING" && hasUploads) return false;
+      if (statusFilter === "UPLOADED" && !hasUploads) return false;
 
       // Search term
       if (searchTerm.trim()) {
@@ -129,7 +132,8 @@ export default function VendorAllocatedItems() {
               </span>
             </h1>
             <p className="text-xs text-slate-500 mt-1">
-              Material items allocated to your company. Click Edit to view full specifications, submit prices, and attach quality documents.
+              Material items allocated to your company. Click Edit to view full
+              specifications, submit prices, and attach quality documents.
             </p>
           </div>
 
@@ -162,7 +166,14 @@ export default function VendorAllocatedItems() {
       <div className="px-6 py-3 bg-white/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
         {/* Category Pills */}
         <div className="flex items-center space-x-1 overflow-x-auto pb-1 sm:pb-0">
-          {["ALL", "YARN", "FABRIC", "MACHINE SPARES", "DYES & CHEMICALS", "GENERAL"].map((cat) => (
+          {[
+            "ALL",
+            "YARN",
+            "FABRIC",
+            "MACHINE SPARES",
+            "DYES & CHEMICALS",
+            "GENERAL",
+          ].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -184,7 +195,9 @@ export default function VendorAllocatedItems() {
             <button
               onClick={() => setStatusFilter("ALL")}
               className={`px-2.5 py-1 rounded-md transition-colors ${
-                statusFilter === "ALL" ? "bg-white text-slate-900 shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"
+                statusFilter === "ALL"
+                  ? "bg-white text-slate-900 shadow-sm font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               All ({totalAllocated})
@@ -192,18 +205,22 @@ export default function VendorAllocatedItems() {
             <button
               onClick={() => setStatusFilter("PENDING")}
               className={`px-2.5 py-1 rounded-md transition-colors ${
-                statusFilter === "PENDING" ? "bg-white text-amber-800 shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"
+                statusFilter === "PENDING"
+                  ? "bg-white text-amber-800 shadow-sm font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Pending ({pendingCount})
             </button>
             <button
-              onClick={() => setStatusFilter("QUOTED")}
+              onClick={() => setStatusFilter("UPLOADED")}
               className={`px-2.5 py-1 rounded-md transition-colors ${
-                statusFilter === "QUOTED" ? "bg-white text-emerald-800 shadow-sm font-semibold" : "text-slate-600 hover:text-slate-900"
+                statusFilter === "UPLOADED"
+                  ? "bg-white text-emerald-800 shadow-sm font-semibold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Quoted ({quotedCount})
+              Uploaded ({uploadedCount})
             </button>
           </div>
 
@@ -222,7 +239,12 @@ export default function VendorAllocatedItems() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
         </div>
@@ -233,14 +255,18 @@ export default function VendorAllocatedItems() {
         {isLoading ? (
           <div className="h-64 flex flex-col items-center justify-center space-y-3">
             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-slate-500 font-medium">Loading allocated items...</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Loading allocated items...
+            </p>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="h-64 bg-white rounded-2xl border border-dashed border-slate-300 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 text-xl mb-3">
               📦
             </div>
-            <h3 className="text-sm font-bold text-slate-800">No Allocated Items Found</h3>
+            <h3 className="text-sm font-bold text-slate-800">
+              No Allocated Items Found
+            </h3>
             <p className="text-xs text-slate-500 max-w-sm mt-1">
               {items.length === 0
                 ? "No published indent items have been allocated to your organization yet."
@@ -268,7 +294,7 @@ export default function VendorAllocatedItems() {
                     Deadline
                   </th>
                   <th scope="col" className="px-5 py-3.5">
-                    Quote Status
+                    Attachments
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right">
                     Actions
@@ -277,9 +303,12 @@ export default function VendorAllocatedItems() {
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {filteredItems.map((item, idx) => {
-                  const isQuoted = item.quotedPrice !== null && item.quotedPrice !== undefined;
+                  const isQuoted =
+                    item.quotedPrice !== null && item.quotedPrice !== undefined;
                   const buyerDocCount = (item.buyerDocuments || []).length;
-                  const uploadCount = (item.vendorUploads || []).filter((u) => u.filePath || u.fileName).length;
+                  const uploadCount = (item.vendorUploads || []).filter(
+                    (u) => u.filePath || u.fileName,
+                  ).length;
 
                   return (
                     <tr
@@ -294,7 +323,8 @@ export default function VendorAllocatedItems() {
                       {/* Bid Reference */}
                       <td className="px-5 py-4">
                         <span className="font-mono text-xs px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-md font-bold text-blue-800 shadow-sm inline-block">
-                          {item.bidNo || `BID-${item.bidId || item.biddingIndentId}`}
+                          {item.bidNo ||
+                            `BID-${item.bidId || item.biddingIndentId}`}
                         </span>
                         {item.bidName && (
                           <span className="block text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]">
@@ -342,7 +372,9 @@ export default function VendorAllocatedItems() {
                         <div>
                           <div className="text-slate-700 font-medium">
                             {item.deadlines?.submission
-                              ? new Date(item.deadlines.submission).toLocaleDateString("en-IN", {
+                              ? new Date(
+                                  item.deadlines.submission,
+                                ).toLocaleDateString("en-IN", {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
@@ -355,43 +387,43 @@ export default function VendorAllocatedItems() {
                         </div>
                       </td>
 
-                      {/* Quote Status */}
+                      {/* Attachments Status */}
                       <td className="px-5 py-4">
-                        {isQuoted ? (
-                          <div>
-                            <div className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-xs">
-                              ₹ {parseFloat(item.quotedPrice).toFixed(2)}
-                              <span className="text-[10px] font-normal text-emerald-600 ml-1">
-                                / {item.uom || "Unit"}
-                              </span>
-                            </div>
-                            {uploadCount > 0 && (
-                              <p className="text-[10px] text-blue-600 font-medium mt-0.5">
-                                {uploadCount} file(s) attached
-                              </p>
-                            )}
-                          </div>
+                        {uploadCount > 0 ? (
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-bold text-xs">
+                            ✓ {uploadCount} Attachment{uploadCount > 1 ? "s" : ""}
+                          </span>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/80 font-semibold text-xs">
-                            ● Action Needed
+                            ● Pending Upload
                           </span>
                         )}
                       </td>
 
-                      {/* Actions: Edit button opens the new Quotation Form */}
+                      {/* Actions: Button opens the Attachment Form */}
                       <td className="px-5 py-4 text-right">
                         <button
                           onClick={() => setSelectedItemForForm(item)}
                           className={`px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors inline-flex items-center space-x-1.5 ${
-                            isQuoted
+                            uploadCount > 0
                               ? "bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                               : "bg-emerald-600 hover:bg-emerald-700 text-white"
                           }`}
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                            />
                           </svg>
-                          <span>{isQuoted ? "Edit Quote" : "Quote Price"}</span>
+                          <span>{uploadCount > 0 ? "Manage Attachments" : "Upload Attachments"}</span>
                         </button>
                       </td>
                     </tr>

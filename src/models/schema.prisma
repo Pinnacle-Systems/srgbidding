@@ -3184,6 +3184,7 @@ model IndentVendorsUpload {
   date                   DateTime?
   fileName               String?
   filePath               String?
+  quoteVersion           Int?                 @default(1)
 }
 
 model BiddingIndentChat {

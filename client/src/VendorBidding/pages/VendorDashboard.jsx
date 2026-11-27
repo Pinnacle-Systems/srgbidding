@@ -21,10 +21,10 @@ export default function VendorDashboard({ onNavigateToBids }) {
 
   // Metrics
   const totalAllocated = items.length;
-  const quotedCount = items.filter(
-    (it) => it.quotedPrice !== null && it.quotedPrice !== undefined
+  const uploadedCount = items.filter(
+    (it) => (it.vendorUploads || []).filter((u) => u.filePath || u.fileName).length > 0
   ).length;
-  const pendingCount = totalAllocated - quotedCount;
+  const pendingCount = totalAllocated - uploadedCount;
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-auto">
@@ -103,14 +103,14 @@ export default function VendorDashboard({ onNavigateToBids }) {
               </div>
             </div>
 
-            {/* Card 2: Action Needed (Pending Quote) */}
+            {/* Card 2: Action Needed (Pending Upload) */}
             <div
               onClick={onNavigateToBids}
               className="p-6 rounded-2xl bg-white border border-amber-200/80 shadow-sm hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
-                  Action Needed (Pending Quote)
+                  Action Needed (Pending Upload)
                 </span>
                 <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                   ⏳
@@ -120,36 +120,36 @@ export default function VendorDashboard({ onNavigateToBids }) {
                 {pendingCount}
               </div>
               <div className="mt-3 pt-3 border-t border-amber-100 flex items-center justify-between text-xs text-amber-700">
-                <span>Awaiting your quotation</span>
+                <span>Awaiting your attachments</span>
                 {onNavigateToBids && (
                   <span className="text-amber-800 font-semibold group-hover:underline">
-                    Quote Now →
+                    Upload Now →
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Card 3: Quotes Submitted */}
+            {/* Card 3: Attachments Uploaded */}
             <div
               onClick={onNavigateToBids}
               className="p-6 rounded-2xl bg-white border border-emerald-200/80 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
-                  Quotes Submitted
+                  Submissions Completed
                 </span>
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                   ✓
                 </div>
               </div>
               <div className="text-4xl font-extrabold text-emerald-900 mt-4">
-                {quotedCount}
+                {uploadedCount}
               </div>
               <div className="mt-3 pt-3 border-t border-emerald-100 flex items-center justify-between text-xs text-emerald-700">
-                <span>Successfully submitted</span>
+                <span>Attachments successfully uploaded</span>
                 {onNavigateToBids && (
                   <span className="text-emerald-800 font-semibold group-hover:underline">
-                    Review →
+                    View →
                   </span>
                 )}
               </div>
